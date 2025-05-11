@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:rxflare/rxflare.dart';
 
-final greetingText = RxState("Hello");
-final clickCounter = RxState(0);
+final greetingText = RxValue("Hello");
+final clickCounter = RxValue(0);
 
-final timestampedMessage = RxState("函数调用更新");
+final timestampedMessage = RxValue("函数调用更新");
 
-final fruits = RxState<List<String>>(["apple", "banana", "列表更新"]);
+final fruits = RxValue<List<String>>(["apple", "banana", "列表更新"]);
 
 class StringChangeListenerWidget extends StatelessWidget {
   const StringChangeListenerWidget({super.key});

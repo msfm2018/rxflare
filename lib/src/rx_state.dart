@@ -1,5 +1,7 @@
 import 'rx_track.dart';
 
+typedef RxValue<T> = RxState<T>;
+
 int _rxStateCounter = 0;
 
 class RxState<T> {

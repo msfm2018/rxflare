@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:rxflare/rxflare.dart';
 
-final myData = RxState<Map<dynamic, dynamic>>({"a": 1, "b": 2, 1: "one"});
-final myList = RxState<List<String>>(["apple", "banana"]);
+final myData = RxValue<Map<dynamic, dynamic>>({"a": 1, "b": 2, 1: "one"});
+final myList = RxValue<List<String>>(["apple", "banana"]);
 
 class MyReactiveWidget extends StatefulWidget {
   const MyReactiveWidget({super.key});

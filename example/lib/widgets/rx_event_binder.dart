@@ -1,8 +1,8 @@
 import 'package:rxflare/rxflare.dart';
 
 /// 示例用：全局状态
-final counterState = RxState<int>(0, name: "CounterState");
-final lastEventInfo = RxState<Map<String, dynamic>>({}, name: "LastEventInfo");
+final counterState = RxValue<int>(0, name: "CounterState");
+final lastEventInfo = RxValue<Map<String, dynamic>>({}, name: "LastEventInfo");
 
 /// 事件 ID 常量
 const int incrementEvent = 1;
