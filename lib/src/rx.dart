@@ -8,7 +8,9 @@ typedef RxWidgetBuilder = Widget Function();
 
 class Rx extends StatefulWidget {
   final RxWidgetBuilder builder;
-  const Rx(this.builder, {super.key});
+  final List<RxState>? deps;
+  const Rx(this.builder, {super.key}) : deps = null;
+  const Rx.custom({required this.builder, required this.deps, super.key});
 
   @override
   State<Rx> createState() => _RxState();
@@ -25,15 +27,37 @@ class _RxState extends State<Rx> {
     _setupReactivity();
   }
 
+  // void _setupReactivity() {
+  //   for (final dep in _dependencies) {
+  //     dep.removeListener(_onDependencyChanged);
+  //   }
+
+  //   _dependencies.clear();
+  //   RxTrack.startTracking(_dependencies);
+  //   _built = widget.builder();
+  //   RxTrack.stopTracking();
+
+  //   for (final dep in _dependencies) {
+  //     dep.addListener(_onDependencyChanged);
+  //   }
+
+  //   RxDebug.log("📦 当前依赖数量: ${_dependencies.length}");
+  // }
+
   void _setupReactivity() {
     for (final dep in _dependencies) {
       dep.removeListener(_onDependencyChanged);
     }
-
     _dependencies.clear();
-    RxTrack.startTracking(_dependencies);
-    _built = widget.builder();
-    RxTrack.stopTracking();
+
+    if (widget.deps != null) {
+      _dependencies.addAll(widget.deps!);
+      _built = widget.builder(); // 不需要追踪
+    } else {
+      RxTrack.startTracking(_dependencies);
+      _built = widget.builder();
+      RxTrack.stopTracking();
+    }
 
     for (final dep in _dependencies) {
       dep.addListener(_onDependencyChanged);
@@ -73,6 +97,7 @@ class _RxState extends State<Rx> {
 
   @override
   void dispose() {
+    _debounceTimer?.cancel();
     for (final dep in _dependencies) {
       dep.removeListener(_onDependencyChanged);
     }

@@ -59,5 +59,32 @@ class StringChangeListenerWidget extends StatelessWidget {
 
 ## 使用方法
 ```
+异步数据
+final RxFuture<User> userFuture = RxFuture(fetchUser());
+Future<User> fetchUser() async {
+  await Future.delayed(const Duration(seconds: 2));
+  return User(name: '张三', age: 28);
+}
+
+Rx(() {
+  final snapshot = userFuture.value;
+
+  if (snapshot.connectionState == ConnectionState.waiting) {
+    return const CircularProgressIndicator();
+  } else if (snapshot.hasError) {
+    return Text('加载失败: ${snapshot.error}');
+  } else {
+    return Text('用户名: ${snapshot.data}');
+  }
+});
+
+
+
+自定义
+Rx.custom(
+  builder: () => Text(myState.value.toString()),
+  deps: [myState],
+)
+
 
   ```
