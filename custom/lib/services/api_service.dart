@@ -33,37 +33,82 @@ class ApiService {
     }
   }
 
+  // ① 用户信息
   static Future<Map<String, dynamic>?> fetchUserInfo() async {
-    try {
-      final response = await _dio.post('/api/user/info');
-      return response.data;
-      // final data =
-      //     '{code: 0, data: [{age: 21, birthday: 2000/4/5, cardid: 110119118117221, id: 1, phone: 138000000, xm: 张三}, {age: 90, birthday: 2025/9/2, cardid: 119119118228112, id: 2, phone: 13900000000, xm: 李四}, {age: 45, birthday: 2022/2/2, cardid: 119808678903, id: 3, phone: 13200000000, xm: 王二麻子}], msg: succ}';
-
-      // return data as Map<String, dynamic>;
-    } catch (e) {
-      return null;
-    }
+    // 模拟网络耗时
+    await Future.delayed(const Duration(milliseconds: 300));
+    return {
+      'code': 0,
+      'data': [
+        {'age': 21, 'birthday': '2000/4/5', 'cardid': '110119118117221', 'id': 1, 'phone': '138000000', 'xm': '张三'},
+        {'age': 90, 'birthday': '2025/9/2', 'cardid': '119119118228112', 'id': 2, 'phone': '13900000000', 'xm': '李四'},
+        {'age': 45, 'birthday': '2022/2/2', 'cardid': '119808678903', 'id': 3, 'phone': '13200000000', 'xm': '王二麻子'},
+      ],
+      'msg': 'succ',
+    };
   }
 
+  // ② 今日衣服列表
   static Future<void> fetchTodayYifuInfo() async {
-    try {
-      final response = await _dio.post('/api/server/yifuinfo', data: {'today': '20250516'});
-      // {code: 0, data: [{cardid: 80203, cardname: 七折卡, count: 2, id: 1, name: 李艾想, payed: 未付, pdid: 21736, phone: 138000000, price: 165.0}, {cardid: 80922, cardname: 八折卡, count: 9, id: 2, name: 王女士, payed: 刷卡, pdid: 21735, phone: 1390000000, price: 200.0}], msg: succ}
-      final data = response.data as Map<String, dynamic>;
+    await Future.delayed(const Duration(milliseconds: 300));
+    final data = {
+      'code': 0,
+      'data': [
+        {'cardid': 80203, 'cardname': '七折卡', 'count': 2, 'id': 1, 'name': '李艾想', 'payed': '未付', 'pdid': 21736, 'phone': '138000000', 'price': 165.0},
+        {'cardid': 80922, 'cardname': '八折卡', 'count': 9, 'id': 2, 'name': '王女士', 'payed': '刷卡', 'pdid': 21735, 'phone': '1390000000', 'price': 200.0},
+      ],
+      'msg': 'succ',
+    };
 
-      RxSimpleEvent.executeEvent(1001, data);
-    } catch (e) {}
+    RxSimpleEvent.executeEvent(1001, data);
   }
 
+  // ③ 衣服明细
   static Future<void> yifuInfoDetail(int pdid) async {
-    try {
-      final response = await _dio.post('/api/server/yifuinfodetail', data: {'pdid': pdid});
-      //  {code: 0, data: [{color: 浅色, guayihao: 453, id: 1, memo: 油渍划伤, name: 羽绒马甲, pdid: 21736, region: 输送, server: 普洗, 条码号: 248173}, {color: 黑色, guayihao: 445, id: 2, memo: 油渍, name: 羽绒上衣, pdid: 21736, region: 输送线, server: 精洗, 条码号: 248174}], msg: succ}
-      final data = response.data as Map<String, dynamic>;
+    await Future.delayed(const Duration(milliseconds: 300));
+    final data = {
+      'code': 0,
+      'data': [
+        {'color': '浅色', 'guayihao': 453, 'id': 1, 'memo': '油渍划伤', 'name': '羽绒马甲', 'pdid': pdid, 'region': '输送', 'server': '普洗', '条码号': 248173},
+        {'color': '黑色', 'guayihao': 445, 'id': 2, 'memo': '油渍', 'name': '羽绒上衣', 'pdid': pdid, 'region': '输送线', 'server': '精洗', '条码号': 248174},
+      ],
+      'msg': 'succ',
+    };
 
-      print("发射--------------》");
-      RxSimpleEvent.executeEvent(1002, data);
-    } catch (e) {}
+    RxSimpleEvent.executeEvent(1002, data);
   }
+
+  // static Future<Map<String, dynamic>?> fetchUserInfo() async {
+  //   try {
+  //     final response = await _dio.post('/api/user/info');
+  //     return response.data;
+  //     // final data =
+  //     //     '{code: 0, data: [{age: 21, birthday: 2000/4/5, cardid: 110119118117221, id: 1, phone: 138000000, xm: 张三}, {age: 90, birthday: 2025/9/2, cardid: 119119118228112, id: 2, phone: 13900000000, xm: 李四}, {age: 45, birthday: 2022/2/2, cardid: 119808678903, id: 3, phone: 13200000000, xm: 王二麻子}], msg: succ}';
+
+  //     // return data as Map<String, dynamic>;
+  //   } catch (e) {
+  //     return null;
+  //   }
+  // }
+
+  // static Future<void> fetchTodayYifuInfo() async {
+  //   try {
+  //     final response = await _dio.post('/api/server/yifuinfo', data: {'today': '20250516'});
+  //     // {code: 0, data: [{cardid: 80203, cardname: 七折卡, count: 2, id: 1, name: 李艾想, payed: 未付, pdid: 21736, phone: 138000000, price: 165.0}, {cardid: 80922, cardname: 八折卡, count: 9, id: 2, name: 王女士, payed: 刷卡, pdid: 21735, phone: 1390000000, price: 200.0}], msg: succ}
+  //     final data = response.data as Map<String, dynamic>;
+
+  //     RxSimpleEvent.executeEvent(1001, data);
+  //   } catch (e) {}
+  // }
+
+  // static Future<void> yifuInfoDetail(int pdid) async {
+  //   try {
+  //     final response = await _dio.post('/api/server/yifuinfodetail', data: {'pdid': pdid});
+  //     //  {code: 0, data: [{color: 浅色, guayihao: 453, id: 1, memo: 油渍划伤, name: 羽绒马甲, pdid: 21736, region: 输送, server: 普洗, 条码号: 248173}, {color: 黑色, guayihao: 445, id: 2, memo: 油渍, name: 羽绒上衣, pdid: 21736, region: 输送线, server: 精洗, 条码号: 248174}], msg: succ}
+  //     final data = response.data as Map<String, dynamic>;
+
+  //     print("发射--------------》");
+  //     RxSimpleEvent.executeEvent(1002, data);
+  //   } catch (e) {}
+  // }
 }

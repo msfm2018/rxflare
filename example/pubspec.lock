@@ -142,10 +142,11 @@ packages:
   rxflare:
     dependency: "direct main"
     description:
-      path: ".."
-      relative: true
-    source: path
-    version: "0.0.2"
+      name: rxflare
+      sha256: d1163a44f02a77bd42dd9e6fe65b048ba120b1e6983dcb24f8581255ffc5c11f
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.3"
   sky_engine:
     dependency: transitive
     description: flutter

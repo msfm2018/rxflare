@@ -11,3 +11,6 @@ rx_future
  RxStore<T> 
  RxNotifier<T>  
 demo custom
+
+## 0.0.4
+修改了 demo

@@ -22,7 +22,7 @@ class HomeState extends State<Home> {
   void initState() {
     super.initState();
 
-    Config.init(myAppPages); // 初始化页面配置
+    Core.instance.initPages(myAppPages); // 初始化页面配置
     _timer = Timer.periodic(const Duration(seconds: 1), (Timer timer) {
       currentTime.value = DateTime.now();
     });

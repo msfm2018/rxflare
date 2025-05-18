@@ -251,10 +251,11 @@ packages:
   rxflare:
     dependency: "direct main"
     description:
-      path: ".."
-      relative: true
-    source: path
-    version: "0.0.2"
+      name: rxflare
+      sha256: d1163a44f02a77bd42dd9e6fe65b048ba120b1e6983dcb24f8581255ffc5c11f
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.3"
   shared_preferences:
     dependency: "direct main"
     description:
@@ -315,10 +316,10 @@ packages:
     dependency: "direct main"
     description:
       name: simple_tree
-      sha256: e4f6fdf044044c574c7a6dcf068774e2ccb875d367cff58bea0b15e0ae69fae1
+      sha256: "8e6a20aea1e9ccc6f15dc3037a79c14e367d027531816c76ad426c5c32b9e3aa"
       url: "https://pub.dev"
     source: hosted
-    version: "0.1.0"
+    version: "0.1.1"
   sky_engine:
     dependency: transitive
     description: flutter
