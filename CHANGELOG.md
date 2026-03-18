@@ -14,3 +14,7 @@ demo custom
 
 ## 0.0.4
 修改了 demo
+
+## [1.0.0] - 2026-03-18
+### Added
+- 增加 listen接口
