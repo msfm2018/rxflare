@@ -67,6 +67,36 @@ class RxState<T> {
     _listeners.add(listener);
   }
 
+// --- 新增 listen 接口 ---
+  /// 监听值的变化，并立即返回当前最新的值
+  /// 我们让它返回一个函数，方便外部取消监听（类似 StreamSubscription）
+  void Function() listen(void Function(T value) onData) {
+    // 包装一层，因为底层 _listeners 需要 dynamic id，但用户想要 T value
+    void wrapper(dynamic _) => onData(_value);
+    
+    _listeners.add(wrapper);
+    
+    // 返回一个取消监听的闭包，这样更高级
+    return () => _listeners.remove(wrapper);
+  }
+
+  /// 建议增加一个返回值，或者传回 field 本身
+void listenField(dynamic field, void Function(dynamic value) onData) {
+  addFieldListener(field, (_) {
+    // 这里的 _ 其实就是传入的 field
+    // 如果 _value 是 Map/List，我们可以考虑把具体的值传回去，而不是整个对象
+    dynamic specificValue;
+    if (_value is Map) {
+      specificValue = (_value as Map)[field];
+    } else if (_value is List && field is int) {
+      specificValue = (_value as List)[field];
+    } else {
+      specificValue = _value;
+    }
+    onData(specificValue); 
+  });
+}
+
   void removeListener(void Function(dynamic) listener) {
     _listeners.remove(listener);
   }
