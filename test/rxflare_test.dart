@@ -10,3 +10,13 @@ void main() {
     expect(calculator.addOne(0), 1);
   });
 }
+
+
+
+RxState + .obs：基础响应式变量。
+
+Rx：自动刷新的 UI 组件。
+
+RxEventBus：强大的异步事件总线。
+
+RxComputed：智能的计算属性。

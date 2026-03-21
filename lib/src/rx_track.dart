@@ -1,25 +1,24 @@
-import 'rx_core.dart';
+import 'rx_state.dart';
 import 'rx_debug.dart';
 
 
-//追踪花费时间
 class RxTrack {
-  static List<RxValue>? _currentDependencies;
+  static Set<RxState>? _current;
 
-  static void startTracking(List<RxValue> targetList) {
-    _currentDependencies = targetList;
+  static void startTracking(Set<RxState> deps) {
+    _current = deps;
     RxDebug.log("🔍 开始追踪依赖");
   }
 
   static void stopTracking() {
     RxDebug.log("✅ 停止追踪依赖");
-    _currentDependencies = null;
+    _current = null;
   }
 
-  static void register(RxValue state) {
-    if (_currentDependencies != null) {
-      RxDebug.log("➕ 注册依赖: ${state.runtimeType}");
-      _currentDependencies!.add(state);
+  static void register(RxState state) {
+    if (_current != null) {
+      RxDebug.log("➕ 注册依赖: ${state.name ?? state.id}");
+      _current!.add(state);
     }
   }
 }

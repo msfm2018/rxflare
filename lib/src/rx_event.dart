@@ -1,72 +1,206 @@
-// 定义事件类型（更通用）
+import 'dart:async';
 import 'rx_debug.dart';
 
-typedef EventCallback = void Function(int eventID, String uuid, Map<String, dynamic> data);
+enum EventPriority { high, normal, low }
 
-// 事件数据类
-class EventListenData {
-  final String moduleName;
-  final int eventID;
+// 保持泛型定义，方便外部调用时有类型推断
+typedef EventCallback<T> = Future<void> Function(int eventID, String uuid, T data);
 
-  final EventCallback eventCallback;
-
-  EventListenData({required this.moduleName, required this.eventID, required this.eventCallback});
+class EventToken {
+  final String id = DateTime.now().microsecondsSinceEpoch.toString();
 }
 
-// 按照模块来划分的事件管理器
-class RxEvent {
-  static final Map<String, List<EventListenData>> _moduleListeners = {};
+/// 内部包装类：解决类型逆变问题
+class _EventWrapper {
+  // 统一存储为 dynamic，供内部调度使用
+  final Future<void> Function(int eventID, String uuid, dynamic data) wrapperCallback;
+  // 存储原始引用，用于 off() 时的比对
+  final dynamic originalCallback;
+  final EventToken? token;
 
-  // 注册事件监听器
-  static void putEventListen(String moduleName, int eventID, EventCallback callback) {
-    final listeners = _moduleListeners.putIfAbsent(moduleName, () => []);
+  _EventWrapper({
+    required this.wrapperCallback, 
+    required this.originalCallback, 
+    this.token
+  });
+}
 
-    // 避免重复注册
-    if (listeners.any((e) => e.eventID == eventID)) {
-      RxDebug.log('⚠️ [$moduleName] 已存在事件 ID: $eventID，忽略注册');
+class _EventTask {
+  final String module;
+  final int eventID;
+  final dynamic data;
+  final String uuid;
+  final EventPriority priority;
+  final bool parallel;
+
+  _EventTask({
+    required this.module, 
+    required this.eventID, 
+    required this.data, 
+    required this.uuid, 
+    required this.priority, 
+    required this.parallel
+  });
+}
+
+class RxEventBus {
+  /// 注册表：List 存储的是统一的 _EventWrapper
+  static final Map<String, Map<int, List<_EventWrapper>>> _listeners = {};
+
+  /// Sticky 缓存
+  static final Map<String, Map<int, dynamic>> _sticky = {};
+
+  /// 任务队列
+  static final List<_EventTask> _queue = [];
+
+  static bool _isProcessing = false;
+
+  /// ==========================
+  /// 注册（修复了类型赋值错误）
+  /// ==========================
+  static void on<T>({
+    required String module, 
+    required int eventID, 
+    required EventCallback<T> callback, 
+    EventToken? token, 
+    bool sticky = false
+  }) {
+    final moduleMap = _listeners.putIfAbsent(module, () => {});
+    final list = moduleMap.putIfAbsent(eventID, () => []);
+
+    // 使用 originalCallback 进行重复检查
+    if (list.any((e) => e.originalCallback == callback)) {
+      RxDebug.log('⚠️ [$module] 重复注册 $eventID');
       return;
     }
 
-    listeners.add(EventListenData(moduleName: moduleName, eventID: eventID, eventCallback: callback));
-    RxDebug.log('✅ [$moduleName] 注册事件: $eventID');
+    // 【核心修复】：包装回调，手动进行类型转换 (data as T)
+    final wrapper = _EventWrapper(
+      wrapperCallback: (id, uuid, data) async {
+        return await callback(id, uuid, data as T);
+      },
+      originalCallback: callback,
+      token: token,
+    );
+
+    list.add(wrapper);
+
+    /// Sticky 立即回调
+    if (sticky && _sticky[module]?[eventID] != null) {
+      final stickyData = _sticky[module]![eventID];
+      Future.microtask(() {
+        try {
+          callback(eventID, "sticky", stickyData as T);
+        } catch (e) {
+          RxDebug.log('❌ Sticky 回调类型转换失败: $e');
+        }
+      });
+    }
   }
 
-  // 按模块触发事件
-  static void executeModuleEvent(String moduleName, int eventID, String uuid, Map<String, dynamic> data) {
-    final listeners = _moduleListeners[moduleName];
-    if (listeners == null) {
-      RxDebug.log('❌ [$moduleName] 没有注册该事件监听器');
-      return;
+  /// ==========================
+  /// 发送事件
+  /// ==========================
+  static void emit<T>({
+    required String module,
+    required int eventID,
+    required T data,
+    String uuid = "",
+    EventPriority priority = EventPriority.normal,
+    bool parallel = true,
+    bool sticky = false,
+    Duration? delay,
+  }) {
+    if (sticky) {
+      _sticky.putIfAbsent(module, () => {})[eventID] = data;
     }
 
-    for (var listener in listeners) {
-      if (listener.eventID == eventID) {
-        listener.eventCallback(eventID, uuid, data);
+    final task = _EventTask(
+      module: module, 
+      eventID: eventID, 
+      data: data, 
+      uuid: uuid, 
+      priority: priority, 
+      parallel: parallel
+    );
+
+    if (delay != null) {
+      Future.delayed(delay, () => _enqueue(task));
+    } else {
+      _enqueue(task);
+    }
+  }
+
+  static void _enqueue(_EventTask task) {
+    _queue.add(task);
+    // 稳定排序：优先级高的在前
+    _queue.sort((a, b) => a.priority.index.compareTo(b.priority.index));
+    _processQueue();
+  }
+
+  static void _processQueue() async {
+    if (_isProcessing || _queue.isEmpty) return;
+    _isProcessing = true;
+
+    while (_queue.isNotEmpty) {
+      final task = _queue.removeAt(0);
+      final listeners = _listeners[task.module]?[task.eventID];
+      if (listeners == null || listeners.isEmpty) continue;
+
+      RxDebug.log("🚀 分发事件 ${task.eventID} (${task.priority})");
+
+      if (task.parallel) {
+        await Future.wait(
+          listeners.map((e) async {
+            try {
+              // 调用包装后的回调
+              await e.wrapperCallback(task.eventID, task.uuid, task.data);
+            } catch (e, s) {
+              RxDebug.log('❌ 并发执行错误: $e\n$s');
+            }
+          }),
+        );
+      } else {
+        for (final e in List.from(listeners)) {
+          try {
+            await e.wrapperCallback(task.eventID, task.uuid, task.data);
+          } catch (e, s) {
+            RxDebug.log('❌ 串行执行错误: $e\n$s');
+          }
+        }
       }
     }
+
+    _isProcessing = false;
   }
 
-  // 移除事件监听器（按模块）
-  static void removeEventListen(String module, int eventID) {
-    final listeners = _moduleListeners[module];
-    if (listeners == null) return;
+  /// ==========================
+  /// 移除（通过 originalCallback 匹配）
+  /// ==========================
+  static void off({required String module, required int eventID, dynamic callback}) {
+    final list = _listeners[module]?[eventID];
+    if (list == null) return;
 
-    listeners.removeWhere((e) => e.eventID == eventID);
-    if (listeners.isEmpty) _moduleListeners.remove(module);
-    RxDebug.log('🗑️ [$module] 解绑事件: $eventID');
-  }
-
-  // 移除整个模块的监听器
-  static void removeModule(String module) {
-    if (_moduleListeners.containsKey(module)) {
-      _moduleListeners.remove(module);
-      RxDebug.log('🧹 已移除模块 [$module] 的所有监听器');
+    if (callback == null) {
+      list.clear();
+    } else {
+      list.removeWhere((e) => e.originalCallback == callback);
     }
   }
 
-  // 清除所有监听器
+  static void offByToken(EventToken token) {
+    for (final moduleMap in _listeners.values) {
+      for (final list in moduleMap.values) {
+        list.removeWhere((e) => e.token == token);
+      }
+    }
+    RxDebug.log('🗑️ 已通过 Token 移除监听器');
+  }
+
   static void clearAll() {
-    _moduleListeners.clear();
-    RxDebug.log('🧼 所有事件监听器已清除');
+    _listeners.clear();
+    _sticky.clear();
+    _queue.clear();
+    RxDebug.log('🧼 已清空事件总线');
   }
 }

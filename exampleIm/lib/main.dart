@@ -1,75 +1,162 @@
 import 'package:flutter/material.dart';
 import 'package:rxflare/rxflare.dart';
 
-// --- 1. 数据与状态定义 ---
 
-// 当前选中的聊天 ID
-final RxValue<String> selectedId = RxValue("1");
-// 侧边栏导航索引
-final RxValue<int> selectedNavIndex = RxValue(1);
+// ✅ 这里的类型会自动推导为 RxState<String>
+final selectedId = "1".obs; 
 
-// 响应式联系人列表 (包含预览消息和未读数)
-final RxValue<List<Map<String, dynamic>>> chatList = RxValue([
-  {"id": "1", "name": "文件传输助手", "msg": "等待接收文件...", "unread": 0, "color": Colors.green},
+final selectedNavIndex = 1.obs;
+
+// 顺便把你的搜索词也改了，更整洁
+final searchText = "".obs;
+
+
+final chatList = <Map>[
+   {"id": "1", "name": "文件传输助手", "msg": "等待接收文件...", "unread": 0, "color": Colors.green},
   {"id": "2", "name": "公众号", "msg": "[6条] 就业在北京...", "unread": 5, "color": Colors.blue},
   {"id": "3", "name": "拳之森林会员群", "msg": "教练：下午有课", "unread": 0, "color": Colors.teal},
   {"id": "4", "name": "王小静", "msg": "您好！", "unread": 0, "color": Colors.pinkAccent},
-]);
+  ].obs;
 
-// 核心：每个对话的消息记录
-final Map<String, RxValue<List<String>>> messagesMap11 = {
-  "1": RxValue(["[文件传输助手] 已连接"]),
-  "2": RxValue(["欢迎关注公众号"]),
-  "3": RxValue(["教练：下午有课", "大家：收到"]),
-  "4": RxValue(["王小静：您好，请问有什么可以帮您的？"]),
-};
-// 修改消息记录的定义，支持 Map 或对象
+// // ✅ 消息记录也统一使用 .obs
+// final Map<String, RxState<List<Map<String, dynamic>>>> messagesMap = {
+//   "1": [{"text": "[文件传输助手] 已连接", "isMe": false}].obs,
+//   "2": [{"text": "欢迎关注公众号", "isMe": false}].obs,
+//   "3": [{"text": "教练：下午有课", "isMe": false}].obs,
+//   "4": [{"text": "王小静：您好！", "isMe": false}].obs,
+// };
+// 消息记录的定义，支持 Map 或对象
+
 final Map<String, RxValue<List<Map<String, dynamic>>>> messagesMap = {
+
   "1": RxValue([
     {"text": "[文件传输助手] 已连接", "isMe": false},
   ]),
+
   "2": RxValue([
     {"text": "欢迎关注公众号", "isMe": false},
   ]),
+
   "3": RxValue([
     {"text": "教练：下午有课", "isMe": false},
   ]),
+
   "4": RxValue([
     {"text": "王小静：您好！", "isMe": false},
   ]),
-  // ... 其他以此类推
+
+
 };
 void main() {
+  // 开启 Rx 调试日志
+   RxDebug.isEnabled = false;
+   int listenerCount = 0;
   // --- 核心：使用 listen 实现自动持久化 ---
   for (var entry in messagesMap.entries) {
+    listenerCount++;
     // 监听每个对话的消息流
     entry.value.listen((newMsgs) {
       final chatId = entry.key;
       final lastMsg = newMsgs.last;
-      print("【系统日志】对话 $chatId 产生新变动，正在同步到本地：$lastMsg");
+      print("【系统日志----------------------->】对话 $chatId 产生新变动，正在同步到本地：$lastMsg");
       // 这里可以放置你的持久化代码，如：LocalDB.save(chatId, newMsgs);
     });
   }
+  print("【初始化日志】共创建 $listenerCount 个消息监听器"); // 会打印：共创建 4 个（对应4个对话）
   runApp(MaterialApp(debugShowCheckedModeBanner: false, home: WeChatMainPage()));
 }
 
-class WeChatMainPage extends StatelessWidget {
+// 替换原有的 StatelessWidget 定义
+class WeChatMainPage extends StatefulWidget {
+  const WeChatMainPage({super.key});
+
+  @override
+  State<WeChatMainPage> createState() => _WeChatMainPageState();
+}
+
+class _WeChatMainPageState extends State<WeChatMainPage> {
   final TextEditingController _inputController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  late VoidCallback _cancelListener;
 
-  // WeChatMainPage({super.key});
-  WeChatMainPage({super.key}) {
-    // --- 核心：使用 listenField 监控特定字段 ---
-    // 假设王小静在 chatList 中的索引是 3
-    // 我们监听 chatList 的第 3 项（王小静）的变更
-    chatList.listenField(3, (updatedItem) {
+  @override
+  void initState() {
+    super.initState();
+    _cancelListener = chatList.listenField(3, (updatedItem) {
       print("【底层追踪】王小静字段变动：${updatedItem['msg']}");
       if (updatedItem["unread"] > 0) {
         print("【强提醒】${updatedItem['name']} 发来了 ${updatedItem['unread']} 条紧急消息！");
-        // 这里可以调用系统通知、播放声音等非 UI 逻辑
       }
     });
   }
+
+@override
+  void dispose() {
+    // 2. 手动调用闭包，释放监听器（核心操作）
+    _cancelListener();
+    RxDebug.log("✅ 王小静的监听器已手动释放");
+    // 同时释放控制器（避免额外内存泄漏）
+    _inputController.dispose();
+    _scrollController.dispose();
+    
+    super.dispose();
+  }
+// 1. 模拟触发器
+void _simulateLiSiIncoming() {
+  // 模拟李四在 1 秒后发来第一条消息
+  Future.delayed(const Duration(milliseconds: 500), () {
+    _addNewChatMember(
+      id: "5",
+      name: "李四",
+      firstMsg: "嘿！我是李四，有人在吗？",
+      color: Colors.orange,
+    );
+  });
+}
+
+// 2. 核心初始化方法
+void _addNewChatMember({
+  required String id,
+  required String name,
+  required String firstMsg,
+  required Color color,
+}) {
+  // 防止重复创建
+  if (messagesMap.containsKey(id)) {
+    print("【提示】$name 已在列表中");
+    return;
+  }
+
+  // ✅ 关键：显式声明 List<Map<String, dynamic>> 解决 Object 类型错误
+  final List<Map<String, dynamic>> initialData = [
+    {"text": firstMsg, "isMe": false}
+  ];
+
+  final newRxValue = RxValue<List<Map<String, dynamic>>>(initialData);
+
+  // ✅ 绑定持久化监听（新成员专用）
+  newRxValue.listen((newMsgs) {
+    final last = newMsgs.last;
+    print("【李四频道日志】收到新变动：${last['text']}");
+  });
+
+  // 放入全局 Map
+  messagesMap[id] = newRxValue;
+
+  // 更新左侧列表 (chatList.value 需要重新赋值触发 Rx 响应)
+  final Map<String, dynamic> newListEntry = {
+    "id": id,
+    "name": name,
+    "msg": firstMsg,
+    "unread": 1,
+    "color": color
+  };
+  
+  // 使用解构赋值确保 chatList 整体更新
+  chatList.value = [...chatList.value, newListEntry];
+
+  print("✅ 成功为 $name (ID: $id) 建立独立监听通道");
+}
 // 2. 模拟文件上传（rxflare 局部更新演示）
   void _uploadFileSimulation(String id, String fileName) async {
     // 获取当前消息列表长度作为新消息的索引
@@ -404,6 +491,7 @@ void _triggerAutoReply(String id, String userText) async {
   // 辅助方法：获取当前聊天的头像
   Widget _buildStaticAvatar(String id) {
     final item = chatList.value.firstWhere((e) => e["id"] == id, orElse: () => chatList.value.first);
+
     return Container(
       width: 36,
       height: 36,
@@ -439,7 +527,7 @@ void _triggerAutoReply(String id, String userText) async {
     );
   }
 
-  Widget _buildAvatar(Map<String, dynamic> item) {
+  Widget _buildAvatar(Map item) {
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -477,6 +565,13 @@ void _triggerAutoReply(String id, String userText) async {
               onPressed: () => selectedNavIndex.value = 1,
             ),
           ),
+          // --- 新增：点击这个模拟李四发消息 ---
+        const SizedBox(height: 20),
+        IconButton(
+          icon: const Icon(Icons.person_add, color: Colors.orangeAccent),
+          tooltip: "模拟李四发消息",
+          onPressed: _simulateLiSiIncoming, // 调用模拟方法
+        ),
           const Spacer(),
           const Icon(Icons.menu, color: Colors.grey),
           const SizedBox(height: 20),
@@ -485,3 +580,6 @@ void _triggerAutoReply(String id, String userText) async {
     );
   }
 }
+
+
+

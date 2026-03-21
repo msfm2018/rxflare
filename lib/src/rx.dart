@@ -9,90 +9,98 @@ typedef RxWidgetBuilder = Widget Function();
 class Rx extends StatefulWidget {
   final RxWidgetBuilder builder;
   final List<RxState>? deps;
+
   const Rx(this.builder, {super.key}) : deps = null;
-  const Rx.custom({required this.builder, required this.deps, super.key});
+
+  const Rx.custom({
+    required this.builder,
+    required this.deps,
+    super.key,
+  });
 
   @override
   State<Rx> createState() => _RxState();
 }
 
 class _RxState extends State<Rx> {
-  final List<RxState> _dependencies = [];
-  late Widget _built;
-  int _buildCount = 0;
-  Timer? _debounceTimer; // 添加一个 Timer
+  // 使用 Set 替代 List，自动处理重复依赖，提高查找效率
+  final Set<RxState> _dependencies = {}; 
+  Timer? _debounceTimer;
+
   @override
   void initState() {
     super.initState();
-    _setupReactivity();
+    // 初始手动依赖监听
+    if (widget.deps != null) {
+      _updateListeners(Set.from(widget.deps!));
+    }
   }
 
-  // void _setupReactivity() {
-  //   for (final dep in _dependencies) {
-  //     dep.removeListener(_onDependencyChanged);
-  //   }
-
-  //   _dependencies.clear();
-  //   RxTrack.startTracking(_dependencies);
-  //   _built = widget.builder();
-  //   RxTrack.stopTracking();
-
-  //   for (final dep in _dependencies) {
-  //     dep.addListener(_onDependencyChanged);
-  //   }
-
-  //   RxDebug.log("📦 当前依赖数量: ${_dependencies.length}");
-  // }
-
-  void _setupReactivity() {
-    for (final dep in _dependencies) {
+  /// 差异化更新监听器：只操作变化的部分，优化性能
+  void _updateListeners(Set<RxState> newDeps) {
+    // 1. 移除不再需要的旧依赖监听
+    for (final dep in _dependencies.difference(newDeps)) {
       dep.removeListener(_onDependencyChanged);
     }
-    _dependencies.clear();
-
-    if (widget.deps != null) {
-      _dependencies.addAll(widget.deps!);
-      _built = widget.builder(); // 不需要追踪
-    } else {
-      RxTrack.startTracking(_dependencies);
-      _built = widget.builder();
-      RxTrack.stopTracking();
-    }
-
-    for (final dep in _dependencies) {
+    // 2. 添加新增依赖的监听
+    for (final dep in newDeps.difference(_dependencies)) {
       dep.addListener(_onDependencyChanged);
     }
-
-    RxDebug.log("📦 当前依赖数量: ${_dependencies.length}");
+    
+    // 3. 同步依赖集合
+    _dependencies.clear();
+    _dependencies.addAll(newDeps);
   }
 
-  void _onDependencyChanged(dynamic sourceId) {
-    if (!mounted) return;
-    if (_debounceTimer?.isActive ?? false) {
-      _debounceTimer!.cancel(); // 取消之前的 timer
-    }
+bool _scheduled = false;
 
-    _debounceTimer = Timer(const Duration(milliseconds: 16), () {
-      // 16ms 大约是 60fps 的一帧
-      RxDebug.log("🔄 依赖更新: $sourceId，触发第 ${_buildCount + 1} 次重建");
+void _onDependencyChanged([dynamic _]) {
+  if (!mounted || _scheduled) return;
 
-      for (final dep in _dependencies) {
-        dep.removeListener(_onDependencyChanged);
-      }
+  _scheduled = true;
 
-      setState(() {
-        _setupReactivity();
-      });
-      _debounceTimer = null; // 重置 timer
-    });
-  }
+  scheduleMicrotask(() {
+    if (mounted) setState(() {});
+    _scheduled = false;
+  });
+}
 
   @override
   Widget build(BuildContext context) {
-    _buildCount++;
-    RxDebug.log("🛠️ 构建第 $_buildCount 次 Rx Widget");
+    RxDebug.log("🛠️ Rx Widget 构建中...");
 
-    return _built;
+    if (widget.deps != null) {
+      // 模式 A: 手动依赖模式
+      return widget.builder();
+    } else {
+      // 模式 B: 自动追踪模式
+      final Set<RxState> discoveredDeps = {};
+      
+      // 1. 开启追踪
+      RxTrack.startTracking(discoveredDeps);
+      
+      // 2. 执行 builder —— 仅执行这一次！
+      // 在这期间，任何被访问的 RxState 都会把自己加入 discoveredDeps
+      final result = widget.builder();
+      
+      // 3. 停止追踪
+      RxTrack.stopTracking();
+      
+      // 4. 根据本次构建发现的依赖更新监听关系
+      _updateListeners(discoveredDeps);
+      
+      RxDebug.log("📦 自动追踪依赖数量: ${discoveredDeps.length}");
+      return result;
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant Rx oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // 如果手动依赖列表变了，需要更新
+    if (widget.deps != null && oldWidget.deps != widget.deps) {
+      _updateListeners(Set.from(widget.deps!));
+    }
   }
 
   @override
@@ -101,6 +109,7 @@ class _RxState extends State<Rx> {
     for (final dep in _dependencies) {
       dep.removeListener(_onDependencyChanged);
     }
+    _dependencies.clear();
     super.dispose();
   }
 }
