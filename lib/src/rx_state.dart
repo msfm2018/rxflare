@@ -9,7 +9,9 @@ class RxState<T> {
   T _value;
   final List<void Function(dynamic)> _listeners = [];
   final Map<dynamic, List<void Function(dynamic)>> _fieldListeners = {};
-  RxState(this._value, {dynamic id, String? name}) : id = id ?? Object(), name = name ?? "RxState#$_rxStateCounter" {
+  RxState(this._value, {dynamic id, String? name})
+      : id = id ?? Object(),
+        name = name ?? "RxState#$_rxStateCounter" {
     _rxStateCounter++;
   }
 
@@ -25,13 +27,13 @@ class RxState<T> {
     }
   }
 
-/// 内部监听接口：供 RxComputed 等组件绑定依赖
-  /// 它不触发 RxTrack 追踪，只是纯粹的观察者回调
+// 内部监听接口：供 RxComputed 等组件绑定依赖
   void addInternalListener(void Function(dynamic) listener) {
     if (!_listeners.contains(listener)) {
       _listeners.add(listener);
     }
   }
+
 // 2. 这里的 internalUpdate 就是 RxComputed 会调用的“后门”
   void internalUpdate(T newValue) {
     if (_value != newValue) {
@@ -39,49 +41,48 @@ class RxState<T> {
       _notifyListeners(id); // 📢 现在这里可以正常调用了
     }
   }
-  
+
   // void update2(T newValue) => value = newValue;
 
-void update(dynamic newValue) {
-  final current = _value;
+  void update(dynamic newValue) {
+    final current = _value;
 
-  /// 1. 完全匹配类型
-  if (newValue is T) {
-    if (current != newValue) {
-      value = newValue;
+    // 1. 完全匹配类型
+    if (newValue is T) {
+      if (current != newValue) {
+        value = newValue;
+      }
+      return;
     }
-    return;
-  }
 
-  /// 2. 数值类型兼容（推荐用 current 判断）
-  if (current is double && newValue is int) {
-    final converted = newValue.toDouble();
-    if (current != converted) {
-      value = converted as T;
+    // 2. 数值类型兼容（推荐用 current 判断）
+    if (current is double && newValue is int) {
+      final converted = newValue.toDouble();
+      if (current != converted) {
+        value = converted as T;
+      }
+      return;
     }
-    return;
-  }
 
-  if (current is int && newValue is double) {
+    if (current is int && newValue is double) {
+      RxDebug.log(
+        "⚠️ RxState(${name ?? id}): double → int 可能丢失精度: $newValue",
+      );
+
+      final converted = newValue.toInt();
+
+      if (current != converted) {
+        value = converted as T;
+      }
+      return;
+    }
+
+    // 3. 类型不匹配
     RxDebug.log(
-      "⚠️ RxState(${name ?? id}): double → int 可能丢失精度: $newValue",
+      '❌ [类型错误] RxState(${name ?? id}): '
+      '无法将 ${newValue.runtimeType} 赋值给 ${current.runtimeType}',
     );
-
-    final converted = newValue.toInt();
-
-    if (current != converted) {
-      value = converted as T;
-    }
-    return;
   }
-
-  /// 3. 类型不匹配
-  RxDebug.log(
-    '❌ [类型错误] RxState(${name ?? id}): '
-    '无法将 ${newValue.runtimeType} 赋值给 ${current.runtimeType}',
-  );
-}
-
 
   void updateField<K extends Object>(K field, Object? newValue) {
     // 改成 Object? 更宽松
@@ -115,7 +116,7 @@ void update(dynamic newValue) {
     // 只有走到这里，才说明是非容器类型，才考虑整体替换
     if (current != newValue) {
       if (newValue is T) {
-        _value = newValue as T;
+        _value = newValue;
         _notifyListeners(id);
       } else {
         RxDebug.log('⚠️ RxState(${name ?? id}) 更新字段 $field 类型不匹配: 期望 $T，实际 ${newValue.runtimeType}');
@@ -123,13 +124,12 @@ void update(dynamic newValue) {
     }
   }
 
-
-  /// 添加字段监听器（支持任意 key 类型：int、String、Object）
+  // 添加字段监听器（支持任意 key 类型：int、String、Object）
   void addFieldListener(dynamic field, void Function(dynamic) listener) {
     _fieldListeners.putIfAbsent(field, () => []).add(listener);
   }
 
-  /// 移除字段监听器
+  // 移除字段监听器
   void removeFieldListener(dynamic field, void Function(dynamic) listener) {
     final fieldListeners = _fieldListeners[field];
     if (fieldListeners != null) {
@@ -164,8 +164,8 @@ void update(dynamic newValue) {
     }
   }
 
-  /// 监听值的变化，并立即返回当前最新的值
-  /// 返回一个函数，方便外部取消监听（类似 StreamSubscription）
+  // 监听值的变化，并立即返回当前最新的值
+  // 返回一个函数，方便外部取消监听（类似 StreamSubscription）
   void Function() listen(void Function(T value) onData) {
     void wrapper(dynamic _) => onData(_value);
     _listeners.add(wrapper);
@@ -181,7 +181,7 @@ void update(dynamic newValue) {
     };
   }
 
-  /// 监听字段变化，支持取消监听
+  // 监听字段变化，支持取消监听
   void Function() listenField(dynamic field, void Function(dynamic value) onData) {
     void wrapper(dynamic value) => onData(value);
     addFieldListener(field, wrapper);
@@ -198,11 +198,11 @@ void update(dynamic newValue) {
     onData(initialValue);
 
     // 增加防重复调用标记
-    bool _cancelled = false;
+    bool cancelled = false;
     return () {
-      if (!_cancelled) {
+      if (!cancelled) {
         removeFieldListener(field, wrapper);
-        _cancelled = true;
+        cancelled = true;
       }
     };
   }
@@ -218,7 +218,7 @@ void update(dynamic newValue) {
     }
   }
 
-  /// 清理所有监听器，防止内存泄漏
+  // 清理所有监听器，防止内存泄漏
   void dispose() {
     _listeners.clear();
     _fieldListeners.clear();
