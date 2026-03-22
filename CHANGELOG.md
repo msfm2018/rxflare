@@ -23,3 +23,6 @@ demo custom
 ### Added
 - 逻辑更新
 
+## [1.1.2] - 2026-03-21
+### Added
+- 增加导出 rx_get.dart
