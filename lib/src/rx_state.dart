@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'rx_track.dart';
 import 'rx_debug.dart';
 
@@ -21,7 +22,7 @@ class RxState<T> {
   }
 
   set value(T newValue) {
-    if (_value != newValue) {
+    if (!_deepEquals(_value, newValue)) {
       _value = newValue;
       _notifyListeners(id);
     }
@@ -36,12 +37,17 @@ class RxState<T> {
 
 // 2. 这里的 internalUpdate 就是 RxComputed 会调用的“后门”
   void internalUpdate(T newValue) {
-    if (_value != newValue) {
+    if (!_deepEquals(_value, newValue)) {
       _value = newValue;
-      _notifyListeners(id); // 📢 现在这里可以正常调用了
+      _notifyListeners(id);
     }
   }
 
+  bool _deepEquals(dynamic a, dynamic b) {
+    if (a is Map && b is Map) return mapEquals(a, b); // 需要 import 'package:flutter/foundation.dart';
+    if (a is List && b is List) return listEquals(a, b);
+    return a == b;
+  }
   // void update2(T newValue) => value = newValue;
 
   void update(dynamic newValue) {
@@ -84,7 +90,11 @@ class RxState<T> {
     );
   }
 
-  void updateField<K extends Object>(K field, Object? newValue) {
+  void updateField<K extends Object>(
+    K field,
+    Object? newValue, {
+    bool notifyGlobal = true,
+  }) {
     // 改成 Object? 更宽松
     final current = _value;
     if (current == null) {
@@ -94,22 +104,43 @@ class RxState<T> {
 
     // ─────────────── 核心改动在这里 ───────────────
     if (current is Map && current.containsKey(field)) {
-      if (current[field] != newValue) {
-        current[field] = newValue;
-        _notifyFieldListeners(field);
+      final oldFieldValue = current[field];
+      if (!_deepEquals(oldFieldValue, newValue)) {
+        final newMap = {...current};
+        newMap[field] = newValue;
+
+        _value = newMap as T;
+
+        _notifyFieldListeners(field, notifyGlobal);
       }
       return; // 已经处理了 Map 情况，直接返回
     }
 
+    // // ❌ List 直接禁止
+    // if (current is List) {
+    //   RxDebug.log("❌ List 不支持 field 更新，请使用 Map + key");
+    //   return;
+    // }
+
     if (current is List && field is int) {
-      if (field >= 0 && field < current.length) {
-        if (current[field] != newValue) {
-          current[field] = newValue;
-          _notifyFieldListeners(field);
-        }
-      } else {
-        RxDebug.log("⚠️ RxState(${name ?? id}) 列表索引 $field 越界，长度: ${current.length}");
+      final index = field;
+
+      if (index < 0 || index >= current.length) {
+        RxDebug.log("⚠️ List index 越界: $index");
+        return;
       }
+
+      final oldItem = current[index];
+
+      if (_deepEquals(oldItem, newValue)) return;
+
+      final newList = (current as List).toList();
+
+      newList[index] = newValue;
+
+      _value = newList as T;
+
+      _notifyFieldListeners(field, notifyGlobal);
       return;
     }
 
@@ -141,21 +172,21 @@ class RxState<T> {
     }
   }
 
-  /// 触发字段监听器
-  void _notifyFieldListeners(dynamic field) {
-    dynamic fieldValue;
-    if (_value is Map) {
-      fieldValue = (_value as Map)[field];
-    } else if (_value is List && field is int) {
-      fieldValue = (_value as List)[field];
-    } else {
-      fieldValue = _value;
-    }
+  void _notifyFieldListeners(dynamic field, bool notifyGlobal) {
+    final listeners = _fieldListeners[field]?.toList();
 
-    // 触发字段专属监听器（遍历副本，避免遍历中修改）
-    _fieldListeners[field]?.toList().forEach((listener) => listener(fieldValue));
-    // 触发整体监听器（保证依赖追踪不遗漏）
-    _notifyListeners(id);
+    if (listeners != null) {
+      final map = _value as Map;
+      final fieldValue = map[field];
+
+      for (final l in listeners) {
+        l(fieldValue);
+      }
+    }
+    if (notifyGlobal) {
+      // ✅ 永远触发全局监听
+      _notifyListeners(id);
+    }
   }
 
   void addListener(void Function(dynamic) listener) {
@@ -181,27 +212,59 @@ class RxState<T> {
     };
   }
 
-  // 监听字段变化，支持取消监听
-  void Function() listenField(dynamic field, void Function(dynamic value) onData) {
-    void wrapper(dynamic value) => onData(value);
-    addFieldListener(field, wrapper);
-
-    // 立即返回当前字段值
-    dynamic initialValue;
-    if (_value is Map) {
-      initialValue = (_value as Map)[field];
-    } else if (_value is List && field is int) {
-      initialValue = (_value as List)[field];
-    } else {
-      initialValue = _value;
+// ✅ 新增：按条件监听（核心能力）
+  void Function() listenWhere(
+    bool Function(dynamic item) test,
+    void Function(dynamic item) onData,
+  ) {
+    void wrapper(dynamic _) {
+      if (_value is Map) {
+        if (test(_value)) {
+          onData(_value);
+        } else {
+          onData(null);
+        }
+      } else {
+        onData(_value);
+      }
     }
-    onData(initialValue);
 
-    // 增加防重复调用标记
+    _listeners.add(wrapper);
+
+    // ✅ 初始触发
+    wrapper(_value);
+
+    bool disposed = false;
+    return () {
+      if (!disposed) {
+        _listeners.remove(wrapper);
+        disposed = true;
+      }
+    };
+  }
+
+// ✅ listenByKey：按 key 监听 Map 中的值变化 丢弃 list数据监控 index 会随时变化不稳定
+  void Function() listenByKey(
+    dynamic key,
+    void Function(dynamic value) onData,
+  ) {
+    if (_value is! Map) {
+      RxDebug.log("❌ listenByKey 只能用于 Map");
+      return () {};
+    }
+
+    void wrapper(dynamic value) => onData(value);
+
+    addFieldListener(key, wrapper);
+
+    // 初始值
+    final map = _value as Map;
+    onData(map[key]);
+
     bool cancelled = false;
     return () {
       if (!cancelled) {
-        removeFieldListener(field, wrapper);
+        removeFieldListener(key, wrapper);
         cancelled = true;
       }
     };
@@ -223,5 +286,9 @@ class RxState<T> {
     _listeners.clear();
     _fieldListeners.clear();
     RxDebug.log("🧹 RxState(${name ?? id}) 已清理所有监听器");
+  }
+
+  void refresh() {
+    _notifyListeners(id); // 这里的 notifyListeners 是继承自 ChangeNotifier 的
   }
 }

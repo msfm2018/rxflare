@@ -21,7 +21,7 @@ void main() {
       int count = 0;
 
       state.listen((v) => count++);
-      state.value = 1; 
+      state.value = 1;
 
       expect(count, 1); // 仅初始触发
     });
@@ -45,23 +45,24 @@ void main() {
       final state = {"name": "Tom"}.obs;
       String? name;
 
-      state.listenField("name", (v) => name = v);
+      state.listenByKey("name", (v) => name = v);
       expect(name, "Tom");
 
-      state.updateField("name", "Jerry");
+      state.listenByKey("name", "Jerry");
       expect(name, "Jerry");
     });
 
-    test('List 字段监听', () {
-      final state = [1, 2, 3].obs;
-      int? item;
+    // 废弃 list监听
+    // test('List 字段监听', () {
+    //   final state = [1, 2, 3].obs;
+    //   int? item;
 
-      state.listenField(1, (v) => item = v);
-      expect(item, 2);
+    //   state.listenByKey(1, (v) => item = v);
+    //   expect(item, 2);
 
-      state.updateField(1, 99);
-      expect(item, 99);
-    });
+    //   state.updateField(1, 99);
+    //   expect(item, 99);
+    // });
   });
 
   group('依赖追踪与 Widget 测试', () {
@@ -106,7 +107,7 @@ void main() {
       state.dispose();
       state.value = 1;
 
-      expect(count, 1); 
+      expect(count, 1);
     });
 
     test('重复取消安全', () {

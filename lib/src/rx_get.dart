@@ -1,12 +1,10 @@
-
 import 'package:flutter/material.dart';
 import 'rx_debug.dart';
-
 
 class RxGet {
   // 1. 实例池：Key 可以是 Type，也可以是 String
   static final Map<Object, dynamic> _singletonMap = {};
-  
+
   // 2. 预约表 (懒加载)
   static final Map<Object, dynamic Function()> _factoryMap = {};
 
@@ -75,6 +73,11 @@ class _RxParentState<T> extends State<RxParent<T>> {
 
   @override
   void dispose() {
+    final instance = RxGet.find<T>(name: widget.name);
+    if (instance is dynamic) {
+      print("【调试日志】_RxParentState dispose 调用，实例 ${widget.name ?? T} ${instance.dispose != null ? '存在 dispose 方法' : '不存在 dispose 方法'}");
+      instance.dispose?.call();
+    }
     RxGet.delete<T>(name: widget.name);
     super.dispose();
   }

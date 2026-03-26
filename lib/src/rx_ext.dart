@@ -1,14 +1,5 @@
-// import 'rx_state.dart';
 
-// extension RxExtension<T> on T {
-//   // 基础类型的 .obs (int, String, bool)
-//   RxState<T> get obs => RxState<T>(this);
-// }
-
-// extension RxListExtension<E> on List<E> {
-//   // 专门给 List 用的 .obs，保持内部元素类型正确
-//   RxState<List<E>> get obs => RxState<List<E>>(this);
-// }
+import 'package:flutter/material.dart';
 
 import 'rx_debug.dart';
 import 'rx_state.dart';
@@ -39,6 +30,25 @@ extension RxMapExtension<K, V> on Map<K, V> {
 
 extension RxListExtension<E> on List<E> {
   RxState<List<E>> get obs => RxState<List<E>>(this);
+}
+
+
+extension RxListToState<T> on RxState<List<T>> {
+  bool contains(T element) => value.contains(element);
+  
+  void add(T element) {
+    value.add(element);
+    refresh(); // 自动触发 rxflare 的 UI 更新
+  }
+
+  void remove(T element) {
+    value.remove(element);
+    refresh();
+  }
+
+  bool get isEmpty => value.isEmpty;
+  bool get isNotEmpty => value.isNotEmpty;
+  int get length => value.length;
 }
 
 // ===== 操作增强 =====
@@ -86,5 +96,7 @@ extension RxAsyncExtension<T> on RxState<T> {
     }
   }
 }
+
+
 
 
