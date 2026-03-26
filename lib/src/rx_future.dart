@@ -63,6 +63,7 @@ class RxFuture<T> extends RxState<AsyncSnapshot<T>> {
     _subscribe(_loader());
   }
 
+  @override
   void refresh({bool force = false}) {
     if (_isRefreshing && !force) return;
     _isStale = true;

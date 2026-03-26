@@ -22,4 +22,8 @@ demo custom
 ## [1.1.1] - 2026-03-21
 ### Added
 - 逻辑更新
+## 1.1.3
 
+- Fixed analyzer warnings
+- Improved type safety in rx_get
+- Cleaned up documentation comments

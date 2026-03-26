@@ -1,25 +1,24 @@
 
-import 'package:flutter/material.dart';
 
 import 'rx_debug.dart';
 import 'rx_state.dart';
 extension RxIntExtension on int {
-  /// 将 int 转换为 RxState<int>
+  // 将 int 转换为 RxState<int>
   RxState<int> get obs => RxState<int>(this);
 }
 
 extension RxStringExtension on String {
-  /// 将 String 转换为 RxState<String>
+  // 将 String 转换为 RxState<String>
   RxState<String> get obs => RxState<String>(this);
 }
 
 extension RxBoolExtension on bool {
-  /// 将 bool 转换为 RxState<bool>
+  // 将 bool 转换为 RxState<bool>
   RxState<bool> get obs => RxState<bool>(this);
 }
 
 extension RxDoubleExtension on double {
-  /// 将 double 转换为 RxState<double>
+  // 将 double 转换为 RxState<double>
   RxState<double> get obs => RxState<double>(this);
 }
 
@@ -60,7 +59,7 @@ extension RxIntOps on RxState<int> {
 
 
 extension RxAsyncExtension<T> on RxState<T> {
-  /// 自动处理异步逻辑，支持重试机制
+  // 自动处理异步逻辑，支持重试机制
   Future<void> runAsync(
     Future<T> Function() task, {
     RxState<bool>? loadingState,
