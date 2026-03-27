@@ -28,6 +28,22 @@ class RxState<T> {
     }
   }
 
+// 👇 新增：字段级依赖注册
+  dynamic getItem(dynamic field) {
+    RxTrack.registerField(this, field);
+
+    if (_value is Map) {
+      return (_value as Map)[field];
+    } else if (_value is List && field is int) {
+      final list = _value as List;
+      if (field >= 0 && field < list.length) {
+        return list[field];
+      }
+    }
+
+    return null;
+  }
+
 // 内部监听接口：供 RxComputed 等组件绑定依赖
   void addInternalListener(void Function(dynamic) listener) {
     if (!_listeners.contains(listener)) {
@@ -93,7 +109,7 @@ class RxState<T> {
   void updateField<K extends Object>(
     K field,
     Object? newValue, {
-    bool notifyGlobal = true,
+    bool notifyGlobal = false,
   }) {
     // 改成 Object? 更宽松
     final current = _value;
@@ -102,20 +118,28 @@ class RxState<T> {
       return;
     }
 
-    // ─────────────── 核心改动在这里 ───────────────
     if (current is Map && current.containsKey(field)) {
       final oldFieldValue = current[field];
+
       if (!_deepEquals(oldFieldValue, newValue)) {
-        final newMap = {...current};
-        newMap[field] = newValue;
-
-        _value = newMap as T;
-
+        if (current is Map<String, Object>) {
+          final newMap = Map<String, Object>.of(current);
+          newMap[field as String] = newValue!;
+          _value = newMap as T;
+        } else if (current is Map<String, dynamic>) {
+          final newMap = Map<String, dynamic>.of(current);
+          newMap[field as String] = newValue!;
+          _value = newMap as T;
+        } else {
+          // 兜底处理普通 Map
+          final newMap = Map.from(current);
+          newMap[field] = newValue;
+          _value = newMap as T;
+        }
         _notifyFieldListeners(field, notifyGlobal);
       }
-      return; // 已经处理了 Map 情况，直接返回
+      return;
     }
-
     // // ❌ List 直接禁止
     // if (current is List) {
     //   RxDebug.log("❌ List 不支持 field 更新，请使用 Map + key");
@@ -129,15 +153,16 @@ class RxState<T> {
         RxDebug.log("⚠️ List index 越界: $index");
         return;
       }
-
+      // print("列表.....................");
       final oldItem = current[index];
-
+      // print(oldItem);
       if (_deepEquals(oldItem, newValue)) return;
 
       final newList = (current as List).toList();
-
+      // print(newList);
+      // print(newValue);
       newList[index] = newValue;
-
+      // print(newList);
       _value = newList as T;
 
       _notifyFieldListeners(field, notifyGlobal);
@@ -173,18 +198,32 @@ class RxState<T> {
   }
 
   void _notifyFieldListeners(dynamic field, bool notifyGlobal) {
+    // print("【_notifyFieldListeners】 field=$field, 当前_fieldListeners=$_fieldListeners");
+
     final listeners = _fieldListeners[field]?.toList();
 
-    if (listeners != null) {
-      final map = _value as Map;
-      final fieldValue = map[field];
+    if (listeners != null && listeners.isNotEmpty) {
+      print("→ 执行字段监听器，数量: ${listeners.length}");
+
+      dynamic fieldValue;
+
+      if (_value is Map) {
+        fieldValue = (_value as Map)[field];
+      } else if (_value is List && field is int) {
+        final list = _value as List;
+        if (field >= 0 && field < list.length) {
+          fieldValue = list[field];
+        }
+      }
 
       for (final l in listeners) {
         l(fieldValue);
       }
     }
+
+    // ✅ 只有明确要求才触发全局
     if (notifyGlobal) {
-      // ✅ 永远触发全局监听
+      print("→ 手动触发全局通知");
       _notifyListeners(id);
     }
   }
@@ -243,8 +282,39 @@ class RxState<T> {
     };
   }
 
-// ✅ listenByKey：按 key 监听 Map 中的值变化 丢弃 list数据监控 index 会随时变化不稳定
   void Function() listenByKey(
+    dynamic key,
+    void Function(dynamic value) onData,
+  ) {
+    void wrapper(dynamic value) => onData(value);
+
+    addFieldListener(key, wrapper);
+
+    // 初始值
+    dynamic fieldValue;
+
+    if (_value is Map) {
+      fieldValue = (_value as Map)[key];
+    } else if (_value is List && key is int) {
+      final list = _value as List;
+      if (key >= 0 && key < list.length) {
+        fieldValue = list[key];
+      }
+    }
+
+    onData(fieldValue);
+
+    bool cancelled = false;
+    return () {
+      if (!cancelled) {
+        removeFieldListener(key, wrapper);
+        cancelled = true;
+      }
+    };
+  }
+
+// ✅ listenByKey：按 key 监听 Map 中的值变化 丢弃 list数据监控 index 会随时变化不稳定
+  void Function() listenByKey11(
     dynamic key,
     void Function(dynamic value) onData,
   ) {

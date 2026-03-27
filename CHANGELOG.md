@@ -5,15 +5,15 @@
 ## 0.0.3
 
 * TODO:  add 
-rx_event_simple  
-rx_future 
+ rx_event_simple  
+ rx_future 
  RxValue<T> 
  RxStore<T> 
  RxNotifier<T>  
 demo custom
 
 ## 0.0.4
-修改了 demo
+ 修改了 demo
 
 ## [1.0.0] - 2026-03-18
 ### Added
@@ -27,3 +27,6 @@ demo custom
 - Fixed analyzer warnings
 - Improved type safety in rx_get
 - Cleaned up documentation comments
+## 1.1.4
+
+增加例子 列表字段更新 map字段更新
