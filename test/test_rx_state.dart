@@ -71,9 +71,9 @@ void main() {
       final b = 2.obs;
       final deps = <RxState>{};
 
-      RxTrack.startTracking(deps);
+      RxStack.push(deps);
       final sum = a.value + b.value;
-      RxTrack.stopTracking();
+      RxStack.pop();
 
       expect(deps.contains(a), true);
       expect(deps.contains(b), true);
@@ -84,11 +84,7 @@ void main() {
       final a = 1.obs;
       final b = 2.obs;
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Rx(() => Text('${a.value + b.value}', textDirection: TextDirection.ltr)),
-        ),
-      );
+      await tester.pumpWidget(MaterialApp(home: Rx(() => Text('${a.value + b.value}', textDirection: TextDirection.ltr))));
 
       expect(find.text('3'), findsOneWidget);
 

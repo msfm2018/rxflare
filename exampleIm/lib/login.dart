@@ -2,13 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:rxflare/rxflare.dart';
 import 'loginController.dart';
 
-
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final c = RxGet.find<LoginController>();
+    final c = RxObjMgr.find<LoginController>();
 
     return Scaffold(
       body: Center(
@@ -19,14 +18,18 @@ class LoginPage extends StatelessWidget {
             children: [
               const Icon(Icons.lock_person, size: 80, color: Colors.blueGrey),
               const SizedBox(height: 30),
-              TextField(controller: c.userCtrl, decoration: const InputDecoration(labelText: "账号")),
-              TextField(controller: c.pwdCtrl, decoration: const InputDecoration(labelText: "密码"), obscureText: true),
-              const SizedBox(height: 30),
-              
-              Rx(() => c.isLoading.value 
-                ? const CircularProgressIndicator() 
-                : _buildLoginButton(c)
+              TextField(
+                controller: c.userCtrl,
+                decoration: const InputDecoration(labelText: "账号"),
               ),
+              TextField(
+                controller: c.pwdCtrl,
+                decoration: const InputDecoration(labelText: "密码"),
+                obscureText: true,
+              ),
+              const SizedBox(height: 30),
+
+              Rx(() => c.isLoading.value ? const CircularProgressIndicator() : _buildLoginButton(c)),
             ],
           ),
         ),
@@ -46,4 +49,3 @@ class LoginPage extends StatelessWidget {
     );
   }
 }
-

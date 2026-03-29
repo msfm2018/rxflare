@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:rxflare/rxflare.dart';
 
@@ -18,7 +17,7 @@ class LoginController {
 
   void login() async {
     if (isLoading.value) return;
-    final auth = RxGet.find<AuthService>();
+    final auth = RxObjMgr.find<AuthService>();
     isLoading.value = true;
     try {
       await auth.login(userCtrl.text, pwdCtrl.text);

@@ -48,7 +48,7 @@ class PageB extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // 1. 根据名字查找，返回类型为 dynamic
-    final dynamic user = RxGet.find(name: "user_service");
+    final dynamic user = RxObjMgr.find(name: "user_service");
 
     return Scaffold(
       appBar: AppBar(title: Text("设置页面")),
@@ -75,8 +75,8 @@ class PageB extends StatelessWidget {
   }
 }
 
-同模块开发	RxGet.find<UserController>()	有提示，最安全。
-跨模块解耦	RxGet.find(name: "user_service")	零依赖，适合插件化。
+同模块开发	RxObjMgr.find<UserController>()	有提示，最安全。
+跨模块解耦	RxObjMgr.find(name: "user_service")	零依赖，适合插件化。
 自动回收	RxParent(name: "user_service")	随页面销毁，不占内存。
 
 放入 最顶层
@@ -94,7 +94,7 @@ void main() {
 处理工厂,         联动计算,           computed(() => ...)
 异步引擎,       异步请求+重试+缓存,    runAsyncWithCache
 渲染终端,       自动局部刷新,           Rx(() => ...)
-中央仓库,       跨页面共享,             RxGet.put / find
+中央仓库,       跨页面共享,             RxObjMgr.put / find
 
 
 数据层：RxState + .obs (支持 int, String, Map, List 等)。
@@ -103,4 +103,4 @@ void main() {
 
 视图层：RxObx / Rx (局部精准刷新)。
 
-注入层：RxGet (单例/懒加载/自动回收)。
+注入层：RxObjMgr (单例/懒加载/自动回收)。

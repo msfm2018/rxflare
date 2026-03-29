@@ -1,5 +1,3 @@
-
-
 import 'package:flutter/material.dart';
 import 'package:rxflare/rxflare.dart';
 
@@ -23,10 +21,10 @@ class _PublishMomentPageState extends State<PublishMomentPage> {
       return;
     }
 
-    final chat = RxGet.find<ChatService>();
+    final chat = RxObjMgr.find<ChatService>();
     // 调用 Service 的发布方法
     chat.postMoment(_textController.text, _selectedImages);
-    
+
     Navigator.pop(context); // 发布成功后返回
   }
 
@@ -72,10 +70,7 @@ class _PublishMomentPageState extends State<PublishMomentPage> {
             TextField(
               controller: _textController,
               maxLines: 5,
-              decoration: const InputDecoration(
-                hintText: "这一刻的想法...",
-                border: InputBorder.none,
-              ),
+              decoration: const InputDecoration(hintText: "这一刻的想法...", border: InputBorder.none),
             ),
             const SizedBox(height: 20),
             // 图片预览区 (九宫格布局)
@@ -92,30 +87,38 @@ class _PublishMomentPageState extends State<PublishMomentPage> {
       runSpacing: 10,
       children: [
         // 已选图片预览
-        ..._selectedImages.map((url) => Stack(
-          children: [
-            Container(
-              width: 80, height: 80,
-              decoration: BoxDecoration(
-                image: DecorationImage(image: NetworkImage(url), fit: BoxFit.cover),
-                borderRadius: BorderRadius.circular(4),
+        ..._selectedImages.map(
+          (url) => Stack(
+            children: [
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  image: DecorationImage(image: NetworkImage(url), fit: BoxFit.cover),
+                  borderRadius: BorderRadius.circular(4),
+                ),
               ),
-            ),
-            Positioned(
-              right: 0, top: 0,
-              child: GestureDetector(
-                onTap: () => setState(() => _selectedImages.remove(url)),
-                child: Container(color: Colors.black54, child: const Icon(Icons.close, size: 16, color: Colors.white)),
+              Positioned(
+                right: 0,
+                top: 0,
+                child: GestureDetector(
+                  onTap: () => setState(() => _selectedImages.remove(url)),
+                  child: Container(
+                    color: Colors.black54,
+                    child: const Icon(Icons.close, size: 16, color: Colors.white),
+                  ),
+                ),
               ),
-            ),
-          ],
-        )),
+            ],
+          ),
+        ),
         // “+” 号按钮
         if (_selectedImages.length < 9)
           GestureDetector(
             onTap: _pickImage,
             child: Container(
-              width: 80, height: 80,
+              width: 80,
+              height: 80,
               color: Colors.grey[100],
               child: const Icon(Icons.add, color: Colors.grey, size: 40),
             ),

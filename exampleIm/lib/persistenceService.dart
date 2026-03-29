@@ -11,7 +11,7 @@ class PersistenceService {
 
   PersistenceService() {
     try {
-      final chatService = RxGet.find<ChatService>();
+      final chatService = RxObjMgr.find<ChatService>();
       // 初始化监听所有现有对话
       for (var entry in chatService.messagesMap.entries) {
         watch(entry.key, entry.value);
@@ -22,10 +22,10 @@ class PersistenceService {
     }
   }
 
-  /// 为指定对话开启消息持久化监听
-  /// [chatId] 对话ID
-  /// [msgsRx] 消息列表的响应式对象
-void watch(String chatId, RxValue<List<Message>> msgsRx) {
+  // 为指定对话开启消息持久化监听
+  // [chatId] 对话ID
+  // [msgsRx] 消息列表的响应式对象
+  void watch(String chatId, RxValue<List<Message>> msgsRx) {
     if (_activeIds.contains(chatId)) {
       RxDebug.log("⚠️ [持久化] 对话 $chatId 已开启监听，跳过");
       return;
@@ -33,13 +33,13 @@ void watch(String chatId, RxValue<List<Message>> msgsRx) {
 
     try {
       _activeIds.add(chatId);
-      
+
       final cancel = msgsRx.listen((newMsgs) {
         if (newMsgs.isEmpty) return;
-        
+
         // 现在 lastMsg 是 Message 类型了
-        final Message lastMsg = newMsgs.last; 
-        
+        final Message lastMsg = newMsgs.last;
+
         // ✅ 这里的访问方式从 lastMsg['text'] 变成 lastMsg.text
         RxDebug.log("💾 [DB写入] 对话 $chatId -> 内容: ${lastMsg.text}");
       });
@@ -52,7 +52,7 @@ void watch(String chatId, RxValue<List<Message>> msgsRx) {
     }
   }
 
-  /// 手动取消单个对话的监听（可选扩展）
+  // 手动取消单个对话的监听（可选扩展）
   void unwatch(String chatId) {
     if (_cancelTasks.containsKey(chatId)) {
       _cancelTasks[chatId]!(); // 执行取消函数
@@ -62,7 +62,7 @@ void watch(String chatId, RxValue<List<Message>> msgsRx) {
     }
   }
 
-  /// 释放所有资源（必须调用，如页面销毁时）
+  // 释放所有资源（必须调用，如页面销毁时）
   void dispose() {
     // 遍历执行所有取消函数，真正释放监听器
     for (var cancelFunc in _cancelTasks.values) {

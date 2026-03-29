@@ -6,24 +6,20 @@ class RxContext {
   final Map<RxState, Set<dynamic>> fields = {};
 }
 
-class RxTrack {
+class RxStack {
   // 🔥 改为栈结构，存储嵌套的上下文
   static final List<RxContext> _stack = [];
 
   // 获取当前最顶层的上下文（即当前正在构建的那个 Rx Widget）
   static RxContext? get _current => _stack.isNotEmpty ? _stack.last : null;
 
-  // ✅ 开始追踪：入栈
-  static void startTracking(RxContext ctx) {
+  static void push(RxContext ctx) {
     _stack.add(ctx);
-    RxDebug.log("🔍 [开始追踪] 当前深度: ${_stack.length}");
   }
 
-  // ✅ 结束追踪：出栈
-  static void stopTracking() {
+  static void pop() {
     if (_stack.isNotEmpty) {
       _stack.removeLast();
-      RxDebug.log("✅ [停止追踪] 剩余深度: ${_stack.length}");
     }
   }
 

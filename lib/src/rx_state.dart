@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'rx_track.dart';
+import 'rx_stack.dart';
 import 'rx_debug.dart';
 
 int _rxStateCounter = 0;
@@ -9,6 +9,7 @@ class RxState<T> {
   final String? name;
   T _value;
   final List<void Function(dynamic)> _listeners = [];
+  final List<void Function(dynamic)> _listenersWithId = []; // 👈 带 id
   final Map<dynamic, List<void Function(dynamic)>> _fieldListeners = {};
   RxState(this._value, {dynamic id, String? name})
       : id = id ?? Object(),
@@ -17,7 +18,7 @@ class RxState<T> {
   }
 
   T get value {
-    RxTrack.register(this);
+    RxStack.register(this);
     return _value;
   }
 
@@ -28,9 +29,9 @@ class RxState<T> {
     }
   }
 
-// 👇 新增：字段级依赖注册
+  // 👇 新增：字段级依赖注册
   dynamic getItem(dynamic field) {
-    RxTrack.registerField(this, field);
+    RxStack.registerField(this, field);
 
     if (_value is Map) {
       return (_value as Map)[field];
@@ -44,14 +45,14 @@ class RxState<T> {
     return null;
   }
 
-// 内部监听接口：供 RxComputed 等组件绑定依赖
+  // 内部监听接口：供 RxComputed 等组件绑定依赖
   void addInternalListener(void Function(dynamic) listener) {
     if (!_listeners.contains(listener)) {
       _listeners.add(listener);
     }
   }
 
-// 2. 这里的 internalUpdate 就是 RxComputed 会调用的“后门”
+  // 2. 这里的 internalUpdate 就是 RxComputed 会调用的“后门”
   void internalUpdate(T newValue) {
     if (!_deepEquals(_value, newValue)) {
       _value = newValue;
@@ -64,7 +65,6 @@ class RxState<T> {
     if (a is List && b is List) return listEquals(a, b);
     return a == b;
   }
-  // void update2(T newValue) => value = newValue;
 
   void update(dynamic newValue) {
     final current = _value;
@@ -87,9 +87,7 @@ class RxState<T> {
     }
 
     if (current is int && newValue is double) {
-      RxDebug.log(
-        "⚠️ RxState(${name ?? id}): double → int 可能丢失精度: $newValue",
-      );
+      RxDebug.log("⚠️ RxState(${name ?? id}): double → int 可能丢失精度: $newValue");
 
       final converted = newValue.toInt();
 
@@ -106,12 +104,7 @@ class RxState<T> {
     );
   }
 
-  void updateField<K extends Object>(
-    K field,
-    Object? newValue, {
-    bool notifyGlobal = false,
-  }) {
-    // 改成 Object? 更宽松
+  void updateField<K extends Object>(K field, Object? newValue, {bool notifyGlobal = false}) {
     final current = _value;
     if (current == null) {
       RxDebug.log("⚠️ RxState(${name ?? id}) 值为 null，无法更新字段 $field");
@@ -153,16 +146,11 @@ class RxState<T> {
         RxDebug.log("⚠️ List index 越界: $index");
         return;
       }
-      // print("列表.....................");
       final oldItem = current[index];
-      // print(oldItem);
       if (_deepEquals(oldItem, newValue)) return;
 
       final newList = (current as List).toList();
-      // print(newList);
-      // print(newValue);
       newList[index] = newValue;
-      // print(newList);
       _value = newList as T;
 
       _notifyFieldListeners(field, notifyGlobal);
@@ -198,13 +186,9 @@ class RxState<T> {
   }
 
   void _notifyFieldListeners(dynamic field, bool notifyGlobal) {
-    // print("【_notifyFieldListeners】 field=$field, 当前_fieldListeners=$_fieldListeners");
-
     final listeners = _fieldListeners[field]?.toList();
 
     if (listeners != null && listeners.isNotEmpty) {
-      print("→ 执行字段监听器，数量: ${listeners.length}");
-
       dynamic fieldValue;
 
       if (_value is Map) {
@@ -223,7 +207,7 @@ class RxState<T> {
 
     // ✅ 只有明确要求才触发全局
     if (notifyGlobal) {
-      print("→ 手动触发全局通知");
+      // print("→ 手动触发全局通知");
       _notifyListeners(id);
     }
   }
@@ -234,8 +218,16 @@ class RxState<T> {
     }
   }
 
-  // 监听值的变化，并立即返回当前最新的值
-  // 返回一个函数，方便外部取消监听（类似 StreamSubscription）
+  void addListenerWithId(void Function(dynamic) listener) {
+    if (!_listenersWithId.contains(listener)) {
+      _listenersWithId.add(listener);
+    }
+  }
+
+  // final count = 0.obs;
+  // count.listen((v) {
+  //   print(v);
+  // });
   void Function() listen(void Function(T value) onData) {
     void wrapper(dynamic _) => onData(_value);
     _listeners.add(wrapper);
@@ -251,11 +243,28 @@ class RxState<T> {
     };
   }
 
-// ✅ 新增：按条件监听（核心能力）
-  void Function() listenWhere(
-    bool Function(dynamic item) test,
-    void Function(dynamic item) onData,
-  ) {
+  // count.listenWithId((v, id) {
+  //   print("value: $v, from: $id");
+  // });
+  void Function() listenWithId(void Function(T value, dynamic id) onData) {
+    void wrapper(dynamic id) => onData(_value, id);
+
+    _listenersWithId.add(wrapper);
+
+    // 初始触发
+    onData(_value, this.id);
+
+    bool disposed = false;
+    return () {
+      if (!disposed) {
+        _listenersWithId.remove(wrapper);
+        disposed = true;
+      }
+    };
+  }
+
+  // 按条件监听
+  void Function() listenWhere(bool Function(dynamic item) test, void Function(dynamic item) onData) {
     void wrapper(dynamic _) {
       if (_value is Map) {
         if (test(_value)) {
@@ -282,10 +291,7 @@ class RxState<T> {
     };
   }
 
-  void Function() listenByKey(
-    dynamic key,
-    void Function(dynamic value) onData,
-  ) {
+  void Function() listenByKey(dynamic key, void Function(dynamic value) onData) {
     void wrapper(dynamic value) => onData(value);
 
     addFieldListener(key, wrapper);
@@ -313,41 +319,19 @@ class RxState<T> {
     };
   }
 
-// ✅ listenByKey：按 key 监听 Map 中的值变化 丢弃 list数据监控 index 会随时变化不稳定
-  void Function() listenByKey11(
-    dynamic key,
-    void Function(dynamic value) onData,
-  ) {
-    if (_value is! Map) {
-      RxDebug.log("❌ listenByKey 只能用于 Map");
-      return () {};
-    }
-
-    void wrapper(dynamic value) => onData(value);
-
-    addFieldListener(key, wrapper);
-
-    // 初始值
-    final map = _value as Map;
-    onData(map[key]);
-
-    bool cancelled = false;
-    return () {
-      if (!cancelled) {
-        removeFieldListener(key, wrapper);
-        cancelled = true;
-      }
-    };
-  }
-
   void removeListener(void Function(dynamic) listener) {
     _listeners.remove(listener);
   }
 
   void _notifyListeners(dynamic id) {
     // 倒序遍历可以安全地在循环中删除元素，且不产生额外对象
+    // print("→ 执行全局监听器，数量: ${_listeners.length} , $_listeners");
     for (var i = _listeners.length - 1; i >= 0; i--) {
       _listeners[i](id);
+    }
+    // 🔹 带 id（高级用法）
+    for (var i = _listenersWithId.length - 1; i >= 0; i--) {
+      _listenersWithId[i](id);
     }
   }
 

@@ -12,12 +12,12 @@ void main() {
   RxDebug.isEnabled = false;
 
   // 注入服务
-  RxGet.put(AuthService());
+  RxObjMgr.put(AuthService());
   // 2. 注入数据源 (ChatService)
-  RxGet.put(ChatService());
-  // RxGet.put(ChatService());
+  RxObjMgr.put(ChatService());
+  // RxObjMgr.put(ChatService());
   // 3. 启动持久化服务（它一创建就会开始监听 messagesMap）
-  RxGet.put(PersistenceService());
+  RxObjMgr.put(PersistenceService());
   runApp(const MyApp());
 }
 
@@ -29,7 +29,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       home: Rx(() {
-        final auth = RxGet.find<AuthService>();
+        final auth = RxObjMgr.find<AuthService>();
         if (auth.isLogin.value) {
           return const WeChatMainPage();
         } else {
@@ -42,10 +42,7 @@ class MyApp extends StatelessWidget {
 
 // 需要内存释放的 都放到 RxParent 中
 Widget getLoginPage() {
-  return RxParent<LoginController>(
-    dependency: LoginController(), 
-    child: const LoginPage(), 
-  );
+  return RxParent<LoginController>(dependency: LoginController(), child: const LoginPage());
 }
 
 // class ChatService {

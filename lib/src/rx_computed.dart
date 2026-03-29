@@ -1,17 +1,17 @@
 import 'rx_state.dart';
-import 'rx_track.dart';
+import 'rx_stack.dart';
 import 'rx_debug.dart';
 
-/// 全局辅助函数
+// 全局辅助函数
 RxComputed<T> computed<T>(T Function() fn) => RxComputed<T>(fn);
 
 class RxComputed<T> extends RxState<T> {
   final T Function() compute;
 
-  /// 🔥 记录依赖（state）
+  // 🔥 记录依赖（state）
   final Set<RxState> _deps = {};
 
-  /// 🔥 记录依赖（field）
+  // 🔥 记录依赖（field）
   final Map<RxState, Set<dynamic>> _fieldDeps = {};
 
   RxComputed(this.compute) : super(compute()) {
@@ -19,23 +19,23 @@ class RxComputed<T> extends RxState<T> {
   }
 
   void _init() {
-    _recomputeAndTrack();
+    _updateValueAndDeps();
     RxDebug.log("🧬 RxComputed(id: $id) 初始化完成");
   }
 
-  /// =========================
-  /// 🔥 核心：重算 + 依赖追踪
-  /// =========================
-  void _recomputeAndTrack() {
+  // =========================
+  // 🔥 核心：重算 + 依赖追踪
+  // =========================
+  void _updateValueAndDeps() {
     final ctx = RxContext();
 
     // 1️⃣ 开启追踪
-    RxTrack.startTracking(ctx);
+    RxStack.push(ctx);
 
     final newValue = compute();
 
     // 2️⃣ 停止追踪
-    RxTrack.stopTracking();
+    RxStack.pop();
 
     // 3️⃣ 更新值
     internalUpdate(newValue);
@@ -44,9 +44,9 @@ class RxComputed<T> extends RxState<T> {
     _updateDeps(ctx);
   }
 
-  /// =========================
-  /// 🔥 依赖 diff 更新（核心）
-  /// =========================
+  // =========================
+  // 🔥 依赖 diff 更新（核心）
+  // =========================
   void _updateDeps(RxContext ctx) {
     final newStates = ctx.states;
     final newFields = ctx.fields;
@@ -54,11 +54,11 @@ class RxComputed<T> extends RxState<T> {
     // ========= state =========
 
     for (final dep in _deps.difference(newStates)) {
-      dep.removeListener(_onDependencyChanged);
+      dep.removeListener(refresh);
     }
 
     for (final dep in newStates.difference(_deps)) {
-      dep.addInternalListener(_onDependencyChanged);
+      dep.addInternalListener(refresh);
     }
 
     _deps
@@ -72,7 +72,7 @@ class RxComputed<T> extends RxState<T> {
       final newFs = newFields[state] ?? {};
 
       for (final field in oldFields.difference(newFs)) {
-        state.removeFieldListener(field, _onDependencyChanged);
+        state.removeFieldListener(field, refresh);
       }
     });
 
@@ -81,7 +81,7 @@ class RxComputed<T> extends RxState<T> {
       final oldFs = _fieldDeps[state] ?? {};
 
       for (final field in newFs.difference(oldFs)) {
-        state.addFieldListener(field, _onDependencyChanged);
+        state.addFieldListener(field, refresh);
       }
     });
 
@@ -89,16 +89,14 @@ class RxComputed<T> extends RxState<T> {
       ..clear()
       ..addAll(newFields);
 
-    RxDebug.log(
-      "🧬 Computed 依赖更新: states=${_deps.length}, fields=${_fieldDeps.length}",
-    );
+    RxDebug.log("🧬 Computed 依赖更新: states=${_deps.length}, fields=${_fieldDeps.length}");
   }
 
-  /// =========================
-  /// 🔥 依赖变化触发
-  /// =========================
-  void _onDependencyChanged([dynamic _]) {
-    _recomputeAndTrack();
+  // =========================
+  // 🔥 依赖变化触发
+  // =========================
+  void refresh([dynamic _]) {
+    _updateValueAndDeps();
   }
 
   @override
@@ -110,13 +108,13 @@ class RxComputed<T> extends RxState<T> {
   void dispose() {
     // 清理 state
     for (final dep in _deps) {
-      dep.removeListener(_onDependencyChanged);
+      dep.removeListener(refresh);
     }
 
     // 清理 field
     _fieldDeps.forEach((state, fields) {
       for (final field in fields) {
-        state.removeFieldListener(field, _onDependencyChanged);
+        state.removeFieldListener(field, refresh);
       }
     });
 

@@ -29,9 +29,9 @@ class WeChatMainPage extends StatefulWidget {
 class _WeChatMainPageState extends State<WeChatMainPage> {
   final TextEditingController _inputController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  final auth = RxGet.find<AuthService>(); // 获取全局用户
+  final auth = RxObjMgr.find<AuthService>(); // 获取全局用户
   final isLoggingOut = false.obs;
-  final chat = RxGet.find<ChatService>();
+  final chat = RxObjMgr.find<ChatService>();
 
   @override
   void initState() {
@@ -47,7 +47,7 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
   }
 
   void _showAddMemberSheet(BuildContext context, ChatItem currentChat) {
-    final chat = RxGet.find<ChatService>();
+    final chat = RxObjMgr.find<ChatService>();
     // 使用 rxflare 局部变量记录选中的人
     final selectedIds = <String>[].obs;
 
@@ -149,7 +149,7 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
               onPressed: selectedIds.isEmpty
                   ? null
                   : () {
-                      final chatService = RxGet.find<ChatService>();
+                      final chatService = RxObjMgr.find<ChatService>();
 
                       // ✅ 关键：传入 selectedIds.value (List<String>)
                       chatService.createGroupFromChat(currentChat.id, selectedIds.value);
@@ -193,7 +193,7 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
     });
 
     chat.messagesMap[id] = newRxValue;
-    RxGet.find<PersistenceService>().watch(id, newRxValue);
+    RxObjMgr.find<PersistenceService>().watch(id, newRxValue);
 
     final newItem = ChatItem(id: id, type: "contact", name: name, msg: firstMsg, unread: 1, color: color, lastTime: DateTime.now().millisecondsSinceEpoch, isPinned: false);
 
@@ -793,7 +793,7 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
   void _showChatContextMenu(Offset position, ChatItem item) {
     // 直接使用 State 类的 context
     final overlay = Overlay.of(context);
-    final chat = RxGet.find<ChatService>();
+    final chat = RxObjMgr.find<ChatService>();
 
     late OverlayEntry entry;
 
@@ -1184,7 +1184,7 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
   }
 
   void _showMyProfile(BuildContext context) {
-    final auth = RxGet.find<AuthService>();
+    final auth = RxObjMgr.find<AuthService>();
 
     showDialog(
       context: context,
@@ -1215,7 +1215,7 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
 
                   const SizedBox(height: 6),
 
-                  /// 🆔 ID
+                  // 🆔 ID
                   Text(
                     "微信号：${user.id}", // 🔥 动态
                     style: const TextStyle(color: Colors.grey),
@@ -1225,7 +1225,7 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
 
                   const Divider(),
 
-                  /// ✏️ 编辑按钮
+                  // ✏️ 编辑按钮
                   ListTile(
                     leading: const Icon(Icons.edit),
                     title: const Text("编辑资料"),
@@ -1235,7 +1235,7 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
                     },
                   ),
 
-                  /// ⚙️ 设置
+                  // ⚙️ 设置
                   ListTile(leading: const Icon(Icons.settings), title: const Text("设置"), onTap: () {}),
                 ],
               ),
@@ -1331,7 +1331,7 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
   }
 
   Widget _buildContactCategoryList() {
-    final chat = RxGet.find<ChatService>();
+    final chat = RxObjMgr.find<ChatService>();
 
     return Rx(() {
       final query = contactSearchText.value.trim();
@@ -1427,7 +1427,7 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
   }
 
   Widget _buildEmbeddedContactList() {
-    final chat = RxGet.find<ChatService>();
+    final chat = RxObjMgr.find<ChatService>();
 
     return Rx(() {
       // ✅ 修复：直接过滤并转为 List<Contact>，不要转成 Map
@@ -1461,7 +1461,7 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
 
   // 模拟通讯录动态更新
   void _simulateNewContactRequest() {
-    final chat = RxGet.find<ChatService>();
+    final chat = RxObjMgr.find<ChatService>();
 
     // 找到“新的朋友”的索引
     int idx = chat.contactCategories.value.indexWhere((e) => e.id == "new_friends");
@@ -1488,7 +1488,7 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
     );
   }
 
-  /// 构建侧边栏功能图标（增加：Tooltip提示 + 鼠标手型）
+  // 构建侧边栏功能图标（增加：Tooltip提示 + 鼠标手型）
   Widget _buildNavIcon(IconData normalIcon, IconData selectedIcon, int index) {
     // 1. 定义提示文字
     String label = "";
@@ -1534,7 +1534,7 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
   }
 
   Widget _buildContactDetailArea() {
-    final chat = RxGet.find<ChatService>();
+    final chat = RxObjMgr.find<ChatService>();
 
     return Rx(() {
       final selectedId = chat.selectedContactId.value;
@@ -1573,7 +1573,7 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
 
   // ✅ 参数类型从 Map 改为 Contact
   Widget _buildContactInfoCard(Contact contact) {
-    final chat = RxGet.find<ChatService>();
+    final chat = RxObjMgr.find<ChatService>();
 
     return Container(
       color: const Color(0xFFF3F3F3),
@@ -1671,7 +1671,7 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
   }
 
   Widget _buildContactItem(Contact item) {
-    final chat = RxGet.find<ChatService>();
+    final chat = RxObjMgr.find<ChatService>();
 
     return Rx(() {
       bool isSelected = chat.selectedContactId.value == item.id;
@@ -1705,7 +1705,7 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
   // ✅ 参数 item 类型改为 Contact
   void _showContextMenu(Offset position, Contact item) {
     final overlay = Overlay.of(context);
-    final chat = RxGet.find<ChatService>();
+    final chat = RxObjMgr.find<ChatService>();
 
     late OverlayEntry entry;
 
@@ -1767,7 +1767,7 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
 
   // 模拟：从网络同步或手动添加一个新联系人
   void _simulateAddNewContact() {
-    final chat = RxGet.find<ChatService>();
+    final chat = RxObjMgr.find<ChatService>();
 
     // ✅ 1. 直接构造 Contact 对象，而不是 Map
     final newFriend = Contact(
