@@ -8,6 +8,195 @@
 </p>
 
 
+#  Demo 1：最基础用法（自动依赖）
+```
 
 
+class DemoPage extends StatelessWidget {
+  final count = 0.obs;
 
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text("Rx Demo")),
+      body: Center(
+        child: Rx(() {
+          return Text(
+            "count: ${count.value}",
+            style: TextStyle(fontSize: 24),
+          );
+        }),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          count.value++;
+        },
+        child: Icon(Icons.add),
+      ),
+    );
+  }
+}
+发生了什么？
+build → 访问 count.value → 自动收集依赖
+count.value++ → notify → Rx.refresh → setState
+```
+# Demo 2：多个状态自动依赖
+```class DemoPage2 extends StatelessWidget {
+  final count = 0.obs;
+  final name = "Tom".obs;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Rx(() {
+          return Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text("count: ${count.value}"),
+              Text("name: ${name.value}"),
+            ],
+          );
+        }),
+      ),
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          FloatingActionButton(
+            onPressed: () => count.value++,
+            child: Icon(Icons.add),
+          ),
+          SizedBox(height: 10),
+          FloatingActionButton(
+            onPressed: () => name.value = "Jerry",
+            child: Icon(Icons.person),
+          ),
+        ],
+      ),
+    );
+  }
+}```
+# Demo 3：Map + 字段级更新（核心能力）
+```class DemoPage3 extends StatelessWidget {
+  final user = {
+    "name": "Tom",
+    "age": 20,
+  }.obs;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+
+            // 🔥 只依赖 name
+            Rx(() {
+              return Text(
+                "name: ${user.getItem("name")}",
+                style: TextStyle(fontSize: 22),
+              );
+            }),
+
+            // 🔥 只依赖 age
+            Rx(() {
+              return Text(
+                "age: ${user.getItem("age")}",
+                style: TextStyle(fontSize: 22),
+              );
+            }),
+
+          ],
+        ),
+      ),
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          FloatingActionButton(
+            onPressed: () {
+              user.updateField("name", "Jerry");
+            },
+            child: Icon(Icons.person),
+          ),
+          SizedBox(height: 10),
+          FloatingActionButton(
+            onPressed: () {
+              user.updateField("age", 30);
+            },
+            child: Icon(Icons.cake),
+          ),
+        ],
+      ),
+    );
+  }
+}
+点击 name 按钮 → 只刷新 name 的 Rx
+点击 age 按钮 → 只刷新 age 的 Rx
+```
+# Demo 4：List + index 精准更新
+```class DemoPage4 extends StatelessWidget {
+  final list = ["A", "B", "C"].obs;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Column(
+        children: List.generate(3, (index) {
+          return Rx(() {
+            return Text(
+              "item $index: ${list.getItem(index)}",
+              style: TextStyle(fontSize: 20),
+            );
+          });
+        }),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          list.updateField(1, "🔥B changed");
+        },
+        child: Icon(Icons.edit),
+      ),
+    );
+  }
+}只刷新 index=1 的那一行
+```
+# Demo 5：手动依赖模式（你写的 Rx.custom）
+
+```class DemoPage5 extends StatelessWidget {
+  final count = 0.obs;
+  final name = "Tom".obs;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Rx.custom(
+          deps: [count], // 👈 只监听 count
+          builder: () {
+            return Text(
+              "count: ${count.value}, name: ${name.value}",
+              style: TextStyle(fontSize: 20),
+            );
+          },
+        ),
+      ),
+      floatingActionButton: Column(
+        children: [
+          FloatingActionButton(
+            onPressed: () => count.value++,
+            child: Icon(Icons.add),
+          ),
+          FloatingActionButton(
+            onPressed: () => name.value = "Jerry",
+            child: Icon(Icons.person),
+          ),
+        ],
+      ),
+    );
+  }
+}
+count 变化 → 刷新
+name 变化 → 不刷新
+手动控制依赖```
+​
