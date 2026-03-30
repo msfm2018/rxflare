@@ -1,5 +1,6 @@
 import 'rx_state.dart';
 import 'rx_debug.dart';
+import 'package:flutter/material.dart';
 
 typedef RxValue<T> = RxState<T>;
 typedef RxStore<T> = RxState<T>;
@@ -97,4 +98,8 @@ extension RxAsyncExtension<T> on RxState<T> {
       }
     }
   }
+}
+extension RxColorExtension on Color {
+  /// 将 Color 转换为 RxState<Color>
+  RxState<Color> get obs => RxState<Color>(this);
 }
