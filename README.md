@@ -572,3 +572,195 @@ class _UserPageState extends State<UserPage> {
   }
 }
 ```
+# RxObjMgr + RxParent
+# 最基础用法（手动 put / find）
+```
+class UserController {
+  String name = "Tom";
+}
+
+void main() {
+  // 注册
+  RxObjMgr.put(UserController());
+
+  // 获取
+  final c = RxObjMgr.find<UserController>();
+  print(c.name); // Tom
+}
+```
+# 2. 懒加载（lazyPut）
+```
+class ApiService {
+  ApiService() {
+    print("ApiService 创建了");
+  }
+}
+
+void main() {
+  RxObjMgr.lazyPut<ApiService>(() => ApiService());
+
+  // 此时还没创建
+
+  final api = RxObjMgr.find<ApiService>();
+  // 👉 这里才真正创建
+
+  final api2 = RxObjMgr.find<ApiService>();
+  // 👉 不会重复创建（单例）
+}
+```
+# 3. 多实例（name 区分）
+```
+class Counter {
+  int value = 0;
+}
+
+void main() {
+  RxObjMgr.put(Counter(), name: "A");
+  RxObjMgr.put(Counter(), name: "B");
+
+  final a = RxObjMgr.find<Counter>(name: "A");
+  final b = RxObjMgr.find<Counter>(name: "B");
+
+  a.value = 10;
+  b.value = 20;
+
+  print(a.value); // 10
+  print(b.value); // 20
+}
+```
+# 4
+```
+class CounterController {
+  int count = 0;
+
+  void increment() {
+    count++;
+  }
+
+  void dispose() {
+    print("Controller 被释放");
+  }
+}
+class CounterPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return RxParent<CounterController>(
+      dependency: CounterController(),
+      child: const CounterView(),
+    );
+  }
+}
+class CounterView extends StatefulWidget {
+  const CounterView({super.key});
+
+  @override
+  State<CounterView> createState() => _CounterViewState();
+}
+
+class _CounterViewState extends State<CounterView> {
+  late CounterController controller;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = RxObjMgr.find<CounterController>();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("DI 示例")),
+      body: Center(
+        child: Text("count: ${controller.count}"),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          setState(() {
+            controller.increment();
+          });
+        },
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
+}
+@override
+void dispose() {
+  final dynamic instance = RxObjMgr.find<T>(name: widget.name);
+  instance.dispose?.call(); // 自动调用
+  RxObjMgr.delete<T>(name: widget.name);
+}
+
+多页隔离
+RxParent<CounterController>(
+  name: "pageA",
+  dependency: CounterController(),
+  child: PageA(),
+)
+
+RxParent<CounterController>(
+  name: "pageB",
+  dependency: CounterController(),
+  child: PageB(),
+)
+获取
+final cA = RxObjMgr.find<CounterController>(name: "pageA");
+final cB = RxObjMgr.find<CounterController>(name: "pageB");
+
+结合 RxFuture（高级组合）
+class UserController {
+  late RxFuture<String> userRx;
+
+  UserController() {
+    userRx = RxFuture(() async {
+      await Future.delayed(Duration(seconds: 1));
+      return "用户数据";
+    });
+  }
+
+  void dispose() {
+    userRx.dispose();
+  }
+}
+class UserPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return RxParent<UserController>(
+      dependency: UserController(),
+      child: const UserView(),
+    );
+  }
+}
+使用
+class UserView extends StatefulWidget {
+  const UserView({super.key});
+
+  @override
+  State<UserView> createState() => _UserViewState();
+}
+
+class _UserViewState extends State<UserView> {
+  late UserController c;
+
+  @override
+  void initState() {
+    super.initState();
+    c = RxObjMgr.find<UserController>();
+
+    c.userRx.listen(() {
+      setState(() {});
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (c.userRx.isInitialLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    return Center(
+      child: Text(c.userRx.data ?? ""),
+    );
+  }
+}
+```
