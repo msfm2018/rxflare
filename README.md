@@ -764,3 +764,156 @@ class _UserViewState extends State<UserView> {
   }
 }
 ```
+
+#
+```
+final count = RxState<int>(0);
+
+// 监听
+final cancel = count.listen((v) {
+  print("count: $v");
+});
+
+// 更新
+count.value = 1;
+count.update(2);
+
+// 取消监听
+cancel();
+2. 带来源 ID（调试神器）
+final state = RxState<int>(0, name: "counter");
+
+state.listenWithId((value, id) {
+  print("value: $value, 来自: $id");
+});
+
+state.value = 10;
+state.refresh(); // 手动触发
+
+3. Map 精准监听（🔥核心能力）
+final user = RxState<Map<String, dynamic>>({
+  "name": "Tom",
+  "age": 20,
+});
+
+// 只监听 name
+final cancel = user.listenByKey("name", (v) {
+  print("name 变了: $v");
+});
+
+// 更新 name
+user.updateField("name", "Jerry");
+
+// 更新 age（不会触发）
+user.updateField("age", 30);
+
+4. List 精准监听
+final list = RxState<List<int>>([1, 2, 3]);
+
+list.listenByKey(1, (v) {
+  print("index 1: $v");
+});
+
+list.updateField(1, 999); // ✅ 触发
+list.updateField(0, 111); // ❌ 不触发
+
+5. 条件监听（listenWhere）
+final data = RxState<Map<String, dynamic>>({
+  "score": 50,
+});
+
+data.listenWhere(
+  (map) => map["score"] >= 60,
+  (v) {
+    print("是否及格: $v");
+  },
+);
+
+data.updateField("score", 70);
+
+6. 局部更新 vs 全局更新
+
+final user = RxState<Map<String, dynamic>>({
+  "name": "Tom",
+  "age": 20,
+});
+
+user.listen((v) {
+  print("全局更新: $v");
+});
+
+user.listenByKey("name", (v) {
+  print("name 更新: $v");
+});
+
+// 默认：只触发 field
+user.updateField("name", "Jerry");
+
+// 强制触发全局
+user.updateField("name", "Jack", notifyGlobal: true);
+
+7. Flutter UI 实战
+final counter = RxState<int>(0);
+class RxDemoPage extends StatefulWidget {
+  @override
+  State<RxDemoPage> createState() => _RxDemoPageState();
+}
+
+class _RxDemoPageState extends State<RxDemoPage> {
+  late VoidCallback cancel;
+
+  @override
+  void initState() {
+    super.initState();
+
+    cancel = counter.listen((_) {
+      setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    cancel();
+    counter.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("RxState Demo")),
+      body: Center(
+        child: Text("count: ${counter.value}"),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          counter.value++;
+        },
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
+}
+
+8. 表单场景（Map + 精准更新）
+final form = RxState<Map<String, dynamic>>({
+  "username": "",
+  "password": "",
+});
+
+监听单字段：
+form.listenByKey("username", (v) {
+  print("用户名输入: $v");
+});
+
+更新
+form.updateField("username", "admin");
+
+9. 高级组合（类似 computed）
+
+final a = RxState<int>(1);
+final b = RxState<int>(2);
+
+// 假设你有 RxComputed
+// final sum = RxComputed(() => a.value + b.value);
+```
