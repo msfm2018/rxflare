@@ -10,8 +10,6 @@
 
 #  Demo 1：最基础用法（自动依赖）
 ```
-
-
 class DemoPage extends StatelessWidget {
   final count = 0.obs;
 
@@ -274,4 +272,194 @@ a.value = 10;
 
 print(c.value); // 21
 ```
+# RxEventBus
+# 1. 基础使用（最简单）
+```
+  // 注册监听
+  RxEventBus.on<String>(
+    module: "user",
+    eventID: 1,
+    callback: (eventID, uuid, data) async {
+      print("收到事件: $data");
+    },
+  );
 
+  // 发送事件
+  RxEventBus.notify<String>(
+    module: "user",
+    eventID: 1,
+    data: "Hello EventBus",
+  );
+```
+# 2. 强类型（泛型 T）
+```
+class User {
+  final String name;
+  User(this.name);
+}
+
+void main() {
+  RxEventBus.on<User>(
+    module: "user",
+    eventID: 2,
+    callback: (id, uuid, user) async {
+      print("用户: ${user.name}");
+    },
+  );
+
+  RxEventBus.notify<User>(
+    module: "user",
+    eventID: 2,
+    data: User("Tom"),
+  );
+}
+```
+# 3. 取消监听（off）
+```
+late EventCallback<String> cb;
+
+void main() {
+  cb = (id, uuid, data) async {
+    print("监听: $data");
+  };
+
+  RxEventBus.on<String>(
+    module: "test",
+    eventID: 1,
+    callback: cb,
+  );
+
+  RxEventBus.notify(module: "test", eventID: 1, data: "第一次");
+
+  // 移除
+  RxEventBus.off(
+    module: "test",
+    eventID: 1,
+    callback: cb,
+  );
+
+  RxEventBus.notify(module: "test", eventID: 1, data: "第二次");
+}
+```
+# 4. 使用 Token 批量移除（推荐）
+```
+void main() {
+  final token = EventToken();
+
+  RxEventBus.on<String>(
+    module: "chat",
+    eventID: 1,
+    token: token,
+    callback: (id, uuid, data) async {
+      print("A: $data");
+    },
+  );
+
+  RxEventBus.on<String>(
+    module: "chat",
+    eventID: 1,
+    token: token,
+    callback: (id, uuid, data) async {
+      print("B: $data");
+    },
+  );
+
+  RxEventBus.notify(module: "chat", eventID: 1, data: "hello");
+
+  // 一键移除
+  RxEventBus.offByToken(token);
+
+  RxEventBus.notify(module: "chat", eventID: 1, data: "world");
+}
+```
+# 5. Sticky 事件（后注册也能收到）
+```
+void main() {
+  // 先发送（sticky）
+  RxEventBus.notify<String>(
+    module: "config",
+    eventID: 1,
+    data: "配置已加载",
+    sticky: true,
+  );
+
+  // 后注册仍然会收到
+  RxEventBus.on<String>(
+    module: "config",
+    eventID: 1,
+    sticky: true,
+    callback: (id, uuid, data) async {
+      print("收到 sticky: $data");
+    },
+  );
+}
+```
+# 6. 优先级（high / normal / low）
+```
+void main() {
+  RxEventBus.on<String>(
+    module: "priority",
+    eventID: 1,
+    callback: (id, uuid, data) async {
+      print("执行: $data");
+    },
+  );
+
+  RxEventBus.notify(
+    module: "priority",
+    eventID: 1,
+    data: "普通",
+    priority: EventPriority.normal,
+  );
+
+  RxEventBus.notify(
+    module: "priority",
+    eventID: 1,
+    data: "高优先级",
+    priority: EventPriority.high,
+  );
+
+  RxEventBus.notify(
+    module: "priority",
+    eventID: 1,
+    data: "低优先级",
+    priority: EventPriority.low,
+  );
+}
+```
+# 7. 串行 vs 并行
+```
+RxEventBus.on<String>(
+  module: "task",
+  eventID: 1,
+  callback: (id, uuid, data) async {
+    await Future.delayed(Duration(milliseconds: 500));
+    print("任务1完成");
+  },
+);
+
+RxEventBus.on<String>(
+  module: "task",
+  eventID: 1,
+  callback: (id, uuid, data) async {
+    await Future.delayed(Duration(milliseconds: 500));
+    print("任务2完成");
+  },
+);
+
+// 并行（默认）
+RxEventBus.notify(
+  module: "task",
+  eventID: 1,
+  data: "",
+  parallel: true,
+);
+
+// 串行
+RxEventBus.notify(
+  module: "task",
+  eventID: 1,
+  data: "",
+  parallel: false,
+);
+```
