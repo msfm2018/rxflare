@@ -681,7 +681,6 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
 
   // --- 新增搜索词状态 ---
   final TextEditingController _searchController = TextEditingController();
-
   Widget _buildDynamicChatList() {
     return Column(
       children: [
@@ -709,9 +708,8 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
         // 2. 列表
         Expanded(
           child: Rx(() {
-            final filteredList = chat.chatList.value.where((item) {
-              return item.name.contains(searchText.value);
-            }).toList();
+            // 生成 filteredList，每次 Rx 更新都会重新计算
+            final filteredList = chat.chatList.value.where((item) => item.name.contains(searchText.value)).toList();
 
             if (filteredList.isEmpty) {
               return const Center(
@@ -722,39 +720,42 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
             return ListView.builder(
               itemCount: filteredList.length,
               itemBuilder: (context, index) {
-                final item = filteredList[index];
-                final id = item.id;
+                final id = filteredList[index].id;
 
                 return Rx(() {
+                  final currentItem = chat.chatList.value.firstWhere((e) => e.id == id);
                   final isSelected = chat.selectedId.value == id;
 
                   return GestureDetector(
                     onTap: () {
                       chat.selectedId.value = id;
 
-                      if (item.unread > 0) {
+                      if (currentItem.unread > 0) {
                         int originalIdx = chat.chatList.value.indexWhere((e) => e.id == id);
 
-                        final current = chat.chatList.value[originalIdx];
-
-                        chat.chatList.updateField(originalIdx, current.copyWith(unread: 0));
+                        chat.chatList.updateField(originalIdx, currentItem.copyWith(unread: 0));
                       }
 
                       _scrollToBottom();
                     },
-                    // 🔥 新增：处理鼠标右键点击
                     onSecondaryTapDown: (details) {
-                      _showChatContextMenu(details.globalPosition, item);
+                      _showChatContextMenu(details.globalPosition, currentItem);
                     },
                     child: Container(
                       padding: const EdgeInsets.all(12),
                       color: isSelected ? const Color(0xFFCBC9C8) : Colors.transparent,
                       child: Row(
                         children: [
-                          _buildAvatar(Contact(id: item.id, name: item.name, avatar: item.name.isNotEmpty ? item.name[0] : "?", color: item.color, type: item.type)),
-
+                          _buildAvatar(
+                            Contact(
+                              id: currentItem.id,
+                              name: currentItem.name,
+                              avatar: currentItem.name.isNotEmpty ? currentItem.name[0] : "?",
+                              color: currentItem.color,
+                              type: currentItem.type,
+                            ),
+                          ),
                           const SizedBox(width: 12),
-
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -762,14 +763,26 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
                                 Row(
                                   children: [
                                     Expanded(
-                                      child: Text(item.name, style: const TextStyle(fontSize: 14), overflow: TextOverflow.ellipsis),
+                                      child: Row(
+                                        children: [
+                                          Expanded(
+                                            child: Text(currentItem.name, style: const TextStyle(fontSize: 14), overflow: TextOverflow.ellipsis),
+                                          ),
+                                          if (currentItem.unread > 0)
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                              decoration: BoxDecoration(color: Colors.red, borderRadius: BorderRadius.circular(10)),
+                                              child: Text(currentItem.unread > 99 ? "99+" : "${currentItem.unread}", style: const TextStyle(color: Colors.white, fontSize: 10)),
+                                            ),
+                                        ],
+                                      ),
                                     ),
-                                    Text(formatTime(item.lastTime), style: const TextStyle(fontSize: 10, color: Colors.grey)),
+                                    Text(formatTime(currentItem.lastTime), style: const TextStyle(fontSize: 10, color: Colors.grey)),
                                   ],
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  item.msg,
+                                  currentItem.msg,
                                   style: const TextStyle(color: Colors.grey, fontSize: 12),
                                   overflow: TextOverflow.ellipsis,
                                 ),

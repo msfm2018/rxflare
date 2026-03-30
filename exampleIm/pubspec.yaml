@@ -30,7 +30,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  # rxflare: 1.1.6  # 请根据最新版本调整
+  # rxflare: 1.1.7  # 请根据最新版本调整
   rxflare:
     path: ../../RXFLARE  # 指向你克隆下来的本地文件夹路径
 

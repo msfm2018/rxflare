@@ -31,7 +31,7 @@ class ChatService {
   final chatList = [
     ChatItem(id: "s1", type: "service", name: "文件传输助手", msg: "等待接收文件...", unread: 0, color: Colors.green, lastTime: DateTime.now().millisecondsSinceEpoch, isPinned: false),
 
-    ChatItem(id: "g1", type: "group_chats", name: "拳之森林会员群", msg: "教练：下午有课", unread: 0, color: Colors.teal, lastTime: DateTime.now().millisecondsSinceEpoch - 2000, isPinned: false),
+    ChatItem(id: "g1", type: "group_chats", name: "拳之森林会员群", msg: "教练：下午有课", unread: 10, color: Colors.teal, lastTime: DateTime.now().millisecondsSinceEpoch - 2000, isPinned: false),
     ChatItem(id: "u1", type: "contact", name: "王小静", msg: "您好！", unread: 0, color: Colors.pinkAccent, lastTime: DateTime.now().millisecondsSinceEpoch - 3000, isPinned: false),
   ].obs;
 
