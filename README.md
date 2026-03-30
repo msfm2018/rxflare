@@ -75,8 +75,11 @@ count.value++ → notify → Rx.refresh → setState
       ),
     );
   }
-}```
+}
+```
+
 # Demo 3：Map + 字段级更新（核心能力）
+
 ```class DemoPage3 extends StatelessWidget {
   final user = {
     "name": "Tom",
@@ -198,5 +201,77 @@ count.value++ → notify → Rx.refresh → setState
 }
 count 变化 → 刷新
 name 变化 → 不刷新
-手动控制依赖```
-​
+手动控制依赖
+```
+
+# 示例 1：field 级别依赖（你的高级功能🔥）
+```​
+// final user = RxState<Map<String, dynamic>>({
+final user = RxState<Map>({
+  "name": "Tom",
+  "age": 18
+});
+final nameUpper = computed(() {
+  return user.value["name"].toUpperCase();
+});
+print(nameUpper.value); // 输出 "TOM"
+user.value = {...user.value, "name": "Jerry"};
+print(nameUpper.value); // 输出 "JERRY"
+```
+# 示例 2：最基础 computed
+```
+final count = RxState<int>(1);
+
+final doubleCount = computed(() => count.value * 2);
+
+print(doubleCount.value); // 2
+
+count.value = 5;
+
+print(doubleCount.value); // 10（自动更新）
+
+```
+# 示例 3：多个依赖
+```
+final a = RxState<int>(2);
+
+final b = computed(() => a.value * 2);
+final c = computed(() => b.value + 1);
+
+print(c.value); // 5
+
+a.value = 10;
+
+print(c.value); // 21
+```
+# 示例 4：依赖动态变化
+```
+final flag = RxState<bool>(true);
+final a = RxState<int>(1);
+final b = RxState<int>(100);
+
+final result = computed(() {
+  if (flag.value) {
+    return a.value;
+  } else {
+    return b.value;
+  }
+});
+print(result.value); // 1（依赖 a）
+
+flag.value = false;
+print(result.value); // 100（依赖变成 b）
+```
+# 示例 5：链式 computed
+```final a = RxState<int>(2);
+
+final b = computed(() => a.value * 2);
+final c = computed(() => b.value + 1);
+
+print(c.value); // 5
+
+a.value = 10;
+
+print(c.value); // 21
+```
+
