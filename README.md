@@ -463,3 +463,112 @@ RxEventBus.notify(
   parallel: false,
 );
 ```
+# RxFuture 
+# 示例：加载用户信息页面
+```
+Future<String> fetchUser() async {
+  await Future.delayed(const Duration(seconds: 2));
+
+  // 模拟随机失败
+  if (DateTime.now().second % 2 == 0) {
+    throw Exception("网络错误");
+  }
+
+  return "用户：Tom (${DateTime.now()})";
+}
+
+class UserPage extends StatefulWidget {
+  @override
+  State<UserPage> createState() => _UserPageState();
+}
+
+class _UserPageState extends State<UserPage> {
+  late RxFuture<String> rx;
+
+  @override
+  void initState() {
+    super.initState();
+    rx = RxFuture(fetchUser);
+
+    // 监听变化（假设 RxState 有 listen）
+    rx.listen(() {
+      setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    rx.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("RxFuture 示例")),
+      body: _buildBody(),
+    );
+  }
+
+  Widget _buildBody() {
+    // 🚀 1. 首次加载
+    if (rx.isInitialLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    // ❌ 2. 完全失败（没有数据）
+    if (rx.hasError && !rx.hasData) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text("加载失败: ${rx.error}"),
+            const SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: rx.retry,
+              child: const Text("重试"),
+            )
+          ],
+        ),
+      );
+    }
+
+    // ✅ 3. 有数据（核心）
+    return RefreshIndicator(
+      onRefresh: () async {
+        rx.refresh();
+      },
+      child: ListView(
+        children: [
+          ListTile(
+            title: Text(rx.data ?? ""),
+            subtitle: _buildStatus(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatus() {
+    // 🔄 正在刷新
+    if (rx.isRefreshing) {
+      return const Text("正在刷新...");
+    }
+
+    // ⚠️ 软错误（有数据但更新失败）
+    if (rx.hasSoftError) {
+      return Text(
+        "更新失败（显示旧数据）: ${rx.lastError}",
+        style: const TextStyle(color: Colors.orange),
+      );
+    }
+
+    // ♻️ 数据过期（stale）
+    if (rx.isStale) {
+      return const Text("数据更新中...");
+    }
+
+    return const Text("正常");
+  }
+}
+```
