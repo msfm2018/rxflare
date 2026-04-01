@@ -38,6 +38,67 @@ class DemoPage extends StatelessWidget {
 build → 访问 count.value → 自动收集依赖
 count.value++ → notify → Rx.refresh → setState
 ```
+# 一个 Rx 块 监听多个值
+```
+import 'package:flutter/material.dart';
+import 'package:rxflare/rxflare.dart';
+
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  // This widget is the root of your application.
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Flutter Demo',
+      theme: ThemeData(
+        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
+      ),
+      home: MultiRxDemo(),
+    );
+  }
+}
+
+class MultiRxDemo extends StatelessWidget {
+  // 1. 定义三个响应式变量
+  final name = "张三".obs;
+  final age = 20.obs;
+  final score = 100.obs;
+
+  MultiRxDemo({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('RxFlare 自动依赖追踪')),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // 2. 只需要一个 Rx 块，就能同时监听 name, age, score
+            // 只要其中任何一个值改变，这个 Text 就会自动重绘
+            Rx(() {
+              print("UI 重绘了！"); // 你可以观察控制台看它触发的时机
+              return Text('${name.value} (年龄: ${age.value}) 的分数是: ${score.value}', style: const TextStyle(fontSize: 20));
+            }),
+
+            const SizedBox(height: 30),
+
+            // 3. 修改数据的按钮
+            ElevatedButton(onPressed: () => name.value = "李四", child: const Text('改名字')),
+            ElevatedButton(onPressed: () => age.value++, child: const Text('长一岁')),
+            ElevatedButton(onPressed: () => score.value -= 5, child: const Text('扣 5 分')),
+          ],
+        ),
+      ),
+    );
+  }
+}
+```
 # Demo 2：多个状态自动依赖
 ```class DemoPage2 extends StatelessWidget {
   final count = 0.obs;
