@@ -4,24 +4,42 @@ import 'rx_debug.dart';
 
 int _rxStateCounter = 0;
 
+/// [RxState] 是响应式状态的基础单元。
+///
+/// 它封装了一个类型为 [T] 的值，并提供了自动依赖追踪和字段级（Map/List）更新机制
 class RxState<T> {
+  /// 唯一标识符，用于调试或在 [listenWithId] 中识别来源。
   final dynamic id;
+
+  /// 友好的名称，主要用于日志打印。
   final String? name;
   T _value;
   final List<void Function(dynamic)> _listeners = [];
   final List<void Function(dynamic)> _listenersWithId = []; // 👈 带 id
   final Map<dynamic, List<void Function(dynamic)>> _fieldListeners = {};
+
+  /// 创建一个响应式状态。
+  /// [id] 可选，默认为一个新的 [Object]。
+  /// [name] 可选，默认为 "RxState#序号"。
   RxState(this._value, {dynamic id, String? name})
       : id = id ?? Object(),
         name = name ?? "RxState#$_rxStateCounter" {
     _rxStateCounter++;
   }
 
+  bool _deepEquals(dynamic a, dynamic b) {
+    if (a is Map && b is Map) return mapEquals(a, b); // 需要 import 'package:flutter/foundation.dart';
+    if (a is List && b is List) return listEquals(a, b);
+    return a == b;
+  }
+
+  /// 获取当前值，并自动触发 [RxStack] 的依赖收集。
   T get value {
     RxStack.register(this);
     return _value;
   }
 
+  /// 设置新值。如果新旧值通过 [_deepEquals] 判断不一致，则触发全局监听器。
   set value(T newValue) {
     if (!_deepEquals(_value, newValue)) {
       _value = newValue;
@@ -29,7 +47,11 @@ class RxState<T> {
     }
   }
 
-  // 👇 新增：字段级依赖注册
+  /// 获取集合中的特定字段或索引。
+  ///
+  /// 如果 [T] 是 [Map]，[field] 为 Key。
+  /// 如果 [T] 是 [List]，[field] 为 [int] 类型的索引。
+  /// 调用此方法会注册字段级依赖，只有当该特定字段改变时才会触发监听。
   dynamic getItem(dynamic field) {
     RxStack.registerField(this, field);
 
@@ -60,12 +82,9 @@ class RxState<T> {
     }
   }
 
-  bool _deepEquals(dynamic a, dynamic b) {
-    if (a is Map && b is Map) return mapEquals(a, b); // 需要 import 'package:flutter/foundation.dart';
-    if (a is List && b is List) return listEquals(a, b);
-    return a == b;
-  }
-
+  /// 更新整个状态或尝试类型转换更新。
+  ///
+  /// 支持 double 和 int 之间的自动转换（带精度丢失警告）。
   void update(dynamic newValue) {
     final current = _value;
 
@@ -104,6 +123,11 @@ class RxState<T> {
     );
   }
 
+  /// 更新 Map 的特定 Key 或 List 的特定 Index。
+  ///
+  /// [field]: Map 的键或 List 的索引。
+  /// [newValue]: 新的值。
+  /// [notifyGlobal]: 是否同时触发监听 [value] 的全局监听器，默认为 false。
   void updateField<K extends Object>(K field, Object? newValue, {bool notifyGlobal = false}) {
     final current = _value;
     if (current == null) {
@@ -224,10 +248,9 @@ class RxState<T> {
     }
   }
 
-  // final count = 0.obs;
-  // count.listen((v) {
-  //   print(v);
-  // });
+  /// 监听值变化，并立即执行一次 [onData]。
+  ///
+  /// 返回一个取消监听的函数。
   void Function() listen(void Function(T value) onData) {
     void wrapper(dynamic _) => onData(_value);
     _listeners.add(wrapper);
@@ -291,6 +314,9 @@ class RxState<T> {
     };
   }
 
+  /// 监听特定字段的变化。
+  ///
+  /// 适用于只想在 Map 的某个 Key 变化时才刷新的场景。
   void Function() listenByKey(dynamic key, void Function(dynamic value) onData) {
     void wrapper(dynamic value) => onData(value);
 
@@ -335,13 +361,14 @@ class RxState<T> {
     }
   }
 
-  // 清理所有监听器，防止内存泄漏
+  /// 销毁状态，清空所有监听器。
   void dispose() {
     _listeners.clear();
     _fieldListeners.clear();
     RxDebug.log("🧹 RxState(${name ?? id}) 已清理所有监听器");
   }
 
+  /// 手动触发通知。
   void refresh() {
     _notifyListeners(id); // 这里的 notifyListeners 是继承自 ChangeNotifier 的
   }

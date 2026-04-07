@@ -2,6 +2,9 @@ import 'rx_state.dart';
 import 'rx_debug.dart';
 import 'package:flutter/material.dart';
 
+/// RxState 类型别名
+/// 
+/// 提供一些常用别名，方便快速书写：
 typedef RxValue<T> = RxState<T>;
 typedef RxStore<T> = RxState<T>;
 typedef RxNotifier<T> = RxState<T>;
@@ -9,66 +12,101 @@ typedef RxNotifier<T> = RxState<T>;
 typedef RxList<T> = RxState<List<T>>;
 typedef RxMap<K, V> = RxState<Map<K, V>>;
 
+/// ==============================
+/// 基础类型扩展
+/// ==============================
+
+/// 将 int 转换为 RxState<int>
 extension RxIntExtension on int {
-  // 将 int 转换为 RxState<int>
+  /// 将当前 int 包装成 RxState<int>
   RxState<int> get obs => RxState<int>(this);
 }
 
+/// 将 String 转换为 RxState<String>
 extension RxStringExtension on String {
-  // 将 String 转换为 RxState<String>
+  /// 将当前 String 包装成 RxState<String>
   RxState<String> get obs => RxState<String>(this);
 }
 
+/// 将 bool 转换为 RxState<bool>
 extension RxBoolExtension on bool {
-  // 将 bool 转换为 RxState<bool>
+  /// 将当前 bool 包装成 RxState<bool>
   RxState<bool> get obs => RxState<bool>(this);
 }
 
+/// 将 double 转换为 RxState<double>
 extension RxDoubleExtension on double {
-  // 将 double 转换为 RxState<double>
+  /// 将当前 double 包装成 RxState<double>
   RxState<double> get obs => RxState<double>(this);
 }
 
-// 甚至可以针对 Map 和 List 做扩展
+/// 将 Map 转换为 RxState<Map<K, V>>
 extension RxMapExtension<K, V> on Map<K, V> {
+  /// 将当前 Map 包装成 RxState<Map<K,V>>
   RxState<Map<K, V>> get obs => RxState<Map<K, V>>(this);
 }
 
+/// 将 List 转换为 RxState<List<E>>
 extension RxListExtension<E> on List<E> {
+  /// 将当前 List 包装成 RxState<List<E>>
   RxState<List<E>> get obs => RxState<List<E>>(this);
 }
 
+/// ==============================
+/// List 状态增强扩展
+/// ==============================
 extension RxListToState<T> on RxState<List<T>> {
+  /// 判断是否包含元素
   bool contains(T element) => value.contains(element);
 
+  /// 向列表添加元素，并刷新 UI
   void add(T element) {
     value.add(element);
-    refresh(); // 自动触发 rxflare 的 UI 更新
+    refresh(); // 自动触发 UI 更新
   }
 
+  /// 从列表移除元素，并刷新 UI
   void remove(T element) {
     value.remove(element);
     refresh();
   }
 
+  /// 判断是否为空
   bool get isEmpty => value.isEmpty;
+
+  /// 判断是否不为空
   bool get isNotEmpty => value.isNotEmpty;
+
+  /// 获取列表长度
   int get length => value.length;
 }
 
-// ===== 操作增强 =====
+/// ==============================
+/// int 类型操作增强
+/// ==============================
 extension RxIntOps on RxState<int> {
+  /// 自增
   void inc() => value++;
+
+  /// 自减
   void dec() => value--;
 }
 
+/// ==============================
+/// 异步任务扩展
+/// ==============================
 extension RxAsyncExtension<T> on RxState<T> {
-  // 自动处理异步逻辑，支持重试机制
+  /// 执行异步任务并自动更新状态
+  ///
+  /// [task] 异步函数，返回 T 类型结果
+  /// [loadingState] 可选的 RxState<bool>，用于表示加载状态
+  /// [retryCount] 重试次数，默认 3
+  /// [retryDelay] 每次重试间隔，默认 2 秒
   Future<void> runAsync(
     Future<T> Function() task, {
     RxState<bool>? loadingState,
-    int retryCount = 3, // 默认重试 3 次
-    Duration retryDelay = const Duration(seconds: 2), // 每次重试间隔 2 秒
+    int retryCount = 3,
+    Duration retryDelay = const Duration(seconds: 2),
   }) async {
     int attempts = 0;
     loadingState?.value = true;
@@ -87,10 +125,9 @@ extension RxAsyncExtension<T> on RxState<T> {
         return;
       } catch (e) {
         if (attempts > retryCount) {
-          // 尝试次数用尽
           RxDebug.log("❌ [${name ?? 'Rx'}] 经过 $retryCount 次重试后最终失败: $e");
           loadingState?.value = false;
-          rethrow; // 抛出错误供外部处理
+          rethrow;
         }
 
         RxDebug.log("⚠️ [${name ?? 'Rx'}] 第 $attempts 次尝试失败，正在等待重试...");
@@ -99,6 +136,10 @@ extension RxAsyncExtension<T> on RxState<T> {
     }
   }
 }
+
+/// ==============================
+/// Color 扩展
+/// ==============================
 extension RxColorExtension on Color {
   /// 将 Color 转换为 RxState<Color>
   RxState<Color> get obs => RxState<Color>(this);

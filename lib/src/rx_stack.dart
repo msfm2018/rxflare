@@ -1,40 +1,60 @@
 import 'rx_state.dart';
 import 'rx_debug.dart';
 
+/// RxContext 用于记录当前计算或构建期间的依赖状态
+///
+/// - [states] 保存当前计算依赖的 RxState 对象
+/// - [fields] 保存字段级别的依赖，key 为 RxState，value 为依赖的字段集合
 class RxContext {
+  /// 当前上下文中依赖的状态对象
   final Set<RxState> states = {};
+
+  /// 当前上下文中依赖的字段
   final Map<RxState, Set<dynamic>> fields = {};
 }
 
+/// RxStack 是 RxFlare 的依赖栈
+///
+/// 用于在响应式计算或 Widget 构建时追踪状态和字段依赖。
+/// 通过 push/pop 管理嵌套上下文，并提供注册方法。
 class RxStack {
-  // 🔥 改为栈结构，存储嵌套的上下文
+  /// 内部栈，用于存储嵌套上下文
   static final List<RxContext> _stack = [];
 
-  // 获取当前最顶层的上下文（即当前正在构建的那个 Rx Widget）
+  /// 获取当前顶层上下文
   static RxContext? get _current => _stack.isNotEmpty ? _stack.last : null;
 
+  /// 将上下文推入栈顶
   static void push(RxContext ctx) {
     _stack.add(ctx);
   }
 
+  /// 弹出栈顶上下文
   static void pop() {
     if (_stack.isNotEmpty) {
       _stack.removeLast();
     }
   }
 
-  // ✅ 注册 state 级依赖
+  /// 注册 state 级依赖
+  ///
+  /// [state] 要注册的 RxState
+  /// 会记录到当前上下文的 states 集合中
   static void register(RxState state) {
     final ctx = _current;
     if (ctx != null) {
-      // 避免重复打印，只有真正添加成功才 Log
+      // 仅在添加成功时打印日志
       if (ctx.states.add(state)) {
         RxDebug.log("➕ 绑定 State: ${state.name ?? state.id}");
       }
     }
   }
 
-  // ✅ 注册 field 级依赖
+  /// 注册字段级依赖
+  ///
+  /// [state] 所属 RxState
+  /// [field] 字段标识
+  /// 会记录到当前上下文的 fields 集合中
   static void registerField(RxState state, dynamic field) {
     final ctx = _current;
     if (ctx != null) {

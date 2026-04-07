@@ -18,7 +18,7 @@ class ContactCategory {
 }
 
 class ChatController {
-  final categories = RxList([ContactCategory(id: "new_friends", name: "新的朋友"), ContactCategory(id: "group_chats", name: "群聊")]);
+  final categories = RxList([ContactCategory(id: "new_friends", name: "新的朋友"), ContactCategory(id: "groupChats", name: "群聊")]);
 
   void addNewFriendRequest() {
     int idx = categories.value.indexWhere((e) => e.id == "new_friends");

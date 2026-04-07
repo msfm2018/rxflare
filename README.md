@@ -34,9 +34,7 @@ class DemoPage extends StatelessWidget {
     );
   }
 }
-发生了什么？
-build → 访问 count.value → 自动收集依赖
-count.value++ → notify → Rx.refresh → setState
+
 ```
 # 一个 Rx 块 监听多个值
 ```

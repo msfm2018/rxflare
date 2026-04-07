@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="API docs for the updateField method from the RxState class, for the Dart programming language.">
+  <title>updateField method - RxState class - rxflare library - Dart API</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../../static-assets/github.css?v1">
+  <link rel="stylesheet" href="../../static-assets/styles.css?v1">
+  <link rel="icon" href="../../static-assets/favicon.png?v1">
+  
+</head>
+
+<body data-base-href="../../" data-using-base-href="false" class="light-theme">
+<div id="overlay-under-drawer"></div>
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="../../index.html">rxflare</a></li>
+    <li><a href="../../rxflare/">rxflare.dart</a></li>
+    <li><a href="../../rxflare/RxState-class.html">RxState<span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span></a></li>
+    <li class="self-crumb">updateField&lt;<wbr><span class="type-parameter">K extends Object</span>&gt; method</li>
+  </ol>
+  <div class="self-name">updateField</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <button class="toggle" id="theme-button" title="Toggle between light and dark mode" aria-label="Light and dark mode toggle">
+    <span id="dark-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      dark_mode
+    </span>
+    <span id="light-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      light_mode
+    </span>
+  </button>
+</header>
+<main>
+<div
+    id="dartdoc-main-content"
+    class="main-content"
+    data-above-sidebar="rxflare&#47;RxState-class-sidebar.html"
+    data-below-sidebar="">
+    <div>
+<h1><span class="kind-method">updateField&lt;<wbr><span class="type-parameter">K extends Object</span>&gt;</span> method 
+</h1></div>
+
+    <section class="multi-line-signature">
+      
+<span class="returntype">void</span>
+<span class="name ">updateField</span>&lt;<wbr><span class="type-parameter">K extends Object</span>&gt;(<wbr><ol class="parameter-list"> <li><span class="parameter" id="updateField-param-field"><span class="type-annotation">K</span> <span class="parameter-name">field</span>, </span></li>
+<li><span class="parameter" id="updateField-param-newValue"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/Object-class.html">Object</a>?</span> <span class="parameter-name">newValue</span>, {</span></li>
+<li><span class="parameter" id="updateField-param-notifyGlobal"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">notifyGlobal</span> = <span class="default-value">false</span>, </span></li>
+</ol>})
+
+      
+
+    </section>
+    
+<section class="desc markdown">
+  <p>更新 Map 的特定 Key 或 List 的特定 Index。</p>
+<p><code>field</code>: Map 的键或 List 的索引。
+<code>newValue</code>: 新的值。
+<code>notifyGlobal</code>: 是否同时触发监听 <a href="../../rxflare/RxState/value.html">value</a> 的全局监听器，默认为 false。</p>
+</section>
+
+
+    
+<section class="summary source-code" id="source">
+  <h2><span>Implementation</span></h2>
+  <pre class="language-dart"><code class="language-dart">void updateField&lt;K extends Object&gt;(K field, Object? newValue, {bool notifyGlobal = false}) {
+  final current = _value;
+  if (current == null) {
+    RxDebug.log(&quot;⚠️ RxState(${name ?? id}) 值为 null，无法更新字段 $field&quot;);
+    return;
+  }
+
+  if (current is Map &amp;&amp; current.containsKey(field)) {
+    final oldFieldValue = current[field];
+
+    if (!_deepEquals(oldFieldValue, newValue)) {
+      if (current is Map&lt;String, Object&gt;) {
+        final newMap = Map&lt;String, Object&gt;.of(current);
+        newMap[field as String] = newValue!;
+        _value = newMap as T;
+      } else if (current is Map&lt;String, dynamic&gt;) {
+        final newMap = Map&lt;String, dynamic&gt;.of(current);
+        newMap[field as String] = newValue!;
+        _value = newMap as T;
+      } else {
+        &#47;&#47; 兜底处理普通 Map
+        final newMap = Map.from(current);
+        newMap[field] = newValue;
+        _value = newMap as T;
+      }
+      _notifyFieldListeners(field, notifyGlobal);
+    }
+    return;
+  }
+  &#47;&#47; &#47;&#47; ❌ List 直接禁止
+  &#47;&#47; if (current is List) {
+  &#47;&#47;   RxDebug.log(&quot;❌ List 不支持 field 更新，请使用 Map + key&quot;);
+  &#47;&#47;   return;
+  &#47;&#47; }
+
+  if (current is List &amp;&amp; field is int) {
+    final index = field;
+
+    if (index &lt; 0 || index &gt;= current.length) {
+      RxDebug.log(&quot;⚠️ List index 越界: $index&quot;);
+      return;
+    }
+    final oldItem = current[index];
+    if (_deepEquals(oldItem, newValue)) return;
+
+    final newList = (current as List).toList();
+    newList[index] = newValue;
+    _value = newList as T;
+
+    _notifyFieldListeners(field, notifyGlobal);
+    return;
+  }
+
+  &#47;&#47; 只有走到这里，才说明是非容器类型，才考虑整体替换
+  if (current != newValue) {
+    if (newValue is T) {
+      _value = newValue;
+      _notifyListeners(id);
+    } else {
+      RxDebug.log(&#39;⚠️ RxState(${name ?? id}) 更新字段 $field 类型不匹配: 期望 $T，实际 ${newValue.runtimeType}&#39;);
+    }
+  }
+}</code></pre>
+</section>
+
+
+  </div> <!-- /.main-content -->
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li><a href="../../index.html">rxflare</a></li>
+    <li><a href="../../rxflare/">rxflare</a></li>
+    <li><a href="../../rxflare/RxState-class.html">RxState<span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span></a></li>
+    <li class="self-crumb">updateField&lt;<wbr><span class="type-parameter">K extends Object</span>&gt; method</li>
+</ol>
+
+    <h5>RxState class</h5>
+    <div id="dartdoc-sidebar-left-content"></div>
+  </div><!--/.sidebar-offcanvas-->
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+</div><!--/.sidebar-offcanvas-->
+</main>
+<footer>
+  <span class="no-break">
+    rxflare
+      1.1.7
+  </span>
+  
+</footer>
+
+
+<script src="../../static-assets/highlight.pack.js?v1"></script>
+<script src="../../static-assets/docs.dart.js"></script>
+
+</body>
+</html>
+

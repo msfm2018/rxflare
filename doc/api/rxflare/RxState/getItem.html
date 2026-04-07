@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="API docs for the getItem method from the RxState class, for the Dart programming language.">
+  <title>getItem method - RxState class - rxflare library - Dart API</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../../static-assets/github.css?v1">
+  <link rel="stylesheet" href="../../static-assets/styles.css?v1">
+  <link rel="icon" href="../../static-assets/favicon.png?v1">
+  
+</head>
+
+<body data-base-href="../../" data-using-base-href="false" class="light-theme">
+<div id="overlay-under-drawer"></div>
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="../../index.html">rxflare</a></li>
+    <li><a href="../../rxflare/">rxflare.dart</a></li>
+    <li><a href="../../rxflare/RxState-class.html">RxState<span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span></a></li>
+    <li class="self-crumb">getItem method</li>
+  </ol>
+  <div class="self-name">getItem</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <button class="toggle" id="theme-button" title="Toggle between light and dark mode" aria-label="Light and dark mode toggle">
+    <span id="dark-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      dark_mode
+    </span>
+    <span id="light-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      light_mode
+    </span>
+  </button>
+</header>
+<main>
+<div
+    id="dartdoc-main-content"
+    class="main-content"
+    data-above-sidebar="rxflare&#47;RxState-class-sidebar.html"
+    data-below-sidebar="">
+    <div>
+<h1><span class="kind-method">getItem</span> method 
+</h1></div>
+
+    <section class="multi-line-signature">
+      
+<span class="returntype">dynamic</span>
+<span class="name ">getItem</span>(<wbr><ol class="parameter-list single-line"> <li><span class="parameter" id="getItem-param-field"><span class="type-annotation">dynamic</span> <span class="parameter-name">field</span></span></li>
+</ol>)
+
+      
+
+    </section>
+    
+<section class="desc markdown">
+  <p>获取集合中的特定字段或索引。</p>
+<p>如果 <code>T</code> 是 <a href="https://api.flutter.dev/flutter/dart-core/Map-class.html">Map</a>，<code>field</code> 为 Key。
+如果 <code>T</code> 是 <a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a>，<code>field</code> 为 <a href="https://api.flutter.dev/flutter/dart-core/int-class.html">int</a> 类型的索引。
+调用此方法会注册字段级依赖，只有当该特定字段改变时才会触发监听。</p>
+</section>
+
+
+    
+<section class="summary source-code" id="source">
+  <h2><span>Implementation</span></h2>
+  <pre class="language-dart"><code class="language-dart">dynamic getItem(dynamic field) {
+  RxStack.registerField(this, field);
+
+  if (_value is Map) {
+    return (_value as Map)[field];
+  } else if (_value is List &amp;&amp; field is int) {
+    final list = _value as List;
+    if (field &gt;= 0 &amp;&amp; field &lt; list.length) {
+      return list[field];
+    }
+  }
+
+  return null;
+}</code></pre>
+</section>
+
+
+  </div> <!-- /.main-content -->
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li><a href="../../index.html">rxflare</a></li>
+    <li><a href="../../rxflare/">rxflare</a></li>
+    <li><a href="../../rxflare/RxState-class.html">RxState<span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span></a></li>
+    <li class="self-crumb">getItem method</li>
+</ol>
+
+    <h5>RxState class</h5>
+    <div id="dartdoc-sidebar-left-content"></div>
+  </div><!--/.sidebar-offcanvas-->
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+</div><!--/.sidebar-offcanvas-->
+</main>
+<footer>
+  <span class="no-break">
+    rxflare
+      1.1.7
+  </span>
+  
+</footer>
+
+
+<script src="../../static-assets/highlight.pack.js?v1"></script>
+<script src="../../static-assets/docs.dart.js"></script>
+
+</body>
+</html>
+

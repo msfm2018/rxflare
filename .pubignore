@@ -1,0 +1,57 @@
+# =============================
+# Flutter / Dart 默认忽略
+# =============================
+
+# Dart/Pub build
+.dart_tool/
+.packages
+pubspec.lock
+
+# Generated files
+*.g.dart
+*.freezed.dart
+*.mocks.dart
+
+# Build directories
+build/
+ios/Flutter/Flutter.framework/
+ios/Flutter/Flutter.podspec
+ios/Flutter/Flutter.podspec.lock
+ios/Flutter/Generated.xcconfig
+ios/Pods/
+ios/Runner.xcworkspace/
+android/.gradle/
+android/app/build/
+android/local.properties
+android/.idea/
+.idea/
+*.iml
+
+# VS Code / JetBrains
+.vscode/
+*.code-workspace
+
+# macOS/Linux generated
+.macos/
+.linux/
+.windows/
+
+# =============================
+# 示例项目（example）可选择保留或忽略
+# =============================
+exampleIm/android/app/build/
+exampleIm/.dart_tool/
+exampleIm/.idea/
+exampleIm/build/
+exampleIm/ios/Pods/
+exampleIm/ios/Runner.xcworkspace/
+exampleIm/ios/Flutter/Flutter.podspec.lock
+exampleIm/ios/Flutter/Generated.xcconfig
+
+# =============================
+# 忽略一般临时文件
+# =============================
+*.log
+*.tmp
+*.swp
+*.DS_Store

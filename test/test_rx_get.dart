@@ -1,5 +1,8 @@
-定义一个 Controller (业务逻辑类)
-我们将之前的 obs、computed、runAsync 全部封装进一个类里
+import 'package:flutter/material.dart';
+import 'package:rxflare/rxflare.dart';
+
+// 定义一个 Controller (业务逻辑类)
+// 我们将之前的 obs、computed、runAsync 全部封装进一个类里
 class UserController {
   // 1. 状态定义
   final name = "访客".obs;

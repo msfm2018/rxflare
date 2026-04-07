@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="rxflare API docs, for the Dart programming language.">
+  <title>rxflare - Dart API docs</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="static-assets/github.css?v1">
+  <link rel="stylesheet" href="static-assets/styles.css?v1">
+  <link rel="icon" href="static-assets/favicon.png?v1">
+  
+</head>
+
+<body data-base-href="" data-using-base-href="false" class="light-theme">
+<div id="overlay-under-drawer"></div>
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="https://github.com/msfm2018/rxflare">rxflare package</a></li>
+  </ol>
+  <div class="self-name">rxflare</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <button class="toggle" id="theme-button" title="Toggle between light and dark mode" aria-label="Light and dark mode toggle">
+    <span id="dark-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      dark_mode
+    </span>
+    <span id="light-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      light_mode
+    </span>
+  </button>
+</header>
+<main>
+  <div id="dartdoc-main-content" class="main-content">
+      
+<section class="desc markdown">
+  <h4 id="">应用截图</h4>
+<p align="center">
+  <img src="https://github.com/msfm2018/rxflare/blob/1.1.3/img/index.png?raw=true">
+    <img src="https://github.com/msfm2018/rxflare/blob/1.1.3/img/1.png?raw=true">
+    <img src="https://github.com/msfm2018/rxflare/blob/1.1.3/img/2.png?raw=true">
+    <img src="https://github.com/msfm2018/rxflare/blob/1.1.3/img/3.png?raw=true">
+    <img src="https://github.com/msfm2018/rxflare/blob/1.1.3/img/4.png?raw=true">
+</p>
+<h1 id="demo-1">Demo 1：最基础用法（自动依赖）</h1>
+<pre class="language-dart"><code>class DemoPage extends StatelessWidget {
+  final count = 0.obs;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text("Rx Demo")),
+      body: Center(
+        child: Rx(() {
+          return Text(
+            "count: ${count.value}",
+            style: TextStyle(fontSize: 24),
+          );
+        }),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          count.value++;
+        },
+        child: Icon(Icons.add),
+      ),
+    );
+  }
+}
+
+</code></pre>
+<h1 id="-rx--">一个 Rx 块 监听多个值</h1>
+<pre class="language-dart"><code>import 'package:flutter/material.dart';
+import 'package:rxflare/rxflare.dart';
+
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  // This widget is the root of your application.
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Flutter Demo',
+      theme: ThemeData(
+        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
+      ),
+      home: MultiRxDemo(),
+    );
+  }
+}
+
+class MultiRxDemo extends StatelessWidget {
+  // 1. 定义三个响应式变量
+  final name = "张三".obs;
+  final age = 20.obs;
+  final score = 100.obs;
+
+  MultiRxDemo({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('RxFlare 自动依赖追踪')),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // 2. 只需要一个 Rx 块，就能同时监听 name, age, score
+            // 只要其中任何一个值改变，这个 Text 就会自动重绘
+            Rx(() {
+              print("UI 重绘了！"); // 你可以观察控制台看它触发的时机
+              return Text('${name.value} (年龄: ${age.value}) 的分数是: ${score.value}', style: const TextStyle(fontSize: 20));
+            }),
+
+            const SizedBox(height: 30),
+
+            // 3. 修改数据的按钮
+            ElevatedButton(onPressed: () =&gt; name.value = "李四", child: const Text('改名字')),
+            ElevatedButton(onPressed: () =&gt; age.value++, child: const Text('长一岁')),
+            ElevatedButton(onPressed: () =&gt; score.value -= 5, child: const Text('扣 5 分')),
+          ],
+        ),
+      ),
+    );
+  }
+}
+</code></pre>
+<h1 id="demo-2">Demo 2：多个状态自动依赖</h1>
+<pre data-metadata="DemoPage2 extends StatelessWidget {" class="language-class"><code class="language-class">  final count = 0.obs;
+  final name = "Tom".obs;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Rx(() {
+          return Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text("count: ${count.value}"),
+              Text("name: ${name.value}"),
+            ],
+          );
+        }),
+      ),
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          FloatingActionButton(
+            onPressed: () =&gt; count.value++,
+            child: Icon(Icons.add),
+          ),
+          SizedBox(height: 10),
+          FloatingActionButton(
+            onPressed: () =&gt; name.value = "Jerry",
+            child: Icon(Icons.person),
+          ),
+        ],
+      ),
+    );
+  }
+}
+</code></pre>
+<h1 id="demo-3map--">Demo 3：Map + 字段级更新（核心能力）</h1>
+<pre data-metadata="DemoPage3 extends StatelessWidget {" class="language-class"><code class="language-class">  final user = {
+    "name": "Tom",
+    "age": 20,
+  }.obs;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+
+            // 🔥 只依赖 name
+            Rx(() {
+              return Text(
+                "name: ${user.getItem("name")}",
+                style: TextStyle(fontSize: 22),
+              );
+            }),
+
+            // 🔥 只依赖 age
+            Rx(() {
+              return Text(
+                "age: ${user.getItem("age")}",
+                style: TextStyle(fontSize: 22),
+              );
+            }),
+
+          ],
+        ),
+      ),
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          FloatingActionButton(
+            onPressed: () {
+              user.updateField("name", "Jerry");
+            },
+            child: Icon(Icons.person),
+          ),
+          SizedBox(height: 10),
+          FloatingActionButton(
+            onPressed: () {
+              user.updateField("age", 30);
+            },
+            child: Icon(Icons.cake),
+          ),
+        ],
+      ),
+    );
+  }
+}
+点击 name 按钮 → 只刷新 name 的 Rx
+点击 age 按钮 → 只刷新 age 的 Rx
+</code></pre>
+<h1 id="demo-4list--index-">Demo 4：List + index 精准更新</h1>
+<pre data-metadata="DemoPage4 extends StatelessWidget {" class="language-class"><code class="language-class">  final list = ["A", "B", "C"].obs;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Column(
+        children: List.generate(3, (index) {
+          return Rx(() {
+            return Text(
+              "item $index: ${list.getItem(index)}",
+              style: TextStyle(fontSize: 20),
+            );
+          });
+        }),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          list.updateField(1, "🔥B changed");
+        },
+        child: Icon(Icons.edit),
+      ),
+    );
+  }
+}只刷新 index=1 的那一行
+</code></pre>
+<h1 id="demo-5-rxcustom">Demo 5：手动依赖模式（你写的 Rx.custom）</h1>
+<pre data-metadata="DemoPage5 extends StatelessWidget {" class="language-class"><code class="language-class">  final count = 0.obs;
+  final name = "Tom".obs;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Rx.custom(
+          deps: [count], // 👈 只监听 count
+          builder: () {
+            return Text(
+              "count: ${count.value}, name: ${name.value}",
+              style: TextStyle(fontSize: 20),
+            );
+          },
+        ),
+      ),
+      floatingActionButton: Column(
+        children: [
+          FloatingActionButton(
+            onPressed: () =&gt; count.value++,
+            child: Icon(Icons.add),
+          ),
+          FloatingActionButton(
+            onPressed: () =&gt; name.value = "Jerry",
+            child: Icon(Icons.person),
+          ),
+        ],
+      ),
+    );
+  }
+}
+count 变化 → 刷新
+name 变化 → 不刷新
+手动控制依赖
+</code></pre>
+<h1 id="-1field-">示例 1：field 级别依赖（你的高级功能🔥）</h1>
+<pre class="language-​"><code class="language-​">// final user = RxState&lt;Map&lt;String, dynamic&gt;&gt;({
+final user = RxState&lt;Map&gt;({
+  "name": "Tom",
+  "age": 18
+});
+final nameUpper = computed(() {
+  return user.value["name"].toUpperCase();
+});
+print(nameUpper.value); // 输出 "TOM"
+user.value = {...user.value, "name": "Jerry"};
+print(nameUpper.value); // 输出 "JERRY"
+</code></pre>
+<h1 id="-2-computed">示例 2：最基础 computed</h1>
+<pre class="language-dart"><code>final count = RxState&lt;int&gt;(1);
+
+final doubleCount = computed(() =&gt; count.value * 2);
+
+print(doubleCount.value); // 2
+
+count.value = 5;
+
+print(doubleCount.value); // 10（自动更新）
+
+</code></pre>
+<h1 id="-3">示例 3：多个依赖</h1>
+<pre class="language-dart"><code>final a = RxState&lt;int&gt;(2);
+
+final b = computed(() =&gt; a.value * 2);
+final c = computed(() =&gt; b.value + 1);
+
+print(c.value); // 5
+
+a.value = 10;
+
+print(c.value); // 21
+</code></pre>
+<h1 id="-4">示例 4：依赖动态变化</h1>
+<pre class="language-dart"><code>final flag = RxState&lt;bool&gt;(true);
+final a = RxState&lt;int&gt;(1);
+final b = RxState&lt;int&gt;(100);
+
+final result = computed(() {
+  if (flag.value) {
+    return a.value;
+  } else {
+    return b.value;
+  }
+});
+print(result.value); // 1（依赖 a）
+
+flag.value = false;
+print(result.value); // 100（依赖变成 b）
+</code></pre>
+<h1 id="-5-computed">示例 5：链式 computed</h1>
+<pre data-metadata="a = RxState<int>(2);" class="language-final"><code class="language-final">
+final b = computed(() =&gt; a.value * 2);
+final c = computed(() =&gt; b.value + 1);
+
+print(c.value); // 5
+
+a.value = 10;
+
+print(c.value); // 21
+</code></pre>
+<h1 id="rxeventbus">RxEventBus</h1>
+<h1 id="1-">1. 基础使用（最简单）</h1>
+<pre class="language-dart"><code>  // 注册监听
+  RxEventBus.on&lt;String&gt;(
+    module: "user",
+    eventID: 1,
+    callback: (eventID, uuid, data) async {
+      print("收到事件: $data");
+    },
+  );
+
+  // 发送事件
+  RxEventBus.notify&lt;String&gt;(
+    module: "user",
+    eventID: 1,
+    data: "Hello EventBus",
+  );
+</code></pre>
+<h1 id="2--t">2. 强类型（泛型 T）</h1>
+<pre class="language-dart"><code>class User {
+  final String name;
+  User(this.name);
+}
+
+void main() {
+  RxEventBus.on&lt;User&gt;(
+    module: "user",
+    eventID: 2,
+    callback: (id, uuid, user) async {
+      print("用户: ${user.name}");
+    },
+  );
+
+  RxEventBus.notify&lt;User&gt;(
+    module: "user",
+    eventID: 2,
+    data: User("Tom"),
+  );
+}
+</code></pre>
+<h1 id="3-off">3. 取消监听（off）</h1>
+<pre class="language-dart"><code>late EventCallback&lt;String&gt; cb;
+
+void main() {
+  cb = (id, uuid, data) async {
+    print("监听: $data");
+  };
+
+  RxEventBus.on&lt;String&gt;(
+    module: "test",
+    eventID: 1,
+    callback: cb,
+  );
+
+  RxEventBus.notify(module: "test", eventID: 1, data: "第一次");
+
+  // 移除
+  RxEventBus.off(
+    module: "test",
+    eventID: 1,
+    callback: cb,
+  );
+
+  RxEventBus.notify(module: "test", eventID: 1, data: "第二次");
+}
+</code></pre>
+<h1 id="4--token-">4. 使用 Token 批量移除（推荐）</h1>
+<pre class="language-dart"><code>void main() {
+  final token = EventToken();
+
+  RxEventBus.on&lt;String&gt;(
+    module: "chat",
+    eventID: 1,
+    token: token,
+    callback: (id, uuid, data) async {
+      print("A: $data");
+    },
+  );
+
+  RxEventBus.on&lt;String&gt;(
+    module: "chat",
+    eventID: 1,
+    token: token,
+    callback: (id, uuid, data) async {
+      print("B: $data");
+    },
+  );
+
+  RxEventBus.notify(module: "chat", eventID: 1, data: "hello");
+
+  // 一键移除
+  RxEventBus.offByToken(token);
+
+  RxEventBus.notify(module: "chat", eventID: 1, data: "world");
+}
+</code></pre>
+<h1 id="5-sticky-">5. Sticky 事件（后注册也能收到）</h1>
+<pre class="language-dart"><code>void main() {
+  // 先发送（sticky）
+  RxEventBus.notify&lt;String&gt;(
+    module: "config",
+    eventID: 1,
+    data: "配置已加载",
+    sticky: true,
+  );
+
+  // 后注册仍然会收到
+  RxEventBus.on&lt;String&gt;(
+    module: "config",
+    eventID: 1,
+    sticky: true,
+    callback: (id, uuid, data) async {
+      print("收到 sticky: $data");
+    },
+  );
+}
+</code></pre>
+<h1 id="6-high--normal--low">6. 优先级（high / normal / low）</h1>
+<pre class="language-dart"><code>void main() {
+  RxEventBus.on&lt;String&gt;(
+    module: "priority",
+    eventID: 1,
+    callback: (id, uuid, data) async {
+      print("执行: $data");
+    },
+  );
+
+  RxEventBus.notify(
+    module: "priority",
+    eventID: 1,
+    data: "普通",
+    priority: EventPriority.normal,
+  );
+
+  RxEventBus.notify(
+    module: "priority",
+    eventID: 1,
+    data: "高优先级",
+    priority: EventPriority.high,
+  );
+
+  RxEventBus.notify(
+    module: "priority",
+    eventID: 1,
+    data: "低优先级",
+    priority: EventPriority.low,
+  );
+}
+</code></pre>
+<h1 id="7--vs-">7. 串行 vs 并行</h1>
+<pre class="language-dart"><code>RxEventBus.on&lt;String&gt;(
+  module: "task",
+  eventID: 1,
+  callback: (id, uuid, data) async {
+    await Future.delayed(Duration(milliseconds: 500));
+    print("任务1完成");
+  },
+);
+
+RxEventBus.on&lt;String&gt;(
+  module: "task",
+  eventID: 1,
+  callback: (id, uuid, data) async {
+    await Future.delayed(Duration(milliseconds: 500));
+    print("任务2完成");
+  },
+);
+
+// 并行（默认）
+RxEventBus.notify(
+  module: "task",
+  eventID: 1,
+  data: "",
+  parallel: true,
+);
+
+// 串行
+RxEventBus.notify(
+  module: "task",
+  eventID: 1,
+  data: "",
+  parallel: false,
+);
+</code></pre>
+<h1 id="rxfuture">RxFuture</h1>
+<h1 id="-2">示例：加载用户信息页面</h1>
+<pre class="language-dart"><code>Future&lt;String&gt; fetchUser() async {
+  await Future.delayed(const Duration(seconds: 2));
+
+  // 模拟随机失败
+  if (DateTime.now().second % 2 == 0) {
+    throw Exception("网络错误");
+  }
+
+  return "用户：Tom (${DateTime.now()})";
+}
+
+class UserPage extends StatefulWidget {
+  @override
+  State&lt;UserPage&gt; createState() =&gt; _UserPageState();
+}
+
+class _UserPageState extends State&lt;UserPage&gt; {
+  late RxFuture&lt;String&gt; rx;
+
+  @override
+  void initState() {
+    super.initState();
+    rx = RxFuture(fetchUser);
+
+    // 监听变化（假设 RxState 有 listen）
+    rx.listen(() {
+      setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    rx.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("RxFuture 示例")),
+      body: _buildBody(),
+    );
+  }
+
+  Widget _buildBody() {
+    // 🚀 1. 首次加载
+    if (rx.isInitialLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    // ❌ 2. 完全失败（没有数据）
+    if (rx.hasError &amp;&amp; !rx.hasData) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text("加载失败: ${rx.error}"),
+            const SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: rx.retry,
+              child: const Text("重试"),
+            )
+          ],
+        ),
+      );
+    }
+
+    // ✅ 3. 有数据（核心）
+    return RefreshIndicator(
+      onRefresh: () async {
+        rx.refresh();
+      },
+      child: ListView(
+        children: [
+          ListTile(
+            title: Text(rx.data ?? ""),
+            subtitle: _buildStatus(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatus() {
+    // 🔄 正在刷新
+    if (rx.isRefreshing) {
+      return const Text("正在刷新...");
+    }
+
+    // ⚠️ 软错误（有数据但更新失败）
+    if (rx.hasSoftError) {
+      return Text(
+        "更新失败（显示旧数据）: ${rx.lastError}",
+        style: const TextStyle(color: Colors.orange),
+      );
+    }
+
+    // ♻️ 数据过期（stale）
+    if (rx.isStale) {
+      return const Text("数据更新中...");
+    }
+
+    return const Text("正常");
+  }
+}
+</code></pre>
+<h1 id="rxobjmgr--rxparent">RxObjMgr + RxParent</h1>
+<h1 id="-put--find">最基础用法（手动 put / find）</h1>
+<pre class="language-dart"><code>class UserController {
+  String name = "Tom";
+}
+
+void main() {
+  // 注册
+  RxObjMgr.put(UserController());
+
+  // 获取
+  final c = RxObjMgr.find&lt;UserController&gt;();
+  print(c.name); // Tom
+}
+</code></pre>
+<h1 id="2-lazyput">2. 懒加载（lazyPut）</h1>
+<pre class="language-dart"><code>class ApiService {
+  ApiService() {
+    print("ApiService 创建了");
+  }
+}
+
+void main() {
+  RxObjMgr.lazyPut&lt;ApiService&gt;(() =&gt; ApiService());
+
+  // 此时还没创建
+
+  final api = RxObjMgr.find&lt;ApiService&gt;();
+  // 👉 这里才真正创建
+
+  final api2 = RxObjMgr.find&lt;ApiService&gt;();
+  // 👉 不会重复创建（单例）
+}
+</code></pre>
+<h1 id="3-name-">3. 多实例（name 区分）</h1>
+<pre class="language-dart"><code>class Counter {
+  int value = 0;
+}
+
+void main() {
+  RxObjMgr.put(Counter(), name: "A");
+  RxObjMgr.put(Counter(), name: "B");
+
+  final a = RxObjMgr.find&lt;Counter&gt;(name: "A");
+  final b = RxObjMgr.find&lt;Counter&gt;(name: "B");
+
+  a.value = 10;
+  b.value = 20;
+
+  print(a.value); // 10
+  print(b.value); // 20
+}
+</code></pre>
+<h1 id="4-flutter-">4 Flutter 实战</h1>
+<pre class="language-dart"><code>class CounterController {
+  int count = 0;
+
+  void increment() {
+    count++;
+  }
+
+  void dispose() {
+    print("Controller 被释放");
+  }
+}
+class CounterPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return RxParent&lt;CounterController&gt;(
+      dependency: CounterController(),
+      child: const CounterView(),
+    );
+  }
+}
+class CounterView extends StatefulWidget {
+  const CounterView({super.key});
+
+  @override
+  State&lt;CounterView&gt; createState() =&gt; _CounterViewState();
+}
+
+class _CounterViewState extends State&lt;CounterView&gt; {
+  late CounterController controller;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = RxObjMgr.find&lt;CounterController&gt;();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("DI 示例")),
+      body: Center(
+        child: Text("count: ${controller.count}"),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          setState(() {
+            controller.increment();
+          });
+        },
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
+}
+@override
+void dispose() {
+  final dynamic instance = RxObjMgr.find&lt;T&gt;(name: widget.name);
+  instance.dispose?.call(); // 自动调用
+  RxObjMgr.delete&lt;T&gt;(name: widget.name);
+}
+
+多页隔离
+RxParent&lt;CounterController&gt;(
+  name: "pageA",
+  dependency: CounterController(),
+  child: PageA(),
+)
+
+RxParent&lt;CounterController&gt;(
+  name: "pageB",
+  dependency: CounterController(),
+  child: PageB(),
+)
+获取
+final cA = RxObjMgr.find&lt;CounterController&gt;(name: "pageA");
+final cB = RxObjMgr.find&lt;CounterController&gt;(name: "pageB");
+
+结合 RxFuture（高级组合）
+class UserController {
+  late RxFuture&lt;String&gt; userRx;
+
+  UserController() {
+    userRx = RxFuture(() async {
+      await Future.delayed(Duration(seconds: 1));
+      return "用户数据";
+    });
+  }
+
+  void dispose() {
+    userRx.dispose();
+  }
+}
+class UserPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return RxParent&lt;UserController&gt;(
+      dependency: UserController(),
+      child: const UserView(),
+    );
+  }
+}
+使用
+class UserView extends StatefulWidget {
+  const UserView({super.key});
+
+  @override
+  State&lt;UserView&gt; createState() =&gt; _UserViewState();
+}
+
+class _UserViewState extends State&lt;UserView&gt; {
+  late UserController c;
+
+  @override
+  void initState() {
+    super.initState();
+    c = RxObjMgr.find&lt;UserController&gt;();
+
+    c.userRx.listen(() {
+      setState(() {});
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (c.userRx.isInitialLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    return Center(
+      child: Text(c.userRx.data ?? ""),
+    );
+  }
+}
+</code></pre>
+<h1 id="-5"></h1>
+<pre class="language-dart"><code>final count = RxState&lt;int&gt;(0);
+
+// 监听
+final cancel = count.listen((v) {
+  print("count: $v");
+});
+
+// 更新
+count.value = 1;
+count.update(2);
+
+// 取消监听
+cancel();
+2. 带来源 ID（调试神器）
+final state = RxState&lt;int&gt;(0, name: "counter");
+
+state.listenWithId((value, id) {
+  print("value: $value, 来自: $id");
+});
+
+state.value = 10;
+state.refresh(); // 手动触发
+
+3. Map 精准监听（🔥核心能力）
+final user = RxState&lt;Map&lt;String, dynamic&gt;&gt;({
+  "name": "Tom",
+  "age": 20,
+});
+
+// 只监听 name
+final cancel = user.listenByKey("name", (v) {
+  print("name 变了: $v");
+});
+
+// 更新 name
+user.updateField("name", "Jerry");
+
+// 更新 age（不会触发）
+user.updateField("age", 30);
+
+4. List 精准监听
+final list = RxState&lt;List&lt;int&gt;&gt;([1, 2, 3]);
+
+list.listenByKey(1, (v) {
+  print("index 1: $v");
+});
+
+list.updateField(1, 999); // ✅ 触发
+list.updateField(0, 111); // ❌ 不触发
+
+5. 条件监听（listenWhere）
+final data = RxState&lt;Map&lt;String, dynamic&gt;&gt;({
+  "score": 50,
+});
+
+data.listenWhere(
+  (map) =&gt; map["score"] &gt;= 60,
+  (v) {
+    print("是否及格: $v");
+  },
+);
+
+data.updateField("score", 70);
+
+6. 局部更新 vs 全局更新
+
+final user = RxState&lt;Map&lt;String, dynamic&gt;&gt;({
+  "name": "Tom",
+  "age": 20,
+});
+
+user.listen((v) {
+  print("全局更新: $v");
+});
+
+user.listenByKey("name", (v) {
+  print("name 更新: $v");
+});
+
+// 默认：只触发 field
+user.updateField("name", "Jerry");
+
+// 强制触发全局
+user.updateField("name", "Jack", notifyGlobal: true);
+
+7. Flutter UI 实战
+final counter = RxState&lt;int&gt;(0);
+class RxDemoPage extends StatefulWidget {
+  @override
+  State&lt;RxDemoPage&gt; createState() =&gt; _RxDemoPageState();
+}
+
+class _RxDemoPageState extends State&lt;RxDemoPage&gt; {
+  late VoidCallback cancel;
+
+  @override
+  void initState() {
+    super.initState();
+
+    cancel = counter.listen((_) {
+      setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    cancel();
+    counter.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("RxState Demo")),
+      body: Center(
+        child: Text("count: ${counter.value}"),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          counter.value++;
+        },
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
+}
+
+8. 表单场景（Map + 精准更新）
+final form = RxState&lt;Map&lt;String, dynamic&gt;&gt;({
+  "username": "",
+  "password": "",
+});
+
+监听单字段：
+form.listenByKey("username", (v) {
+  print("用户名输入: $v");
+});
+
+更新
+form.updateField("username", "admin");
+
+9. 高级组合（类似 computed）
+
+final a = RxState&lt;int&gt;(1);
+final b = RxState&lt;int&gt;(2);
+
+// 假设你有 RxComputed
+// final sum = RxComputed(() =&gt; a.value + b.value);
+</code></pre>
+</section>
+
+
+      <section class="summary">
+          <h2>Libraries</h2>
+        <dl>
+          <dt id="rxflare">
+  <span class="name"><a href="rxflare/">rxflare</a></span> 
+
+</dt>
+<dd>
+</dd>
+
+        </dl>
+      </section>
+  </div> <!-- /.main-content -->
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li><a href="https://github.com/msfm2018/rxflare">rxflare package</a></li>
+</ol>
+
+    <h5 class="hidden-xs"><span class="package-name">rxflare</span> <span class="package-kind">package</span></h5>
+    <ol>
+      <li class="section-title">Libraries</li>
+      <li><a href="rxflare/">rxflare</a></li>
+</ol>
+
+  </div>
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+  </div>
+</main>
+<footer>
+  <span class="no-break">
+    rxflare
+      1.1.7
+  </span>
+  
+</footer>
+
+
+<script src="static-assets/highlight.pack.js?v1"></script>
+<script src="static-assets/docs.dart.js"></script>
+
+</body>
+</html>
+

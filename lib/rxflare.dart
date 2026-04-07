@@ -1,5 +1,3 @@
-// lib/rxflare.dart
-
 export 'src/rx_core.dart';
 export 'src/rx.dart';
 export 'src/rx_debug.dart';
