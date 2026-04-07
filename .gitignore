@@ -53,6 +53,11 @@ example/linux/flutter/generated_plugin_registrant.*
 example/linux/flutter/generated_plugins.cmake
 example/windows/flutter/generated_plugin_registrant.*
 example/windows/flutter/generated_plugins.cmake
-
+example/ios/
+example/android/
+example/linux/
+example/macos/
+example/windows/
+example/build/
 # 忽略所有 build 产物
 **/build/
