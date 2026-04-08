@@ -47,7 +47,9 @@ example/ios/Pods/
 example/ios/Runner.xcworkspace/
 example/ios/Flutter/Flutter.podspec.lock
 example/ios/Flutter/Generated.xcconfig
-
+example/.flutter-plugins
+example/.flutter-plugins-dependencies
+doc/
 # =============================
 # 忽略一般临时文件
 # =============================
@@ -55,3 +57,5 @@ example/ios/Flutter/Generated.xcconfig
 *.tmp
 *.swp
 *.DS_Store
+.idea/
+*.iml

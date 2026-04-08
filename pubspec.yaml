@@ -3,7 +3,7 @@ description: >
   A high-performance reactive state management library for Flutter. 
   Supports automatic dependency tracking, granular field-level updates 
   for Maps/Lists, and a lightweight Rx widget to minimize boilerplate.
-version: 1.1.7
+version: 1.1.8
 homepage: https://github.com/msfm2018/rxflare
 repository: https://github.com/msfm2018/rxflare
 
