@@ -1,4 +1,6 @@
 # Changelog
+## [1.1.9] - 2026-04-08
+* 优化了文档可读性。
 
 ## [1.1.8] - 2026-04-07
 * 完善了 API 文档注释 (Completed documentation comments).
