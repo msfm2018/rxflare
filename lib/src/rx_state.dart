@@ -274,8 +274,8 @@ class RxState<T> {
 
     _listenersWithId.add(wrapper);
 
-    // 初始触发
-    onData(_value, this.id);
+    // 初始触发 this.
+    onData(_value, id);
 
     bool disposed = false;
     return () {

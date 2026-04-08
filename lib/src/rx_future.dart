@@ -4,7 +4,7 @@ import 'rx_debug.dart';
 
 /// RxFuture 是一个增强型异步状态管理类
 ///
-/// 基于 [RxState]<[AsyncSnapshot]<T>>，用于管理异步任务的状态、刷新、重试和错误处理。
+/// 基于 `[RxState]<[AsyncSnapshot]<T>>`，用于管理异步任务的状态、刷新、重试和错误处理。
 ///
 /// 特点：
 /// - 自动追踪异步任务状态（loading、done、error）

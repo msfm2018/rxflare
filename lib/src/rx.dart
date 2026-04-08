@@ -38,7 +38,7 @@ class _RxState extends State<Rx> {
   /// 依赖的状态对象集合（state 级依赖）
   final Set<RxState> _dependencies = {};
 
-  /// 字段级依赖集合（RxState -> Set<field>）
+  /// 字段级依赖集合（RxState -> Set）
   final Map<RxState, Set<dynamic>> _fieldDeps = {};
 
   /// 防抖定时器（可选）

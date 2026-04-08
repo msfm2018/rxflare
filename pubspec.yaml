@@ -1,11 +1,9 @@
 name: rxflare
-description: >
-  A high-performance reactive state management library for Flutter. 
-  Supports automatic dependency tracking, granular field-level updates 
-  for Maps/Lists, and a lightweight Rx widget to minimize boilerplate.
+description: A high-performance reactive state management library for Flutter featuring automatic dependency tracking and granular field-level updates.
 version: 1.1.8
 homepage: https://github.com/msfm2018/rxflare
 repository: https://github.com/msfm2018/rxflare
+issue_tracker: https://github.com/msfm2018/rxflare/issues
 
 topics:
   - state-management
@@ -26,17 +24,8 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^5.0.0
 
-# The following section is specific to Flutter packages.
 flutter:
 
-  # To add assets to your package, add an assets section, like this:
-  # assets:
-  #   - images/a_dot_burr.jpeg
-  #   - images/a_dot_ham.jpeg
-  #
-linter:
-  rules:
-    public_member_api_docs: true
-    require_trailing_commas: true   # 可选，提高代码风格
+
 
 example: example/lib/main.dart
