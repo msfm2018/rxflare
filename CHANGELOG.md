@@ -1,4 +1,14 @@
 # Changelog
+
+## [1.2.0] - 2026-04-18
+### Added
+* 新增泛型扩展 `RxAnyExtension<T>`，支持任意对象通过 `.obs` 快速转换为 `RxState<T>`：
+  ```dart
+  final user = User().obs;
+  final count = 1.obs;
+  ```
+* 统一 .obs 使用方式，减少对基础类型（int、String 等）的重复扩展依赖。
+
 ## [1.1.9] - 2026-04-08
 * 优化了文档可读性。
 
