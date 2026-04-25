@@ -1,5 +1,43 @@
 # Changelog
 
+## [1.3.0] - 2026-04-25
+
+### Added
+* 🚀 引入全新响应式路由系统 `RxRouter`：基于 `RxState` 驱动的 Navigator 2.0 路由管理方案。
+
+* 🧭 多栈管理机制：
+  * 支持全局根栈（`memPages`）
+  * 支持多 Tab 局部栈（`tabPages`）独立并行管理
+
+* ✨ 声明式 + 命令式统一 API：
+  * `rxr.to('/path')`
+  * `rxr.back()`
+  内部自动映射为声明式状态更新
+
+* 🔗 动态路径匹配：
+  * 支持 `/user/:id` 形式路径参数
+  * 支持完整 URL Query 参数解析
+
+* 🛡️ 路由守卫（Guard）：
+  * 在 `RxDef` 中支持异步拦截逻辑
+  * 可用于登录校验、权限控制等场景
+
+* 📦 强类型参数传递：
+  * 基于 `RxArgs` 实现对象级参数传递
+  * 自动生命周期管理与回收
+
+* 🔄 异步结果回传：
+  * `to<T>()` 返回 `Future<T?>`
+  * 支持 `back(result: ...)` 回传页面结果
+
+* 🌐 Web 适配支持：
+  * 提供 `RxRouteParser` 与 `RxRouterDelegate`
+  * 支持浏览器地址栏同步
+  * 支持手动输入 URL 解析
+
+* 🧩 内置 `KeepAliveWrapper`：
+  * 优化 Tab 切换时的页面状态保持
+
 ## [1.2.0] - 2026-04-18
 ### Added
 * 新增泛型扩展 `RxAnyExtension<T>`，支持任意对象通过 `.obs` 快速转换为 `RxState<T>`：
