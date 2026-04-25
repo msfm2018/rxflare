@@ -31,7 +31,7 @@ class RxRouter {
   /// 获取 RxRouter 的单例实例。
   static final I = RxRouter._();
 
-  final _uuid = RxUtils.generateId(); // const Uuid();
+  // final _uuid = RxUtils.generateId(); // const Uuid();
 
   ///  根路由栈。负责全局大局逻辑，如：登录页、主页、全屏弹窗等。
   final memPages = RxState<List<RxPage>>([]);
@@ -307,13 +307,13 @@ class RxRouterDelegate extends RouterDelegate<Object> with ChangeNotifier, PopNa
 
 class RxRouteParser extends RouteInformationParser<Object> {
   @override
-  Future<Object> parseRouteInformation(RouteInformation info) async {
-    return info.location ?? "/";
+  Future<Object> parseRouteInformation(RouteInformation routeInformation) async {
+    return routeInformation.uri.toString();
   }
 
   @override
-  RouteInformation restoreRouteInformation(Object config) {
-    return RouteInformation(location: config as String);
+  RouteInformation restoreRouteInformation(Object configuration) {
+    return RouteInformation(uri: Uri.parse(configuration as String));
   }
 }
 
