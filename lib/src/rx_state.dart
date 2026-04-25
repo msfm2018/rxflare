@@ -248,6 +248,31 @@ class RxState<T> {
     }
   }
 
+
+/// 绑定一个监听器。
+  /// 
+  /// [onUpdate] 当值发生变化时触发。
+  /// 返回一个取消绑定的函数。
+  void Function() bind(void Function(T value) onUpdate) {
+    // 使用包装函数以匹配内部的 void Function(dynamic) 签名
+    void wrapper(dynamic _) => onUpdate(_value);
+    
+    _listeners.add(wrapper);
+
+    // 考虑到路由 Delegate 的场景，通常绑定时不需要立即执行一次 notifyListeners，
+    // 因为 Delegate 初始化时 Navigator 已经会执行第一次 build。
+    // 如果你希望绑定即触发，可以取消下面这行的注释：
+    // onUpdate(_value);
+
+    bool disposed = false;
+    return () {
+      if (!disposed) {
+        _listeners.remove(wrapper);
+        disposed = true;
+      }
+    };
+  }
+
   /// 监听值变化，并立即执行一次 [onData]。
   ///
   /// 返回一个取消监听的函数。

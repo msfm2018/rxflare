@@ -1059,7 +1059,6 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
                 link: _emojiLayerLink,
                 child: _buildToolIcon(Icons.sentiment_satisfied_alt_outlined, "表情", onTap: _toggleEmojiPicker),
               ),
-
               _buildToolIcon(Icons.grid_view_outlined, "扩展"),
               _buildToolIcon(Icons.folder_open_outlined, "文件"),
               _buildToolIcon(Icons.content_cut_outlined, "截图"),
@@ -1188,6 +1187,8 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
           const Spacer(),
           // 菜单图标
           _buildBottomMinorIcon(Icons.menu),
+          const SizedBox(height: 20),
+
           const SizedBox(height: 20),
         ],
       ),

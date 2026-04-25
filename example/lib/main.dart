@@ -9,6 +9,11 @@ import 'login_controller.dart';
 import 'persistence_service.dart';
 
 void main() {
+// 1. 初始化你的页面表
+
+
+
+  // rxr.to(0);
   RxDebug.isEnabled = false;
 
   // 注入服务
@@ -26,17 +31,16 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: Rx(() {
-        final auth = RxObjMgr.find<AuthService>();
-        if (auth.isLogin.value) {
-          return const WeChatMainPage();
-        } else {
-          return getLoginPage();
-        }
-      }),
-    );
+    return MaterialApp(debugShowCheckedModeBanner: false, home: //RxRouterView()
+         Rx(() {
+          final auth = RxObjMgr.find<AuthService>();
+          if (auth.isLogin.value) {
+            return const WeChatMainPage();
+          } else {
+            return getLoginPage();
+          }
+        }),
+        );
   }
 }
 
