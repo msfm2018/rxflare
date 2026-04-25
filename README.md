@@ -976,3 +976,31 @@ final b = RxState<int>(2);
 // 假设你有 RxComputed
 // final sum = RxComputed(() => a.value + b.value);
 ```
+# 路由
+
+###  定义与注册路由
+···
+rxr.d({
+  '/home': RxDef(builder: () => const HomePage(), path: '/home'),
+  '/detail/:id': RxDef(builder: () => const DetailPage(), path: '/detail/:id'),
+});
+···
+
+###  跳转与参数获取
+···
+// 跳转
+rxr.to('/detail/123?type=premium', arguments: MyObject());
+
+// 目标页获取参数
+final id = rxr.param('id');        // '123'
+final type = rxr.queryItem('type'); // 'premium'
+final obj = rxr.args<MyObject>();   // 获取自定义对象
+···
+### 返回并回传结果
+···
+// 发起跳转并等待
+final result = await rxr.to('/settings');
+
+// 目标页返回
+rxr.back(result: 'Saved!');
+···
