@@ -3,12 +3,12 @@ import 'rx_debug.dart';
 import 'package:flutter/material.dart';
 
 /// `RxState` 类型别名
-/// 
+///
 /// 提供一些常用别名，方便快速书写：
-/// 
+///
 /// 万能扩展：将任何对象转换为 RxState
 extension RxAnyExtension<T> on T {
-  /// 将当前对象包装成 RxState<T>
+  /// 将当前对象包装成 `RxState<T>`
   RxState<T> get obs => RxState<T>(this);
 }
 
