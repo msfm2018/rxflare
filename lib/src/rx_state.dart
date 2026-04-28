@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'dart:async';
 import 'rx_stack.dart';
 import 'rx_debug.dart';
 
@@ -26,6 +27,7 @@ class RxState<T> {
         name = name ?? "RxState#$_rxStateCounter" {
     _rxStateCounter++;
   }
+
 
   bool _deepEquals(dynamic a, dynamic b) {
     if (a is Map && b is Map) return mapEquals(a, b); // 需要 import 'package:flutter/foundation.dart';
@@ -248,15 +250,14 @@ class RxState<T> {
     }
   }
 
-
-/// 绑定一个监听器。
-  /// 
+  /// 绑定一个监听器。
+  ///
   /// [onUpdate] 当值发生变化时触发。
   /// 返回一个取消绑定的函数。
   void Function() bind(void Function(T value) onUpdate) {
     // 使用包装函数以匹配内部的 void Function(dynamic) 签名
     void wrapper(dynamic _) => onUpdate(_value);
-    
+
     _listeners.add(wrapper);
 
     // 考虑到路由 Delegate 的场景，通常绑定时不需要立即执行一次 notifyListeners，

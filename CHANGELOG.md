@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.3.1] - 2026-04-28
+
+### Added
+
+*  引入 RxBuilder 组件：
+
+* 提供了一个标准的 StatelessWidget 包装器，方便在 Widget 树中直接进行响应式局部刷新。
+
+
+* 示例：
+```
+Dart
+RxBuilder(
+  builder: (context) => Text('当前计数: ${count.value}'),
+)
+```
 ## [1.3.0] - 2026-04-25
 
 ### Added

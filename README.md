@@ -5,6 +5,7 @@
     <img src="https://github.com/msfm2018/rxflare/blob/1.1.3/img/2.png?raw=true"  width="45%">
     <img src="https://github.com/msfm2018/rxflare/blob/1.1.3/img/3.png?raw=true" width="45%">
     <img src="https://github.com/msfm2018/rxflare/blob/1.1.3/img/4.png?raw=true" width="45%">
+      <img src="https://github.com/msfm2018/rxflare/blob/1.3.1/img/5.png?raw=true" width="45%">
 </p>
 
 
@@ -1003,4 +1004,65 @@ final result = await rxr.to('/settings');
 
 // 目标页返回
 rxr.back(result: 'Saved!');
+```
+
+
+### RxBuilder
+
+```
+Widget _buildProductList() {
+    // 这一层 RxBuilder 负责：当【分类】切换时，刷新整个列表的内容
+    return RxBuilder(
+      builder: (_) {
+        final currentCategory = categories[selectedCategoryIndex.value];
+        final items = menuItems.value.where((i) => i.category == currentCategory).toList();
+
+        if (items.isEmpty) return const Center(child: Text("该分类下暂无菜品"));
+
+        return ListView.builder(
+          padding: const EdgeInsets.all(10),
+          itemCount: items.length,
+          itemBuilder: (context, index) {
+            final item = items[index];
+
+            // 🏆 核心修改：在 itemBuilder 内部再包一层 RxBuilder
+            // 这一层负责：当【选中项】切换时，刷新这一行的颜色
+            return RxBuilder(
+              builder: (context) {
+                // 此时每一个 Item 都在监听 selectedProductIndex
+                final isSelected = selectedProductIndex.value == index;
+
+                return GestureDetector(
+                  onTap: () {
+                    selectedProductIndex.value = index; // 修改值，触发局部刷新
+                  },
+                  child: Card(
+                    // 根据 isSelected 状态动态切换颜色
+                    color: isSelected ? Colors.orange[100] : Colors.white,
+                    elevation: isSelected ? 4 : 1,
+                    margin: const EdgeInsets.only(bottom: 10),
+                    child: ListTile(
+                      title: Text(
+                        item.name,
+                        style: TextStyle(
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                          color: isSelected ? Colors.orange[900] : Colors.black87,
+                        ),
+                      ),
+                      subtitle: Text('${item.price} 元'),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.add_circle, color: Colors.orange),
+                        onPressed: () => cartController.addToCart(item),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+
 ```
