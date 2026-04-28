@@ -3,9 +3,9 @@
 // back: 优先处理当前视口（Active），如果触底则报警/扩展。
 
 import 'package:flutter/material.dart';
-import 'package:rxflare/rxflare.dart';
 
 import '../rx_debug.dart';
+import '../rx_state.dart';
 import './rx_route_args.dart';
 
 /// 全局路由便捷访问实例。
