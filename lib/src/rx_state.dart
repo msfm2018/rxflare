@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-import 'dart:async';
 import 'rx_stack.dart';
 import 'rx_debug.dart';
 
