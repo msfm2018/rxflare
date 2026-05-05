@@ -10,7 +10,7 @@ dependencies:
   flutter:
     sdk: flutter
   rxflare:
-    path: ../../RXFLARE  # 指向你克隆下来的本地文件夹路径
+    path: ../ 
 
 
   cupertino_icons: ^1.0.8
