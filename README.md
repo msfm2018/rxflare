@@ -8,7 +8,11 @@
       <img src="https://github.com/msfm2018/rxflare/blob/1.3.1/img/5.png?raw=true" width="45%">
 </p>
 
+## 相关软件 
+  <a >音乐 https://github.com/msfm2018/localMusicPlay</a>
+  <a> 树管理 https://github.com/msfm2018/simple_tree </a>
 
+  <a ></a>
 ##  the most basic usage (automatic dependency)
 ```flutter
 class DemoPage extends StatelessWidget {
