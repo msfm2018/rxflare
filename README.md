@@ -1,7 +1,7 @@
-#### 应用截图
+# screenshot
+
 <p align="center">
-  <img src="https://github.com/msfm2018/rxflare/blob/1.1.3/img/index.png?raw=true" width="45%">
-    <img src="https://github.com/msfm2018/rxflare/blob/1.1.3/img/1.png?raw=true" width="45%">
+  <img src="https://github.com/msfm2018/rxflare/blob/1.1.3/img/index.png?raw=true" width="45%"> 
     <img src="https://github.com/msfm2018/rxflare/blob/1.1.3/img/2.png?raw=true"  width="45%">
     <img src="https://github.com/msfm2018/rxflare/blob/1.1.3/img/3.png?raw=true" width="45%">
     <img src="https://github.com/msfm2018/rxflare/blob/1.1.3/img/4.png?raw=true" width="45%">
@@ -9,8 +9,8 @@
 </p>
 
 
-###  Demo 1：最基础用法（自动依赖）
-```
+##  the most basic usage (automatic dependency)
+```flutter
 class DemoPage extends StatelessWidget {
   final count = 0.obs;
 
@@ -37,7 +37,7 @@ class DemoPage extends StatelessWidget {
 }
 
 ```
-### 一个 Rx 块 监听多个值
+## One Rx block listens to multiple values.
 ```
 import 'package:flutter/material.dart';
 import 'package:rxflare/rxflare.dart';
@@ -98,7 +98,7 @@ class MultiRxDemo extends StatelessWidget {
   }
 }
 ```
-### Demo 2：多个状态自动依赖
+## Multiple state automatic dependency
 ```class DemoPage2 extends StatelessWidget {
   final count = 0.obs;
   final name = "Tom".obs;
@@ -136,7 +136,7 @@ class MultiRxDemo extends StatelessWidget {
 }
 ```
 
-### Demo 3：Map + 字段级更新（核心能力）
+## Map+Field Level Update (Core Competence)
 
 ```class DemoPage3 extends StatelessWidget {
   final user = {
@@ -195,7 +195,7 @@ class MultiRxDemo extends StatelessWidget {
 点击 name 按钮 → 只刷新 name 的 Rx
 点击 age 按钮 → 只刷新 age 的 Rx
 ```
-### Demo 4：List + index 精准更新
+## Demo 4：List + index accurate update
 ```class DemoPage4 extends StatelessWidget {
   final list = ["A", "B", "C"].obs;
 
@@ -222,7 +222,7 @@ class MultiRxDemo extends StatelessWidget {
   }
 }只刷新 index=1 的那一行
 ```
-### Demo 5：手动依赖模式（你写的 Rx.custom）
+## Manual dependency mode (Rx.custom you wrote)
 
 ```class DemoPage5 extends StatelessWidget {
   final count = 0.obs;
@@ -262,7 +262,7 @@ name 变化 → 不刷新
 手动控制依赖
 ```
 
-### 示例 1：field 级别依赖（你的高级功能🔥）
+## Field Level Dependency (Your Advanced Function)
 ```​
 // final user = RxState<Map<String, dynamic>>({
 final user = RxState<Map>({
@@ -276,7 +276,7 @@ print(nameUpper.value); // 输出 "TOM"
 user.value = {...user.value, "name": "Jerry"};
 print(nameUpper.value); // 输出 "JERRY"
 ```
-### 示例 2：最基础 computed
+## The most basic computed
 ```
 final count = RxState<int>(1);
 
@@ -289,7 +289,7 @@ count.value = 5;
 print(doubleCount.value); // 10（自动更新）
 
 ```
-### 示例 3：多个依赖
+## Multiple Dependencies
 ```
 final a = RxState<int>(2);
 
@@ -302,7 +302,7 @@ a.value = 10;
 
 print(c.value); // 21
 ```
-### 示例 4：依赖动态变化
+## Dependency Dynamic Change
 ```
 final flag = RxState<bool>(true);
 final a = RxState<int>(1);
@@ -320,7 +320,7 @@ print(result.value); // 1（依赖 a）
 flag.value = false;
 print(result.value); // 100（依赖变成 b）
 ```
-### 示例 5：链式 computed
+## Chain computed
 ```final a = RxState<int>(2);
 
 final b = computed(() => a.value * 2);
@@ -332,8 +332,8 @@ a.value = 10;
 
 print(c.value); // 21
 ```
-### RxEventBus
-### 1. 基础使用（最简单）
+# RxEventBus
+## Basic use (simplest)
 ```
   // 注册监听
   RxEventBus.on<String>(
@@ -351,7 +351,7 @@ print(c.value); // 21
     data: "Hello EventBus",
   );
 ```
-#### 2. 强类型（泛型 T）
+## Strongly typed (generic T)
 ```
 class User {
   final String name;
@@ -374,7 +374,7 @@ void main() {
   );
 }
 ```
-#### 3. 取消监听（off）
+## Cancel listening (off)
 ```
 late EventCallback<String> cb;
 
@@ -401,7 +401,7 @@ void main() {
   RxEventBus.notify(module: "test", eventID: 1, data: "第二次");
 }
 ```
-#### 4. 使用 Token 批量移除（推荐）
+## Bulk removal using Token (recommended)
 ```
 void main() {
   final token = EventToken();
@@ -432,7 +432,7 @@ void main() {
   RxEventBus.notify(module: "chat", eventID: 1, data: "world");
 }
 ```
-#### 5. Sticky 事件（后注册也能收到）
+## Sticky event (you can also receive it after registration)
 ```
 void main() {
   // 先发送（sticky）
@@ -487,7 +487,7 @@ void main() {
   );
 }
 ```
-### 7. 串行 vs 并行
+## Serial vs parallel
 ```
 RxEventBus.on<String>(
   module: "task",
@@ -523,8 +523,8 @@ RxEventBus.notify(
   parallel: false,
 );
 ```
-### RxFuture 
-#### 示例：加载用户信息页面
+# RxFuture 
+## Load User Information Page
 ```
 Future<String> fetchUser() async {
   await Future.delayed(const Duration(seconds: 2));
@@ -955,7 +955,7 @@ class _RxDemoPageState extends State<RxDemoPage> {
   }
 }
 
- 8. 表单场景（Map + 精准更新）
+ 8. Form scene (Map+accurate update)
 final form = RxState<Map<String, dynamic>>({
   "username": "",
   "password": "",
@@ -969,7 +969,7 @@ form.listenByKey("username", (v) {
 更新
 form.updateField("username", "admin");
 
-9. 高级组合（类似 computed）
+9. Advanced combination (similar to computed)
 
 final a = RxState<int>(1);
 final b = RxState<int>(2);
@@ -977,9 +977,9 @@ final b = RxState<int>(2);
 // 假设你有 RxComputed
 // final sum = RxComputed(() => a.value + b.value);
 ```
-# 路由
+# route
 
-###  定义与注册路由
+##  Define and register routes
 ```
 rxr.d({
   '/home': RxDef(builder: () => const HomePage(), path: '/home'),
@@ -987,7 +987,7 @@ rxr.d({
 });
 ```
 
-###  跳转与参数获取
+##  Jump and parameter acquisition
 ```
 // 跳转
 rxr.to('/detail/123?type=premium', arguments: MyObject());
@@ -997,7 +997,7 @@ final id = rxr.param('id');        // '123'
 final type = rxr.queryItem('type'); // 'premium'
 final obj = rxr.args<MyObject>();   // 获取自定义对象
 ```
-### 返回并回传结果
+## Return and return the results.
 ```
 // 发起跳转并等待
 final result = await rxr.to('/settings');
