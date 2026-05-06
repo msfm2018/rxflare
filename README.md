@@ -15,30 +15,14 @@
   <a ></a>
 ##  the most basic usage (automatic dependency)
 ```flutter
-class DemoPage extends StatelessWidget {
-  final count = 0.obs;
+final count = 0.obs;
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text("Rx Demo")),
-      body: Center(
-        child: Rx(() {
-          return Text(
-            "count: ${count.value}",
-            style: TextStyle(fontSize: 24),
-          );
-        }),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          count.value++;
-        },
-        child: Icon(Icons.add),
-      ),
-    );
-  }
-}
+Rx(() => Text("计数: ${count.value}"));
+
+FloatingActionButton(
+  onPressed: () => count.value++,
+  child: Icon(Icons.add),
+)
 
 ```
 ## One Rx block listens to multiple values.
@@ -142,63 +126,22 @@ class MultiRxDemo extends StatelessWidget {
 
 ## Map+Field Level Update (Core Competence)
 
-```class DemoPage3 extends StatelessWidget {
-  final user = {
-    "name": "Tom",
-    "age": 20,
-  }.obs;
+```final user = {
+  "name": "张三",
+  "age": 25,
+  "avatar": "xxx"
+}.obs;
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
+// 只监听 name 变化
+Rx(() => Text("姓名: ${user.getItem('name')}"));
 
-            // 🔥 只依赖 name
-            Rx(() {
-              return Text(
-                "name: ${user.getItem("name")}",
-                style: TextStyle(fontSize: 22),
-              );
-            }),
+// 只监听 age 变化
+Rx(() => Text("年龄: ${user.getItem('age')}"));
 
-            // 🔥 只依赖 age
-            Rx(() {
-              return Text(
-                "age: ${user.getItem("age")}",
-                style: TextStyle(fontSize: 22),
-              );
-            }),
-
-          ],
-        ),
-      ),
-      floatingActionButton: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          FloatingActionButton(
-            onPressed: () {
-              user.updateField("name", "Jerry");
-            },
-            child: Icon(Icons.person),
-          ),
-          SizedBox(height: 10),
-          FloatingActionButton(
-            onPressed: () {
-              user.updateField("age", 30);
-            },
-            child: Icon(Icons.cake),
-          ),
-        ],
-      ),
-    );
-  }
-}
-点击 name 按钮 → 只刷新 name 的 Rx
-点击 age 按钮 → 只刷新 age 的 Rx
+// 精准更新某个字段
+user.updateField("name", "李四");   // 仅 name 的 Rx 重绘
 ```
+
 ## Demo 4：List + index accurate update
 ```class DemoPage4 extends StatelessWidget {
   final list = ["A", "B", "C"].obs;
