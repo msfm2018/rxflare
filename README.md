@@ -15,220 +15,57 @@
   <a ></a>
 ##  the most basic usage (automatic dependency)
 ```flutter
-class DemoPage extends StatelessWidget {
-  final count = 0.obs;
+final count = 0.obs;
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text("Rx Demo")),
-      body: Center(
-        child: Rx(() {
-          return Text(
-            "count: ${count.value}",
-            style: TextStyle(fontSize: 24),
-          );
-        }),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          count.value++;
-        },
-        child: Icon(Icons.add),
-      ),
-    );
-  }
-}
+Rx(() => Text("计数: ${count.value}"));
+
+FloatingActionButton(
+  onPressed: () => count.value++,
+  child: Icon(Icons.add),
+)
 
 ```
 ## One Rx block listens to multiple values.
 ```
-import 'package:flutter/material.dart';
-import 'package:rxflare/rxflare.dart';
+final name = "张三".obs;
+final age = 20.obs;
+final score = 100.obs;
 
-void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  // This widget is the root of your application.
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
-      ),
-      home: MultiRxDemo(),
-    );
-  }
-}
-
-class MultiRxDemo extends StatelessWidget {
-  // 1. 定义三个响应式变量
-  final name = "张三".obs;
-  final age = 20.obs;
-  final score = 100.obs;
-
-  MultiRxDemo({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('RxFlare 自动依赖追踪')),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // 2. 只需要一个 Rx 块，就能同时监听 name, age, score
-            // 只要其中任何一个值改变，这个 Text 就会自动重绘
-            Rx(() {
-              print("UI 重绘了！"); // 你可以观察控制台看它触发的时机
-              return Text('${name.value} (年龄: ${age.value}) 的分数是: ${score.value}', style: const TextStyle(fontSize: 20));
-            }),
-
-            const SizedBox(height: 30),
-
-            // 3. 修改数据的按钮
-            ElevatedButton(onPressed: () => name.value = "李四", child: const Text('改名字')),
-            ElevatedButton(onPressed: () => age.value++, child: const Text('长一岁')),
-            ElevatedButton(onPressed: () => score.value -= 5, child: const Text('扣 5 分')),
-          ],
-        ),
-      ),
-    );
-  }
-}
+Rx(() => Text('${name.value}，${age.value}岁，分数 ${score.value}'));
 ```
-## Multiple state automatic dependency
-```class DemoPage2 extends StatelessWidget {
-  final count = 0.obs;
-  final name = "Tom".obs;
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Rx(() {
-          return Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text("count: ${count.value}"),
-              Text("name: ${name.value}"),
-            ],
-          );
-        }),
-      ),
-      floatingActionButton: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          FloatingActionButton(
-            onPressed: () => count.value++,
-            child: Icon(Icons.add),
-          ),
-          SizedBox(height: 10),
-          FloatingActionButton(
-            onPressed: () => name.value = "Jerry",
-            child: Icon(Icons.person),
-          ),
-        ],
-      ),
-    );
-  }
-}
-```
 
 ## Map+Field Level Update (Core Competence)
 
-```class DemoPage3 extends StatelessWidget {
-  final user = {
-    "name": "Tom",
-    "age": 20,
-  }.obs;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-
-            // 🔥 只依赖 name
-            Rx(() {
-              return Text(
-                "name: ${user.getItem("name")}",
-                style: TextStyle(fontSize: 22),
-              );
-            }),
-
-            // 🔥 只依赖 age
-            Rx(() {
-              return Text(
-                "age: ${user.getItem("age")}",
-                style: TextStyle(fontSize: 22),
-              );
-            }),
-
-          ],
-        ),
-      ),
-      floatingActionButton: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          FloatingActionButton(
-            onPressed: () {
-              user.updateField("name", "Jerry");
-            },
-            child: Icon(Icons.person),
-          ),
-          SizedBox(height: 10),
-          FloatingActionButton(
-            onPressed: () {
-              user.updateField("age", 30);
-            },
-            child: Icon(Icons.cake),
-          ),
-        ],
-      ),
-    );
-  }
-}
-点击 name 按钮 → 只刷新 name 的 Rx
-点击 age 按钮 → 只刷新 age 的 Rx
 ```
-## Demo 4：List + index accurate update
-```class DemoPage4 extends StatelessWidget {
-  final list = ["A", "B", "C"].obs;
+final user = {
+  "name": "张三",
+  "age": 25,
+  "avatar": "xxx"
+}.obs;
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Column(
-        children: List.generate(3, (index) {
-          return Rx(() {
-            return Text(
-              "item $index: ${list.getItem(index)}",
-              style: TextStyle(fontSize: 20),
-            );
-          });
-        }),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          list.updateField(1, "🔥B changed");
-        },
-        child: Icon(Icons.edit),
-      ),
-    );
-  }
-}只刷新 index=1 的那一行
+// 只监听 name 变化
+Rx(() => Text("姓名: ${user.getItem('name')}"));
+
+// 只监听 age 变化
+Rx(() => Text("年龄: ${user.getItem('age')}"));
+
+// 精准更新某个字段
+user.updateField("name", "李四");   // 仅 name 的 Rx 重绘
+```
+
+## Demo 4：List + index accurate update
+```
+final list = ["A", "B", "C"].obs;
+
+Rx(() => Text("Item 1: ${list.getItem(1)}"));
+
+list.updateField(1, "🔥B 已修改"); // 仅刷新第2项
 ```
 ## Manual dependency mode (Rx.custom you wrote)
 
-```class DemoPage5 extends StatelessWidget {
+```
+class DemoPage5 extends StatelessWidget {
   final count = 0.obs;
   final name = "Tom".obs;
 
@@ -530,111 +367,17 @@ RxEventBus.notify(
 # RxFuture 
 ## Load User Information Page
 ```
-Future<String> fetchUser() async {
+late RxFuture<String> userRx;
+
+userRx = RxFuture(() async {
   await Future.delayed(const Duration(seconds: 2));
+  return "用户数据加载成功";
+});
 
-  // 模拟随机失败
-  if (DateTime.now().second % 2 == 0) {
-    throw Exception("网络错误");
-  }
+if (userRx.isInitialLoading) return const CircularProgressIndicator();
+if (userRx.hasError) return Text("错误: ${userRx.error}");
 
-  return "用户：Tom (${DateTime.now()})";
-}
-
-class UserPage extends StatefulWidget {
-  @override
-  State<UserPage> createState() => _UserPageState();
-}
-
-class _UserPageState extends State<UserPage> {
-  late RxFuture<String> rx;
-
-  @override
-  void initState() {
-    super.initState();
-    rx = RxFuture(fetchUser);
-
-    // 监听变化（假设 RxState 有 listen）
-    rx.listen(() {
-      setState(() {});
-    });
-  }
-
-  @override
-  void dispose() {
-    rx.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text("RxFuture 示例")),
-      body: _buildBody(),
-    );
-  }
-
-  Widget _buildBody() {
-    // 🚀 1. 首次加载
-    if (rx.isInitialLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    // ❌ 2. 完全失败（没有数据）
-    if (rx.hasError && !rx.hasData) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text("加载失败: ${rx.error}"),
-            const SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: rx.retry,
-              child: const Text("重试"),
-            )
-          ],
-        ),
-      );
-    }
-
-    // ✅ 3. 有数据（核心）
-    return RefreshIndicator(
-      onRefresh: () async {
-        rx.refresh();
-      },
-      child: ListView(
-        children: [
-          ListTile(
-            title: Text(rx.data ?? ""),
-            subtitle: _buildStatus(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatus() {
-    // 🔄 正在刷新
-    if (rx.isRefreshing) {
-      return const Text("正在刷新...");
-    }
-
-    // ⚠️ 软错误（有数据但更新失败）
-    if (rx.hasSoftError) {
-      return Text(
-        "更新失败（显示旧数据）: ${rx.lastError}",
-        style: const TextStyle(color: Colors.orange),
-      );
-    }
-
-    // ♻️ 数据过期（stale）
-    if (rx.isStale) {
-      return const Text("数据更新中...");
-    }
-
-    return const Text("正常");
-  }
-}
+Text(userRx.data ?? "");
 ```
 ### RxObjMgr + RxParent
 #### 最基础用法（手动 put / find）
@@ -985,10 +728,22 @@ final b = RxState<int>(2);
 
 ##  Define and register routes
 ```
-rxr.d({
+rxr.register({
   '/home': RxDef(builder: () => const HomePage(), path: '/home'),
   '/detail/:id': RxDef(builder: () => const DetailPage(), path: '/detail/:id'),
 });
+
+// 跳转
+rxr.to('/detail/123?type=hot', arguments: MyData());
+
+// 获取参数
+final id = rxr.param('id');        // 路径参数
+final type = rxr.queryItem('type'); // query 参数
+final obj = rxr.args<MyData>();     // 自定义对象
+
+返回数据
+final result = await rxr.to('/edit');
+rxr.back(result: "保存成功");
 ```
 
 ##  Jump and parameter acquisition
@@ -1014,59 +769,22 @@ rxr.back(result: 'Saved!');
 ### RxBuilder
 
 ```
-Widget _buildProductList() {
-    // 这一层 RxBuilder 负责：当【分类】切换时，刷新整个列表的内容
-    return RxBuilder(
-      builder: (_) {
-        final currentCategory = categories[selectedCategoryIndex.value];
-        final items = menuItems.value.where((i) => i.category == currentCategory).toList();
-
-        if (items.isEmpty) return const Center(child: Text("该分类下暂无菜品"));
-
-        return ListView.builder(
-          padding: const EdgeInsets.all(10),
-          itemCount: items.length,
-          itemBuilder: (context, index) {
-            final item = items[index];
-
-            // 🏆 核心修改：在 itemBuilder 内部再包一层 RxBuilder
-            // 这一层负责：当【选中项】切换时，刷新这一行的颜色
-            return RxBuilder(
-              builder: (context) {
-                // 此时每一个 Item 都在监听 selectedProductIndex
-                final isSelected = selectedProductIndex.value == index;
-
-                return GestureDetector(
-                  onTap: () {
-                    selectedProductIndex.value = index; // 修改值，触发局部刷新
-                  },
-                  child: Card(
-                    // 根据 isSelected 状态动态切换颜色
-                    color: isSelected ? Colors.orange[100] : Colors.white,
-                    elevation: isSelected ? 4 : 1,
-                    margin: const EdgeInsets.only(bottom: 10),
-                    child: ListTile(
-                      title: Text(
-                        item.name,
-                        style: TextStyle(
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                          color: isSelected ? Colors.orange[900] : Colors.black87,
-                        ),
-                      ),
-                      subtitle: Text('${item.price} 元'),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.add_circle, color: Colors.orange),
-                        onPressed: () => cartController.addToCart(item),
-                      ),
-                    ),
-                  ),
-                );
-              },
+RxBuilder(
+  builder: (_) {
+    return ListView.builder(
+      itemBuilder: (context, index) {
+        return RxBuilder(
+          builder: (_) {
+            final isSelected = selectedIndex.value == index;
+            return ListTile(
+              title: Text(items[index]),
+              tileColor: isSelected ? Colors.orange[100] : null,
             );
           },
         );
       },
     );
-  }
+  },
+);
 
 ```

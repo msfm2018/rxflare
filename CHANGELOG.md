@@ -1,4 +1,21 @@
 # Changelog
+## [1.4.0] - 2026-05-08
+
+### Added
+
+*  集合响应式增强 (RxCollections)：引入了 RxList 、 RxSet、rx_map，旨在通过不可变更新（Immutable Updates）简化集合状态的管理。
+
+* RxList：
+* 支持原生 List 语法：可以通过 [] 读取和 []= 修改元素
+* 自动化响应：内部在进行 add、removeAt 或 updateAt 操作时，会自动创建新的 List 实例并触发响应式通知。
+
+* 示例：
+```
+Dart
+  final todos = RxList<String>(["Learn Flutter"]);
+  todos.add("Build app"); // 自动触发 UI 刷新
+  todos[0] = "Master Flutter"; // 运算符重载支持
+```
 
 ## [1.3.1] - 2026-04-28
 

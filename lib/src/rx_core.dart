@@ -1,3 +1,6 @@
+import 'rx_list.dart';
+import 'rx_map.dart';
+import 'rx_set.dart';
 import 'rx_state.dart';
 import 'rx_debug.dart';
 import 'package:flutter/material.dart';
@@ -16,8 +19,8 @@ typedef RxValue<T> = RxState<T>;
 typedef RxStore<T> = RxState<T>;
 typedef RxNotifier<T> = RxState<T>;
 
-typedef RxList<T> = RxState<List<T>>;
-typedef RxMap<K, V> = RxState<Map<K, V>>;
+// typedef RxList<T> = RxState<List<T>>;
+// typedef RxMap<K, V> = RxState<Map<K, V>>;
 
 /// ==============================
 /// 基础类型扩展
@@ -47,11 +50,11 @@ extension RxDoubleExtension on double {
   RxState<double> get obs => RxState<double>(this);
 }
 
-/// 将 `Map` 转换为 `RxState<Map<K, V>>`
-extension RxMapExtension<K, V> on Map<K, V> {
-  /// 将当前 `Map` 包装成 `RxState<Map<K, V>>`
-  RxState<Map<K, V>> get obs => RxState<Map<K, V>>(this);
-}
+// /// 将 `Map` 转换为 `RxState<Map<K, V>>`
+// extension RxMapExtension<K, V> on Map<K, V> {
+//   /// 将当前 `Map` 包装成 `RxState<Map<K, V>>`
+//   RxState<Map<K, V>> get obs => RxState<Map<K, V>>(this);
+// }
 
 /// 将 `List` 转换为 `RxState<List<E>>`
 extension RxListExtension<E> on List<E> {
@@ -156,4 +159,24 @@ extension RxAsyncExtension<T> on RxState<T> {
 extension RxColorExtension on Color {
   /// 将 `Color` 转换为 `RxState<Color>`
   RxState<Color> get obs => RxState<Color>(this);
+}
+
+
+
+
+
+/// ==============================
+/// 集合类型专用扩展（推荐最终版）
+/// ==============================
+extension RxFlareCollectionExtensions on Object {
+  
+  RxMap<K, V> obsMap<K, V>() => RxMap<K, V>(this as Map<K, V>);
+  
+  RxList<T> obsList<T>() => RxList<T>(this as List<T>);
+  
+  RxSet<T> obsSet<T>() => RxSet<T>(this as Set<T>);
+
+  // 快捷方式（日常最常用）
+  RxMap<String, dynamic> get obsMapD => RxMap<String, dynamic>(this as Map<String, dynamic>);
+  RxList<Map<String, dynamic>> get obsListMap => RxList<Map<String, dynamic>>(this as List<Map<String, dynamic>>);
 }

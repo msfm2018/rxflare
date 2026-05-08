@@ -3,6 +3,7 @@
 // back: 优先处理当前视口（Active），如果触底则报警/扩展。
 
 import 'package:flutter/material.dart';
+import '../rx_core.dart';
 
 import '../rx_debug.dart';
 import '../rx_state.dart';
@@ -27,6 +28,8 @@ class RxUtils {
 /// 路由跳转 ([to])、返回 ([back]) 以及参数存取。
 class RxRouter {
   RxRouter._();
+  String initialRoute = "/";
+  final navigatorKey = GlobalKey<NavigatorState>();
 
   /// 获取 RxRouter 的单例实例。
   static final I = RxRouter._();
@@ -40,7 +43,7 @@ class RxRouter {
   final Map<int, RxState<List<RxPage>>> tabPages = {};
 
   /// 当前激活的 Tab 索引。
-  int activeTabIndex = 0;
+  final activeTabIndex = 0.obs;
 
   /// 已注册的路由配置映射表。
   final _routes = <String, RxDef>{};
@@ -52,7 +55,7 @@ class RxRouter {
   /// 注册路由定义表。
   ///
   /// [map] 包含路径与对应的构建器及守卫逻辑。
-  void d(Map<String, RxDef> map) {
+  void register(Map<String, RxDef> map) {
     _routes.addAll(map);
   }
 
@@ -61,11 +64,24 @@ class RxRouter {
   // =====================
   /// 获取当前活跃的路由栈（根据 [activeTabIndex] 自动选择 Tab 栈或根栈）。
   RxState<List<RxPage>> get _activePages {
-    return tabPages[activeTabIndex] ?? memPages;
+    return tabPages[activeTabIndex.value] ?? memPages;
   }
 
   /// 获取当前视口顶部的页面信息。
   RxPage? get current => _activePages.value.isNotEmpty ? _activePages.value.last : null;
+
+  void ensureInitialized() {
+    if (memPages.value.isNotEmpty) return;
+
+    memPages.value = [
+      RxPage(
+        name: initialRoute,
+        pageId: RxUtils.generateId(),
+        params: {},
+        query: {},
+      ),
+    ];
+  }
 
   // =====================
   // 跳转 API
@@ -203,9 +219,15 @@ class RxRouter {
     tabPages[index] = RxState(initial);
   }
 
+  void initTabIfNeeded(int index, List<RxPage> initial) {
+    if (tabPages[index] != null) return;
+
+    tabPages[index] = RxState(initial);
+  }
+
   /// 切换当前激活的 Tab。
   void switchTab(int index) {
-    activeTabIndex = index;
+    activeTabIndex.value = index;
   }
 }
 
@@ -231,6 +253,8 @@ class RxRouterDelegate extends RouterDelegate<Object> with ChangeNotifier, PopNa
   final List<void Function()> _unbinders = [];
 
   RxRouterDelegate({this.customStack}) {
+    RxRouter.I.ensureInitialized();
+
     final target = customStack ?? RxRouter.I.memPages;
 
     // 绑定状态变化，自动通知 Flutter 重新构建
@@ -258,7 +282,6 @@ class RxRouterDelegate extends RouterDelegate<Object> with ChangeNotifier, PopNa
     final router = RxRouter.I;
     // 使用指定的栈，如果没有则使用全局逻辑
     final stack = customStack?.value ?? router._activePages.value;
-    // final stack = router._activePages.value;
     return Navigator(
       key: navigatorKey,
       pages: stack.map((e) {
@@ -270,10 +293,14 @@ class RxRouterDelegate extends RouterDelegate<Object> with ChangeNotifier, PopNa
           ),
         );
       }).toList(),
-      onPopPage: (route, result) {
-        if (!route.didPop(result)) return false;
-        router.back(result: result);
-        return true;
+      onDidRemovePage: (page) {
+        final key = page.key;
+        if (key is ValueKey<String>) {
+          final pageId = key.value;
+          if (RxRouter.I.pageId() == pageId) {
+            RxRouter.I.back();
+          }
+        }
       },
     );
   }

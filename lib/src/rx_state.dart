@@ -158,11 +158,7 @@ class RxState<T> {
       }
       return;
     }
-    // // ❌ List 直接禁止
-    // if (current is List) {
-    //   RxDebug.log("❌ List 不支持 field 更新，请使用 Map + key");
-    //   return;
-    // }
+ 
 
     if (current is List && field is int) {
       final index = field;
@@ -398,3 +394,5 @@ class RxState<T> {
     _notifyListeners(id); // 这里的 notifyListeners 是继承自 ChangeNotifier 的
   }
 }
+
+
