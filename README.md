@@ -1,11 +1,12 @@
 # screenshot
 
 <p align="center">
-  <img src="https://github.com/msfm2018/rxflare/blob/1.1.3/img/index.png?raw=true" width="45%"> 
-    <img src="https://github.com/msfm2018/rxflare/blob/1.1.3/img/2.png?raw=true"  width="45%">
-    <img src="https://github.com/msfm2018/rxflare/blob/1.1.3/img/3.png?raw=true" width="45%">
-    <img src="https://github.com/msfm2018/rxflare/blob/1.1.3/img/4.png?raw=true" width="45%">
-      <img src="https://github.com/msfm2018/rxflare/blob/1.3.1/img/5.png?raw=true" width="45%">
+  <img src="https://github.com/msfm2018/rxflare/blob/1.4.0/img/0.png?raw=true" width="45%"> 
+  <img src="https://github.com/msfm2018/rxflare/blob/1.4.0/img/index.png?raw=true" width="45%"> 
+    <img src="https://github.com/msfm2018/rxflare/blob/1.4.0/img/2.png?raw=true"  width="45%">
+    <img src="https://github.com/msfm2018/rxflare/blob/1.4.0/img/3.png?raw=true" width="45%">
+    <img src="https://github.com/msfm2018/rxflare/blob/1.4.0/img/4.png?raw=true" width="45%">
+      <img src="https://github.com/msfm2018/rxflare/blob/1.4.0/img/5.png?raw=true" width="45%">
 </p>
 
 ## 相关软件 
@@ -98,9 +99,7 @@ class DemoPage5 extends StatelessWidget {
     );
   }
 }
-count 变化 → 刷新
-name 变化 → 不刷新
-手动控制依赖
+
 ```
 
 ## Field Level Dependency (Your Advanced Function)
