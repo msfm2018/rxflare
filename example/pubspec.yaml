@@ -36,7 +36,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   rxflare: 
     path: ../
-  # rxflare: ^1.4.0
+  # rxflare: ^1.4.1
 
 dev_dependencies:
   flutter_test:
