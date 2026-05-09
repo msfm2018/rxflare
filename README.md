@@ -128,6 +128,22 @@ print(nameUpper.value); // 输出 "JERRY"
 ```
 ## The most basic computed
 ```
+final price = 99.obs;
+final quantity = 1.obs;
+
+// 计算属性会自动追踪依赖
+late final total = computed(() => price.value * quantity.value);
+late final isExpensive = computed(() => total.value > 500);
+
+Rx(() => Column(
+  children: [
+    Text("总价: ${total.value} 元", style: const TextStyle(fontSize: 32)),
+    Text(isExpensive.value ? "💰 高消费" : "🛍️ 性价比不错",
+         style: TextStyle(color: isExpensive.value ? Colors.red : Colors.green)),
+  ],
+));
+
+
 final count = RxState<int>(1);
 
 final doubleCount = computed(() => count.value * 2);
@@ -200,6 +216,19 @@ print(c.value); // 21
     eventID: 1,
     data: "Hello EventBus",
   );
+```
+## RxFuture
+```
+late RxFuture<User> userFuture = RxFuture(() async {
+  await Future.delayed(const Duration(seconds: 2));
+  return User(name: "张三");
+});
+
+Rx(() {
+  if (userFuture.isInitialLoading) return const CircularProgressIndicator();
+  if (userFuture.hasError) return Text("错误: ${userFuture.error}");
+  return Text("用户: ${userFuture.data?.name}");
+});
 ```
 ## Strongly typed (generic T)
 ```
