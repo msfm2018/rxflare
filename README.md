@@ -55,8 +55,18 @@ Rx(() => Text("年龄: ${user.getItem('age')}"));
 user.updateField("name", "李四");   // 仅 name 的 Rx 重绘
 ```
 
-## Demo 4：List + index accurate update
+## List + index accurate update
 ```
+final items = List.generate(1000, (i) => {
+  "id": i,
+  "title": "Item $i",
+  "score": 50,
+}).obsListMap;
+
+// 只更新第5项
+items.updateAt(5, {...items[5], "score": 999});
+
+
 final list = ["A", "B", "C"].obs;
 
 Rx(() => Text("Item 1: ${list.getItem(1)}"));
