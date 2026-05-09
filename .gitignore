@@ -5,6 +5,7 @@
 # Dart / Pub build
 .dart_tool/
 .packages
+.pub/
 pubspec.lock
 
 # Generated files
@@ -61,3 +62,31 @@ example/windows/
 example/build/
 # 忽略所有 build 产物
 **/build/
+
+# Flutter
+.flutter-plugins
+.flutter-plugins-dependencies
+.metadata
+
+# IDE
+.idea/
+.vscode/
+
+# Generated
+**/generated_plugin_registrant.*
+**/generated_plugins.cmake
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# Example build
+example/build/
+example/.dart_tool/
+
+exampleIm/.dart_tool/
+
+# pub lock
+pubspec.lock

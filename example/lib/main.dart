@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:rxflare/rxflare.dart';
 
+import 'feature/features/home/view/freature_home_page.dart';
 import 'router_demo.dart';
 
 final isDarkMode = false.obs;
@@ -41,7 +42,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 7, vsync: this);
+    _tabController = TabController(length: 8, vsync: this);
   }
 
   @override
@@ -70,12 +71,13 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
             Tab(text: '性能测试'),
             Tab(text: '性能测试2'),
             Tab(text: '路由'),
+            Tab(text: 'RxFuture用法'),
           ],
         ),
       ),
       body: TabBarView(
         controller: _tabController,
-        children: [BasicAutoTrackDemo(), MapListPreciseDemo(), ComputedDemo(), EventBusDemo(), PerformanceTestDemo(), PerformanceTestDemoA(), RouterDemo()],
+        children: [BasicAutoTrackDemo(), MapListPreciseDemo(), ComputedDemo(), EventBusDemo(), PerformanceTestDemo(), PerformanceTestDemoA(), RouterDemo(),FreatureHomePage()],
       ),
     );
   }

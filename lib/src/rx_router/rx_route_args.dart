@@ -77,10 +77,12 @@ class RxDef {
   final Future<bool> Function()? guard;
 
   /// 注册的路径规则（支持 :id 格式）。
-  final String path;
+  /// 如果不传，则默认使用注册时的 key 作为 path
+  final String? path;
 
-  RxDef({required this.builder, required this.path, this.guard});
+  RxDef({required this.builder,  this.path, this.guard});
 }
+
 
 /// 路由匹配成功后的中间结果。
 class RxHit {
@@ -98,32 +100,64 @@ class RxHiter {
   /// 将输入的 [input] 路径与已注册的 [routes] 进行匹配。
   ///
   /// 如果匹配成功，返回包含路由名和参数的 [RxHit] 对象。
+  // static RxHit? match(String input, Map<String, RxDef> routes) {
+  //   final inputSegments = Uri.parse(input).pathSegments;
+  //   for (final entry in routes.entries) {
+  //     final pattern = Uri.parse(entry.value.path).pathSegments;
+  //     if (pattern.length != inputSegments.length) continue;
+  //     final params = <String, String>{};
+  //     bool ok = true;
+
+  //     for (int i = 0; i < pattern.length; i++) {
+  //       final p = pattern[i];
+  //       final v = inputSegments[i];
+
+  //       if (p.startsWith(':')) {
+  //         // 提取动态参数
+  //         params[p.substring(1)] = v;
+  //       } else if (p != v) {
+  //         ok = false;
+  //         break;
+  //       }
+  //     }
+
+  //     if (ok) {
+  //       return RxHit(entry.key, params);
+  //     }
+  //   }
+
+  //   return null;
+  // }
+
   static RxHit? match(String input, Map<String, RxDef> routes) {
-    final inputSegments = Uri.parse(input).pathSegments;
-    for (final entry in routes.entries) {
-      final pattern = Uri.parse(entry.value.path).pathSegments;
-      if (pattern.length != inputSegments.length) continue;
-      final params = <String, String>{};
-      bool ok = true;
+  final inputUri = Uri.parse(input);
+  final inputSegments = inputUri.pathSegments;
 
-      for (int i = 0; i < pattern.length; i++) {
-        final p = pattern[i];
-        final v = inputSegments[i];
+  for (final entry in routes.entries) {
+    final def = entry.value;
+    final pattern = Uri.parse(def.path ?? entry.key).pathSegments;  // 使用 effective path
 
-        if (p.startsWith(':')) {
-          // 提取动态参数
-          params[p.substring(1)] = v;
-        } else if (p != v) {
-          ok = false;
-          break;
-        }
-      }
+    if (pattern.length != inputSegments.length) continue;
 
-      if (ok) {
-        return RxHit(entry.key, params);
+    final params = <String, String>{};
+    bool ok = true;
+
+    for (int i = 0; i < pattern.length; i++) {
+      final p = pattern[i];
+      final v = inputSegments[i];
+
+      if (p.startsWith(':')) {
+        params[p.substring(1)] = v;
+      } else if (p != v) {
+        ok = false;
+        break;
       }
     }
 
-    return null;
+    if (ok) {
+      return RxHit(entry.key, params);   // 仍然返回注册时的 key
+    }
   }
+  return null;
+}
 }

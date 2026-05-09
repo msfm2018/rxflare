@@ -55,8 +55,23 @@ class RxRouter {
   /// 注册路由定义表。
   ///
   /// [map] 包含路径与对应的构建器及守卫逻辑。
+  // void register(Map<String, RxDef> map) {
+  //   _routes.addAll(map);
+  // }
   void register(Map<String, RxDef> map) {
-    _routes.addAll(map);
+    for (var entry in map.entries) {
+      final key = entry.key;
+      final def = entry.value;
+
+      // 如果用户没传 path，则使用 key 作为 path
+      final effectivePath = def.path ?? key;
+
+      _routes[key] = RxDef(
+        builder: def.builder,
+        path: effectivePath, // 内部统一保存
+        guard: def.guard,
+      );
+    }
   }
 
   // =====================

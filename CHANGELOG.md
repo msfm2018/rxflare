@@ -1,4 +1,22 @@
 # Changelog
+## [1.4.1] - 2026-05-09
+
+### 优化
+* 路由注册优化
+* 优化 register 路由注册机制
+* 移除 path 路径参数，使注册方式更加简洁
+* RxFuture 状态监听增强
+
+* 新增 listenState 方法，用于监听 RxFuture 内部状态变化。
+
+* 状态流转包括：
+
+* loading → done
+* loading → error
+* 其他状态切换
+
+* 适用于在状态变化时主动通知 UI 刷新。
+
 ## [1.4.0] - 2026-05-08
 
 ### Added

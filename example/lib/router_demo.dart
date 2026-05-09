@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:rxflare/rxflare.dart';
 
-import 'menu/screens/home_screen.dart';
+import 'app_routes.dart';
 
 class RouterDemo extends StatelessWidget {
   const RouterDemo({super.key});
@@ -9,25 +9,7 @@ class RouterDemo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // 1. 注册路由（这里一定要正确）
-    rxr.register({
-      "/": RxDef(path: "/", builder: () => MainTabWrapper()),
-      "/RouterHomePage": RxDef(path: "/RouterHomePage", builder: () => const RouterHomePage()),
-      "/HomeScreen": RxDef(path: "/HomeScreen", builder: () => const HomeScreen()),
-      "/admin": RxDef(
-        path: "/admin",
-        builder: () => const Scaffold(body: Center(child: Text("管理员专区"))),
-        // 路由守卫：只有异步返回 true 才能进入
-        guard: () async {
-          debugPrint("守卫检查中...");
-          // 模拟未登录，跳转登录并拦截
-          final result = await rxr.to("/login");
-          return result == "error";
-        },
-      ),
-
-      "/login": RxDef(path: "/login", builder: () => const LoginPage()),
-      "/detail": RxDef(path: "/detail", builder: () => const DetailPage()),
-    });
+    rxr.register(AppRoutes.routes);
 
     // 2. 必须用 Router + Delegate，不能用 Navigator！
     return Router(
@@ -76,7 +58,6 @@ class _MainTabWrapperState extends State<MainTabWrapper> {
       ),
     );
   }
-
 }
 
 class RouterHomePage extends StatelessWidget {

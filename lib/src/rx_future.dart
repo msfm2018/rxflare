@@ -99,6 +99,18 @@ class RxFuture<T> extends RxState<AsyncSnapshot<T>> {
     });
   }
 
+  ///listenState 的作用是：当 RxFuture 内部状态发生变化（loading → done → error）时，通知外部。
+  /// ✅ 推荐写法：支持 c.userFuture.listenState(() => setState(() {}))
+  void Function() listenState(void Function() onUpdate) {
+    void wrapper(AsyncSnapshot<T> _) => onUpdate();
+    return super.listen(wrapper);
+  }
+
+  /// 保留原始功能（接收 AsyncSnapshot）
+  void Function() listenWithSnapshot(void Function(AsyncSnapshot<T>) onUpdate) {
+    return super.listen(onUpdate);
+  }
+
   /// 重试异步任务
   ///
   /// 如果当前正在刷新，则跳过
@@ -145,6 +157,7 @@ class RxFuture<T> extends RxState<AsyncSnapshot<T>> {
   Object? get error => value.error;
 
   @override
+
   /// 释放资源
   void dispose() {
     _disposed = true;

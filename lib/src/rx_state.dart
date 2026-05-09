@@ -54,6 +54,7 @@ class RxState<T> {
   /// 如果 [T] 是 [List]，[field] 为 [int] 类型的索引。
   /// 调用此方法会注册字段级依赖，只有当该特定字段改变时才会触发监听。
   dynamic getItem(dynamic field) {
+    RxStack.register(this);
     RxStack.registerField(this, field);
 
     if (_value is Map) {
