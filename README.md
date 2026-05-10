@@ -1,3 +1,50 @@
+# rxflare 核心内容总结
+rxflare 是**Flutter 轻量级响应式状态管理库**，当前最新版 **v1.4.2**（2026‑05‑10），主打**自动依赖追踪、字段级精准更新、低代码、高性能**。
+
+---
+## 一、核心定位
+- 极简响应式状态管理，**零配置、自动依赖、局部刷新**
+- 替代 Provider、GetX、Bloc 等重方案，适合中小项目快速开发
+
+## 二、核心能力（必看）
+1. **自动依赖**
+   变量 `.obs` + `Rx(() => 组件)`，自动追踪、按需重绘
+2. **字段/索引级精准刷新**
+   Map 按 key、List 按 index 监听/更新，只重绘用到的部分
+3. **计算属性 computed**
+   自动链式依赖，数据变化同步更新
+4. **事件总线 RxEventBus**
+   支持模块、ID、优先级、粘滞、串行/并行、批量解绑
+5. **异步封装 RxFuture**
+   内置加载/错误/成功状态，简化异步 UI
+6. **依赖管理 RxObjMgr + RxParent**
+   单例/懒加载/多实例/页面隔离，配合控制器架构
+7. **路由 rxr**
+   路径参数、query、对象传参、返回结果
+8. **自动释放 RxAutoDispose**
+   防内存泄漏，简化销毁逻辑
+
+## 三、核心 API 速览
+- 响应式变量：`xxx.obs`
+- 自动刷新组件：`Rx(() => Text('${count.value}'))`
+- 手动指定依赖：`Rx.custom(deps: [count], builder: ...)`
+- 计算属性：`computed(() => a.value + b.value)`
+- Map/List 精准：`updateField` / `updateAt` / `getItem`
+- 事件：`RxEventBus.on/notify/off`
+- 异步：`RxFuture` + 状态判断
+- 依赖：`RxObjMgr.put/find` + `RxParent`
+- 路由：`rxr.to / back / param / queryItem`
+
+## 四、适用场景
+- 快速开发、低代码 Flutter 页面
+- 列表/表单大量数据，需要**局部精准刷新**提升性能
+- 中小型项目，不想引入复杂状态框架
+- 需事件通信、异步状态、控制器隔离的业务
+
+## 五、一句话亮点
+**用最少代码实现最精准刷新，自动依赖+字段级更新，上手极快、性能友好**。
+
+需要我给你一份**可直接复制的 rxflare 快速上手模板**（计数器+表单+列表+事件总线）吗？
 # screenshot
 
 <p align="center">
