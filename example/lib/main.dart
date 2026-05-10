@@ -2,7 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:rxflare/rxflare.dart';
 
 import 'auto_dispose/data_dispose.dart';
-import 'feature/features/home/view/freature_home_page.dart';
+import 'feature/features/home/controller/dio_controller.dart';
+import 'feature/features/home/controller/home_controller.dart';
+import 'feature/features/home/controller/page_controller.dart';
+import 'feature/features/home/controller/poll_controller.dart';
+import 'feature/features/home/controller/search_controller.dart';
+
 import 'router_demo.dart';
 import 'auto_dispose/auto_dispose.dart';
 
@@ -44,7 +49,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 10, vsync: this);
+    _tabController = TabController(length: 14, vsync: this);
   }
 
   @override
@@ -74,6 +79,12 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
             Tab(text: '性能测试2'),
             Tab(text: '路由'),
             Tab(text: 'RxFuture用法'),
+            Tab(text: 'RxFuture分页'),
+            Tab(text: 'RxFuture轮询'),
+            Tab(text: 'RxFuture防抖'),
+            Tab(text: 'RxFutureDio'),
+
+            
             Tab(text: '简单生命周期'),
             Tab(text: '复杂生命周期'),
           ],
@@ -82,7 +93,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
       body: TabBarView(
         controller: _tabController,
         children: [BasicAutoTrackDemo(), MapListPreciseDemo(), ComputedDemo(), EventBusDemo(), PerformanceTestDemo(), 
-        PerformanceTestDemoA(), RouterDemo(),FreatureHomePage(),
+        PerformanceTestDemoA(), RouterDemo(),FreatureHomePage(),HomeP(),PollPage(),SearchPage(),DioPage(),
         AutoDisposePage(),DataDispose()],
       ),
     );

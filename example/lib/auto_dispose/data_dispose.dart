@@ -27,7 +27,7 @@ class UserController implements Disposable {
   late final RxFuture<User> userFuture;
 
   UserController() {
-    userFuture = RxFuture(() async {
+    userFuture = RxFuture((cancelToken) async {
       await Future.delayed(const Duration(seconds: 1));
       return User(name: "张三");
     });
@@ -71,7 +71,7 @@ class _UserViewState extends State<UserView> {
   @override
   void initState() {
     super.initState();
-    controller = RxObjMgr.find<UserController>();
+    controller = RxObjMgr.find<UserController>(name: "data_dispose");
   }
 
   @override

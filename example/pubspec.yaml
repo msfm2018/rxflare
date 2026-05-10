@@ -36,6 +36,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   rxflare: 
     path: ../
+  dio: ^5.9.2
   # rxflare: ^1.4.1
 
 dev_dependencies:

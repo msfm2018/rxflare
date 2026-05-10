@@ -1,4 +1,38 @@
 # Changelog
+
+## [1.4.3] - 2026-05-10
+
+### 完善优化
+* RxFuture 防抖 / 节流 / 轮询 / 重试
+```
+final userRx = RxFuture<User>(
+  () => api.getUser(),
+  debounce: Duration(milliseconds: 300),    // 防抖
+  throttle: Duration(seconds: 1),           // 节流
+  maxRetries: 3,                            // 自动重试 3 次
+  retryDelay: Duration(seconds: 1),         // 重试间隔
+  pollInterval: Duration(seconds: 10),      // 每10秒轮询
+);
+
+
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // ========== 全局 RxFuture 配置 ==========
+  RxFuture.globalOnError = (error, stack) {
+    // 1. 统一打印日志
+    //print("🌐 全局捕获 RxFuture 错误：$error\n$stack");
+    
+    // 2. 统一弹窗 / Toast
+    //print("请求失败：${error.toString()}");
+    
+    // 3. 可在这里做 401 登录过期、token 刷新、跳转登录页
+    // if(error.toString().contains("401")){...}
+  };
+
+  runApp(const MyApp());
+}
+```
 ## [1.4.2] - 2026-05-10
 
 ### Added

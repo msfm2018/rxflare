@@ -1,166 +1,921 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
-import 'rx_state.dart';
-import 'rx_debug.dart';
 
-/// RxFuture 是一个增强型异步状态管理类
+import '../rxflare.dart';
+
+/// =======================================================
+/// RxFuture
+/// =======================================================
 ///
-/// 基于 `[RxState]<[AsyncSnapshot]<T>>`，用于管理异步任务的状态、刷新、重试和错误处理。
+/// 支持：
 ///
-/// 特点：
-/// - 自动追踪异步任务状态（loading、done、error）
-/// - 提供 `retry()` 方法重试任务
-/// - 提供 `refresh()` 方法刷新任务（可标记为 stale）
-/// - 提供丰富状态访问属性：`isLoading`, `isRefreshing`, `hasData`, `hasError`, `data`, `error`
+/// ✅ 自动依赖联动
+/// ✅ CancelToken
+/// ✅ debounce
+/// ✅ throttle
+/// ✅ retry
+/// ✅ polling
+/// ✅ cache
+/// ✅ stale-while-revalidate
+/// ✅ background refresh
+/// ✅ force refresh
+/// ✅ soft error
+/// ✅ request dedupe
+/// ✅ keep previous data
+/// ✅ concurrent control
+/// ✅ global error handler
 ///
-/// 示例：
+/// 设计目标：
 ///
-/// ```dart
-/// final rx = RxFuture<String>(() async {
-///   await Future.delayed(Duration(seconds: 2));
-///   return "Hello RxFuture";
-/// });
+/// ReactQuery / SWR / Riverpod AsyncValue 风格
 ///
-/// rx.listen((snapshot) {
-///   if (snapshot.hasData) print("数据: ${snapshot.data}");
-///   if (snapshot.hasError) print("错误: ${snapshot.error}");
-/// });
-///
-/// // 手动刷新
-/// rx.refresh();
-///
-/// // 失败后重试
-/// rx.retry();
-/// ```
+/// =======================================================
+
 class RxFuture<T> extends RxState<AsyncSnapshot<T>> {
-  /// 内部请求 ID，用于标记当前异步任务
-  int _requestId = 0;
+  // =======================================================
+  // constructor
+  // =======================================================
 
-  /// 是否已被释放
-  bool _disposed = false;
-
-  /// 是否正在刷新
-  bool _isRefreshing = false;
-
-  /// 上一次错误对象
-  Object? _lastError;
-
-  /// 当前数据是否为 stale（过期）
-  bool _isStale = false;
-
-  /// 获取上一次错误
-  Object? get lastError => _lastError;
-
-  /// 是否存在软错误（错误但仍有数据）
-  bool get hasSoftError => _lastError != null;
-
-  /// 当前数据是否过期
-  bool get isStale => _isStale;
-
-  /// 异步加载函数
-  final Future<T> Function() _loader;
-
-  /// 构造函数
-  ///
-  /// [_loader] 异步任务函数
-  RxFuture(this._loader) : super(const AsyncSnapshot.nothing()) {
-    _subscribe(_loader());
+  RxFuture(
+    this._loader, {
+    this.debounce,
+    this.throttle,
+    this.maxRetries = 0,
+    this.retryDelay = const Duration(seconds: 1),
+    this.pollInterval,
+    this.enableCache = false,
+    this.cacheMaxAge = const Duration(minutes: 5),
+    this.staleTime = Duration.zero,
+    this.maxConcurrentRequests = 1,
+    this.dependencies = const [],
+    this.keepPreviousData = true,
+    this.skipInitialRequest = false,
+  }) : super(const AsyncSnapshot.nothing()) {
+    _init();
   }
 
-  /// 内部订阅异步任务
-  void _subscribe(Future<T> future) {
-    final int currentId = ++_requestId;
 
-    // 更新状态
-    if (value.hasData) {
-      value = AsyncSnapshot.withData(ConnectionState.waiting, value.data as T);
+
+  factory RxFuture.search(
+    Future<T> Function(CancelToken? token) loader, {
+    List<RxState> dependencies = const [],
+  }) {
+    return RxFuture(
+      loader,
+      debounce: const Duration(milliseconds: 400),
+      keepPreviousData: true,
+      dependencies: dependencies,
+    );
+  }
+
+  factory RxFuture.poll(
+    Future<T> Function(CancelToken? token) loader, {
+    Duration interval = const Duration(seconds: 5),
+  }) {
+    return RxFuture(
+      loader,
+      pollInterval: interval,
+      enableCache: false,
+      keepPreviousData: true,
+    );
+  }
+
+  // =======================================================
+  // loader
+  // =======================================================
+
+  final Future<T> Function(CancelToken? token) _loader;
+
+  // =======================================================
+  // configs
+  // =======================================================
+
+  final Duration? debounce;
+  final Duration? throttle;
+
+  final int maxRetries;
+  final Duration retryDelay;
+
+  final Duration? pollInterval;
+
+  final bool enableCache;
+  final Duration cacheMaxAge;
+
+  /// 数据多久认为是 fresh
+  final Duration staleTime;
+
+  final int maxConcurrentRequests;
+
+  final bool keepPreviousData;
+
+  final bool skipInitialRequest;
+
+  // =======================================================
+  // dependencies
+  // =======================================================
+
+  final List<RxState> dependencies;
+
+  final List<VoidCallback> _depDisposers = [];
+
+  // =======================================================
+  // request state
+  // =======================================================
+
+  int _requestId = 0;
+
+  int _runningRequests = 0;
+
+  bool _disposed = false;
+
+  bool _forceRefresh = false;
+
+  CancelToken? _cancelToken;
+
+  // =======================================================
+  // ui state
+  // =======================================================
+
+  bool _isRefreshing = false;
+
+  bool _isRetrying = false;
+
+  bool _isPolling = false;
+
+  Object? _lastSoftError;
+
+  // =======================================================
+  // cache
+  // =======================================================
+
+  T? _cache;
+
+  DateTime? _cacheTime;
+
+  // =======================================================
+  // timers
+  // =======================================================
+
+  Timer? _debounceTimer;
+
+  Timer? _throttleTimer;
+
+  Timer? _pollTimer;
+
+  // =======================================================
+  // global error
+  // =======================================================
+
+  static void Function(Object error, StackTrace stack)? globalOnError;
+
+  // =======================================================
+  // init
+  // =======================================================
+
+  void _init() {
+    _listenDependencies();
+
+    if (pollInterval != null) {
+      _startPolling();
+    }
+
+    if (!skipInitialRequest) {
+      _execute();
+    }
+  }
+
+  void _listenDependencies() {
+    for (final dep in dependencies) {
+      final disposer = dep.listen((_) {
+        refresh(force: true);
+      });
+
+      _depDisposers.add(disposer);
+    }
+  }
+
+  // =======================================================
+  // execute
+  // =======================================================
+
+  void _execute({
+    bool polling = false,
+    bool retrying = false,
+  }) {
+    if (_disposed) return;
+
+    _isPolling = polling;
+
+    _isRetrying = retrying;
+
+    _debounceTimer?.cancel();
+
+    if (debounce != null) {
+      _debounceTimer = Timer(
+        debounce!,
+        _startRequest,
+      );
+    } else {
+      _startRequest();
+    }
+  }
+
+  // =======================================================
+  // request
+  // =======================================================
+
+  Future<void> _startRequest() async {
+    if (_disposed) return;
+
+    // throttle
+    if (throttle != null && _throttleTimer != null) {
+      return;
+    }
+
+    if (throttle != null) {
+      _throttleTimer = Timer(
+        throttle!,
+        () => _throttleTimer = null,
+      );
+    }
+
+    // concurrent limit
+    if (_runningRequests >= maxConcurrentRequests) {
+      return;
+    }
+
+    // cache hit
+    if (!_forceRefresh && _cacheValid()) {
+      _restoreCache();
+      return;
+    }
+
+    // cancel previous
+    _cancelCurrentRequest();
+
+    _runningRequests++;
+
+    final currentRequestId = ++_requestId;
+
+    final token = CancelToken();
+
+    _cancelToken = token;
+
+    _setLoadingState();
+
+    try {
+      final result = await _runWithRetry(token);
+
+      if (!_isRequestValid(currentRequestId, token)) {
+        return;
+      }
+
+      _onSuccess(result);
+    } catch (e, s) {
+      if (!_isRequestValid(currentRequestId, token)) {
+        return;
+      }
+
+      _onError(e, s);
+    } finally {
+      _runningRequests--;
+
+      _forceRefresh = false;
+
+      if (_cancelToken == token) {
+        _cancelToken = null;
+      }
+    }
+  }
+
+  // =======================================================
+  // retry
+  // =======================================================
+
+  Future<T> _runWithRetry(
+    CancelToken token,
+  ) async {
+    int attempt = 0;
+
+    while (true) {
+      try {
+        return await _loader(token);
+      } catch (e) {
+        if (token.isCanceled) {
+          rethrow;
+        }
+
+        attempt++;
+
+        if (attempt > maxRetries) {
+          rethrow;
+        }
+
+        await Future.delayed(
+          retryDelay * attempt,
+        );
+      }
+    }
+  }
+
+  // =======================================================
+  // state
+  // =======================================================
+
+  void _setLoadingState() {
+    if (keepPreviousData && hasData) {
+      value = AsyncSnapshot.withData(
+        ConnectionState.waiting,
+        data!,
+      );
     } else {
       value = const AsyncSnapshot.waiting();
     }
+  }
 
-    future.then((data) {
-      if (_disposed || currentId != _requestId) return;
-      _lastError = null;
-      _isRefreshing = false;
-      _isStale = false;
-      value = AsyncSnapshot.withData(ConnectionState.done, data);
-    }).catchError((err, stack) {
-      if (_disposed || currentId != _requestId) return;
-      _isRefreshing = false;
-      _isStale = false;
-      _lastError = err;
+  void _onSuccess(T result) {
+    _lastSoftError = null;
 
-      if (value.hasData) {
-        value = AsyncSnapshot.withData(ConnectionState.done, value.data as T);
-      } else {
-        value = AsyncSnapshot.withError(ConnectionState.done, err, stack);
-      }
+    _isRefreshing = false;
 
-      RxDebug.log("❌ RxFuture 异步任务失败: $err");
+    _isRetrying = false;
+
+    _isPolling = false;
+
+    if (enableCache) {
+      _cache = result;
+      _cacheTime = DateTime.now();
+    }
+
+    value = AsyncSnapshot.withData(
+      ConnectionState.done,
+      result,
+    );
+  }
+
+  void _onError(
+    Object error,
+    StackTrace stack,
+  ) {
+    _lastSoftError = error;
+
+    _isRefreshing = false;
+
+    _isRetrying = false;
+
+    _isPolling = false;
+
+    globalOnError?.call(error, stack);
+
+    // soft error
+    if (hasData) {
+      value = AsyncSnapshot.withData(
+        ConnectionState.done,
+        data!,
+      );
+    } else {
+      value = AsyncSnapshot.withError(
+        ConnectionState.done,
+        error,
+        stack,
+      );
+    }
+  }
+
+  // =======================================================
+  // cache
+  // =======================================================
+
+  bool _cacheValid() {
+    if (!enableCache) return false;
+
+    if (_cache == null) return false;
+
+    if (_cacheTime == null) return false;
+
+    return DateTime.now().difference(_cacheTime!) < cacheMaxAge;
+  }
+
+  void _restoreCache() {
+    _isRefreshing = false;
+
+    _isRetrying = false;
+
+    _isPolling = false;
+
+    value = AsyncSnapshot.withData(
+      ConnectionState.done,
+      _cache as T,
+    );
+
+    // stale-while-revalidate
+    if (_isCacheStale()) {
+      refresh();
+    }
+  }
+
+  bool _isCacheStale() {
+    if (_cacheTime == null) return true;
+
+    return DateTime.now().difference(_cacheTime!) > staleTime;
+  }
+
+  void clearCache() {
+    _cache = null;
+    _cacheTime = null;
+  }
+
+  // =======================================================
+  // polling
+  // =======================================================
+
+  void _startPolling() {
+    _pollTimer?.cancel();
+
+    _pollTimer = Timer.periodic(
+      pollInterval!,
+      (_) {
+        if (isRequesting) return;
+
+        _isPolling = true;
+
+        refresh(force: true);
+      },
+    );
+  }
+
+  // =======================================================
+  // public api
+  // =======================================================
+
+  @override
+  void refresh({
+    bool force = false,
+  }) {
+    if (isRequesting && !force) {
+      return;
+    }
+
+    _forceRefresh = force;
+
+    _isRefreshing = true;
+
+    _execute();
+  }
+
+  void retry() {
+    if (isRequesting) return;
+
+    _isRetrying = true;
+
+    _execute(retrying: true);
+  }
+
+  void cancel() {
+    _cancelCurrentRequest();
+  }
+
+  void reset() {
+    cancel();
+
+    clearCache();
+
+    _lastSoftError = null;
+
+    _isRefreshing = false;
+
+    _isRetrying = false;
+
+    _isPolling = false;
+
+    value = const AsyncSnapshot.nothing();
+  }
+
+  // =======================================================
+  // internal
+  // =======================================================
+
+  void _cancelCurrentRequest() {
+    _cancelToken?.cancel();
+    _cancelToken = null;
+  }
+
+  bool _isRequestValid(
+    int requestId,
+    CancelToken token,
+  ) {
+    if (_disposed) return false;
+
+    if (token.isCanceled) return false;
+
+    return requestId == _requestId;
+  }
+
+  // =======================================================
+  // getters
+  // =======================================================
+
+  bool get hasData => value.hasData;
+
+  bool get hasError => value.hasError;
+
+  T? get data => value.data;
+
+  Object? get error => value.error;
+
+  bool get isLoading => value.connectionState == ConnectionState.waiting;
+
+  bool get isInitialLoading => isLoading && !hasData;
+
+  bool get isRefreshing => _isRefreshing;
+
+  bool get isRetrying => _isRetrying;
+
+  bool get isPolling => _isPolling;
+
+  bool get isRequesting => _cancelToken != null;
+
+  bool get isStale => hasData && value.connectionState == ConnectionState.waiting;
+
+  bool get hasSoftError => _lastSoftError != null;
+
+  Object? get lastSoftError => _lastSoftError;
+
+  DateTime? get cacheTime => _cacheTime;
+
+  // =======================================================
+  // listener helper
+  // =======================================================
+
+  VoidCallback listenState(
+    VoidCallback listener,
+  ) {
+    return listen((_) {
+      listener();
     });
   }
 
-  ///listenState 的作用是：当 RxFuture 内部状态发生变化（loading → done → error）时，通知外部。
-  /// ✅ 推荐写法：支持 c.userFuture.listenState(() => setState(() {}))
-  void Function() listenState(void Function() onUpdate) {
-    void wrapper(AsyncSnapshot<T> _) => onUpdate();
-    return super.listen(wrapper);
-  }
-
-  /// 保留原始功能（接收 AsyncSnapshot）
-  void Function() listenWithSnapshot(void Function(AsyncSnapshot<T>) onUpdate) {
-    return super.listen(onUpdate);
-  }
-
-  /// 重试异步任务
-  ///
-  /// 如果当前正在刷新，则跳过
-  void retry() {
-    if (_isRefreshing) return;
-    _isRefreshing = true;
-    _subscribe(_loader());
-  }
-
-  /// 刷新异步任务
-  ///
-  /// [force] 是否强制刷新，即使当前正在刷新
-  @override
-  void refresh({bool force = false}) {
-    if (_isRefreshing && !force) return;
-    _isStale = true;
-    _isRefreshing = true;
-
-    // 立即触发一次状态更新
-    value = value;
-
-    _subscribe(_loader());
-  }
-
-  /// 是否正在首次加载（初次加载且无数据）
-  bool get isInitialLoading => isLoading && !hasData;
-
-  /// 是否正在刷新（已有数据，正在获取更新）
-  bool get isRefreshing => _isRefreshing;
-
-  /// 是否正在加载
-  bool get isLoading => value.connectionState == ConnectionState.waiting;
-
-  /// 是否有数据
-  bool get hasData => value.hasData;
-
-  /// 是否有错误
-  bool get hasError => value.hasError;
-
-  /// 获取数据
-  T? get data => value.data;
-
-  /// 获取错误对象
-  Object? get error => value.error;
+  // =======================================================
+  // dispose
+  // =======================================================
 
   @override
-
-  /// 释放资源
   void dispose() {
     _disposed = true;
+
+    _cancelCurrentRequest();
+
+    _debounceTimer?.cancel();
+
+    _throttleTimer?.cancel();
+
+    _pollTimer?.cancel();
+
+    for (final disposer in _depDisposers) {
+      disposer();
+    }
+
+    _depDisposers.clear();
+
     super.dispose();
   }
 }
+
+// =======================================================
+// CancelToken
+// =======================================================
+
+class CancelToken {
+  bool isCanceled = false;
+
+  VoidCallback? onCancel;
+
+  void cancel() {
+    if (isCanceled) return;
+
+    isCanceled = true;
+
+    onCancel?.call();
+  }
+}
+
+// import 'package:flutter/material.dart';
+// import 'dart:async';
+
+// import '../rxflare.dart';
+
+// /// 支持：自动依赖联动、CancelToken、防抖、节流、轮询、重试、缓存、全局错误处理
+// class RxFuture<T> extends RxState<AsyncSnapshot<T>> {
+//   int _requestId = 0;
+//   bool _disposed = false;
+//   bool _isRefreshing = false;
+//   bool _isStale = false;
+
+//   Object? _lastSoftError;
+//   Object? get lastSoftError => _lastSoftError;
+//   bool get hasSoftError => _lastSoftError != null;
+
+//   bool get isStale => _isStale;
+
+//   // ====================== 核心加载函数 ======================
+//   final Future<T> Function(CancelToken? cancelToken) _loader;
+
+//   // ====================== 策略配置 ======================
+//   final Duration? debounce;
+//   final Duration? throttle;
+//   final int? maxRetries;
+//   final Duration? retryDelay;
+//   final Duration? pollInterval;
+//   final Duration cacheMaxAge;
+//   final bool enableCache;
+//   final int? maxConcurrentRequests;
+
+//   // ====================== 依赖联动 ======================
+//   final List<RxState> dependencies;
+//   final List<VoidCallback> _depSubs = []; // 这里修复了类型
+
+//   // ====================== 取消 & 状态 ======================
+//   CancelToken? _cancelToken;
+//   CancelToken? get cancelToken => _cancelToken;
+//   bool get isRequesting => _cancelToken != null;
+//   // ====================== 缓存 ======================
+//   T? _cachedData;
+//   DateTime? _cacheTime;
+
+//   // ====================== 计时器 ======================
+//   Timer? _debounceTimer;
+//   Timer? _throttleTimer;
+//   Timer? _pollTimer;
+
+//   // ====================== 并发控制（实例级别） ======================
+//   int _currentConcurrent = 0;
+
+//   // ====================== 全局错误处理 ======================
+//   static void Function(Object error, StackTrace stack)? globalOnError;
+
+//   // ====================== 构造函数 ======================
+//   RxFuture(
+//     this._loader, {
+//     this.debounce,
+//     this.throttle,
+//     this.maxRetries,
+//     this.retryDelay,
+//     this.pollInterval,
+//     this.cacheMaxAge = const Duration(minutes: 5),
+//     this.enableCache = false,
+//     this.maxConcurrentRequests,
+//     this.dependencies = const [],
+//   }) : super(const AsyncSnapshot.nothing()) {
+//     _init();
+//   }
+
+//   // ====================== 工厂方法 ======================
+//   factory RxFuture.search(Future<T> Function(CancelToken?) loader) {
+//     return RxFuture(
+//       loader,
+//       debounce: const Duration(milliseconds: 500),
+//     );
+//   }
+
+//   factory RxFuture.poll(
+//     Future<T> Function(CancelToken?) loader, {
+//     Duration interval = const Duration(seconds: 5),
+//     Duration cacheMaxAge = const Duration(minutes: 5),
+//   }) {
+//     return RxFuture(
+//       loader,
+//       pollInterval: interval,
+//       enableCache: false, //轮询不需要缓存
+//       cacheMaxAge: cacheMaxAge,
+//     );
+//   }
+
+//   // ====================== 初始化 ======================
+//   void _init() {
+//     _listenDependencies();
+//     if (pollInterval != null) _startPolling();
+//     _execute();
+//   }
+
+//   void _listenDependencies() {
+//     for (final dep in dependencies) {
+//       final cancel = dep.listen((_) => _execute());
+//       _depSubs.add(cancel);
+//     }
+//   }
+
+//   // ====================== 执行入口 ======================
+//   void _execute() {
+//     _debounceTimer?.cancel();
+
+//     if (debounce != null) {
+//       _debounceTimer = Timer(debounce!, _startRequest);
+//     } else {
+//       _startRequest();
+//     }
+//   }
+
+//   // ====================== 真正发起请求 ======================
+//   Future<void> _startRequest() async {
+//     if (throttle != null && _throttleTimer != null) return;
+//     if (throttle != null) {
+//       _throttleTimer = Timer(throttle!, () => _throttleTimer = null);
+//     }
+
+//     if (maxConcurrentRequests != null && _currentConcurrent >= maxConcurrentRequests!) {
+//       return;
+//     }
+
+//     // if (enableCache && _cacheValid()) {
+//     //   value = AsyncSnapshot.withData(ConnectionState.done, _cachedData!);
+//     //   return;
+//     // }
+
+//     if (enableCache && _cacheValid()) {
+//       _isRefreshing = false;
+//       _isStale = false;
+
+//       value = AsyncSnapshot.withData(
+//         ConnectionState.done,
+//         _cachedData!,
+//       );
+//       return;
+//     }
+
+//     _cancelCurrentRequest();
+//     _currentConcurrent++;
+//     final currentId = ++_requestId;
+
+//     _cancelToken = CancelToken();
+//     _setLoadingState();
+
+//     try {
+//       final data = await _runWithRetries(_cancelToken);
+//       if (!_valid(currentId)) return;
+//       _onSuccess(data);
+//     } catch (e, s) {
+//       if (!_valid(currentId) || _cancelToken?.isCanceled == true) return;
+//       _onError(e, s);
+//     } finally {
+//       _currentConcurrent--;
+//       _cancelToken = null;
+//     }
+//   }
+
+//   // ====================== 重试机制 ======================
+//   Future<T> _runWithRetries(CancelToken? token) async {
+//     int attempt = 0;
+//     while (true) {
+//       try {
+//         return await _loader(token);
+//       } catch (e) {
+//         attempt++;
+//         if (maxRetries == null || attempt >= maxRetries! || (token?.isCanceled ?? false)) {
+//           rethrow;
+//         }
+//         await Future.delayed(
+//           (retryDelay ?? const Duration(seconds: 1)) * attempt,
+//         );
+//       }
+//     }
+//   }
+
+//   // ====================== 缓存判断 ======================
+//   bool _cacheValid() {
+//     if (!enableCache || _cachedData == null || _cacheTime == null) return false;
+//     return DateTime.now().difference(_cacheTime!) < cacheMaxAge;
+//   }
+
+//   // ====================== 状态管理 ======================
+//   void _setLoadingState() {
+//     if (hasData) {
+//       value = AsyncSnapshot.withData(ConnectionState.waiting, data!);
+//     } else {
+//       value = const AsyncSnapshot.waiting();
+//     }
+//   }
+
+//   void _onSuccess(T data) {
+//     _lastSoftError = null;
+//     _isRefreshing = false;
+//     _isStale = false;
+
+//     if (enableCache) {
+//       _cachedData = data;
+//       _cacheTime = DateTime.now();
+//     }
+
+//     value = AsyncSnapshot.withData(ConnectionState.done, data);
+//   }
+
+//   void _onError(Object err, StackTrace stack) {
+//     _isRefreshing = false;
+//     _isStale = false;
+//     _lastSoftError = err;
+//     globalOnError?.call(err, stack);
+
+//     if (hasData) {
+//       value = AsyncSnapshot.withData(ConnectionState.done, data!);
+//     } else {
+//       value = AsyncSnapshot.withError(ConnectionState.done, err, stack);
+//     }
+//   }
+
+//   bool _valid(int id) => !_disposed && id == _requestId;
+
+//   void _cancelCurrentRequest() {
+//     _cancelToken?.cancel();
+//     _cancelToken = null;
+//   }
+
+//   // ====================== 轮询 ======================
+//   // void _startPolling() {
+//   //   _pollTimer?.cancel();
+//   //   _pollTimer = Timer.periodic(pollInterval!, (_) => refresh(force: true));
+//   // }
+
+//   void _startPolling() {
+//     _pollTimer?.cancel();
+
+//     _pollTimer = Timer.periodic(pollInterval!, (_) {
+//       if (isRequesting) return;
+
+//       refresh(force: true);
+//     });
+//   }
+
+//   // ====================== 公开 API ======================
+//   void retry() {
+//     if (_isRefreshing) return;
+//     _isRefreshing = true;
+//     _execute();
+//   }
+
+//   @override
+//   void refresh({bool force = false}) {
+//     if (_isRefreshing && !force) return;
+//     _isStale = true;
+//     _isRefreshing = true;
+//     _execute();
+//   }
+
+//   void clearCache() {
+//     _cachedData = null;
+//     _cacheTime = null;
+//   }
+
+//   void cancel() => _cancelCurrentRequest();
+
+//   void reset() {
+//     cancel();
+//     clearCache();
+//     value = const AsyncSnapshot.nothing();
+//     _lastSoftError = null;
+//     _isStale = false;
+//     _isRefreshing = false;
+//   }
+
+//   // ====================== Getters ======================
+//   bool get isInitialLoading => isLoading && !hasData;
+//   bool get isLoading => value.connectionState == ConnectionState.waiting;
+//   bool get isRefreshing => _isRefreshing;
+//   bool get isLoadingOrRefreshing => isLoading || isRefreshing;
+
+//   bool get hasData => value.hasData;
+//   bool get hasError => value.hasError;
+
+//   T? get data => value.data;
+//   Object? get error => value.error;
+
+//   // ====================== 监听便捷方法 ======================
+//   VoidCallback listenState(VoidCallback onUpdate) {
+//     return listen((_) => onUpdate());
+//   }
+
+//   // ====================== 释放 ======================
+//   @override
+//   void dispose() {
+//     _disposed = true;
+//     _cancelCurrentRequest();
+//     _debounceTimer?.cancel();
+//     _throttleTimer?.cancel();
+//     _pollTimer?.cancel();
+//     for (final sub in _depSubs) {
+//       sub(); // 执行取消函数
+//     }
+//     _depSubs.clear();
+//     super.dispose();
+//   }
+// }
+
+// // ====================== CancelToken ======================
+// class CancelToken {
+//   bool isCanceled = false;
+//   VoidCallback? onCancel;
+
+//   void cancel() {
+//     if (isCanceled) return;
+//     isCanceled = true;
+//     onCancel?.call();
+//   }
+// }

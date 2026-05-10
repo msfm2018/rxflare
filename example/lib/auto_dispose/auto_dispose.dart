@@ -27,7 +27,7 @@ class _CounterPageState extends State<AutoDisposePage> with RxAutoDispose {
     super.initState();
 
     // 1. RxFuture - 链式调用
-    dataFuture = RxFuture(() async {
+    dataFuture = RxFuture((cancelToken) async {
       await Future.delayed(const Duration(seconds: 2));
       return "数据加载完成";
     }).autoDispose(this);
