@@ -3,8 +3,7 @@
 <p align="center">
   <img src="https://github.com/msfm2018/rxflare/blob/1.4.0/img/0.png?raw=true" width="45%"> 
   <img src="https://github.com/msfm2018/rxflare/blob/1.4.0/img/index.png?raw=true" width="45%"> 
-    <img src="https://github.com/msfm2018/rxflare/blob/1.4.0/img/4.png?raw=true" width="45%">
-      <img src="https://github.com/msfm2018/rxflare/blob/1.4.0/img/5.png?raw=true" width="45%">
+
 </p>
 
 ## 相关软件 
