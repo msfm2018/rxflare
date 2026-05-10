@@ -112,7 +112,6 @@
 //   }
 // }
 
-
 // features/home/controller/home_controller.dart
 import 'package:rxflare/rxflare.dart';
 import '../models/user_model.dart';
@@ -183,6 +182,7 @@ class HomeController {
 
   void dispose() {
     userFuture.dispose();
+    userList.dispose();
   }
 }
 

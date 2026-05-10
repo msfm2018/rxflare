@@ -7,6 +7,8 @@ export 'src/rx_builder.dart';
 
 export 'src/rx_state.dart';
 
+export 'src/rx_auto_dispose.dart';
+
 export 'src/rx_map.dart';
 export 'src/rx_list.dart';
 export 'src/rx_set.dart';

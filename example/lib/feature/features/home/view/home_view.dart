@@ -108,7 +108,7 @@ class _HomeViewState extends State<HomeView> {
   @override
   void initState() {
     super.initState();
-    c = RxObjMgr.find<HomeController>(name: "home");
+    c = RxObjMgr.find<HomeController>(name: "homex");
 
     c.userFuture.listenState(() {
       print("用户列表加载状态变化: ${c.userFuture.isInitialLoading ? '加载中' : '完成'}");
@@ -118,7 +118,6 @@ class _HomeViewState extends State<HomeView> {
   @override
   void dispose() {
     c.dispose();
-    RxObjMgr.delete<HomeController>(name: "home");
     super.dispose();
   }
 
@@ -149,19 +148,14 @@ class _HomeViewState extends State<HomeView> {
                     final isSelected = c.selectedIndex.value == index;
 
                     return ListTile(
-                      leading: CircleAvatar(
-                        child: Text(user.name[0]),
-                      ),
+                      leading: CircleAvatar(child: Text(user.name[0])),
                       title: Text(user.name),
                       subtitle: Text("年龄: ${user.age}"),
                       tileColor: isSelected ? Colors.orange[100] : null,
                       onTap: () => c.selectUser(index),
                       trailing: Text(
                         user.age >= 18 ? "✅ 成年" : "未成年",
-                        style: TextStyle(
-                          color: user.age >= 18 ? Colors.green : Colors.grey,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: TextStyle(color: user.age >= 18 ? Colors.green : Colors.grey, fontWeight: FontWeight.bold),
                       ),
                     );
                   },
@@ -169,17 +163,11 @@ class _HomeViewState extends State<HomeView> {
               }),
             ),
 
-            Rx(() => Text(
-                  "选中用户是否成年: ${c.selectedUserIsAdult.value ? '是' : '否'}",
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                )),
+            Rx(() => Text("选中用户是否成年: ${c.selectedUserIsAdult.value ? '是' : '否'}", style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold))),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: c.increment,
-        child: const Icon(Icons.add),
-      ),
+      floatingActionButton: FloatingActionButton(onPressed: c.increment, child: const Icon(Icons.add)),
     );
   }
 }

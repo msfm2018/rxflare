@@ -10,7 +10,7 @@ class FreatureHomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return RxParent<HomeController>(
-      name: "home",                    // 重要：多页面隔离
+      name: "homex",                    // 重要：多页面隔离
       dependency: HomeController(),
       child: const HomeView(),
     );

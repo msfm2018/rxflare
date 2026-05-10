@@ -65,8 +65,17 @@ class RxObjMgr {
       _factoryMap.remove(key);
       return dependency as T;
     }
-
     throw "❌ [注入错误] 未找到标识为 '$key' 的实例";
+  }
+
+  static T? findOrNull<T>({String? name}) {
+    final key = name ?? T;
+
+    if (_singletonMap.containsKey(key)) {
+      return _singletonMap[key] as T;
+    }
+
+    return null;
   }
 
   /// 删除实例
@@ -116,14 +125,29 @@ class _RxParentState<T> extends State<RxParent<T>> {
     RxObjMgr.put<T>(widget.dependency, name: widget.name);
   }
 
+  // @override
+  // void dispose() {
+  //   // 尝试调用 dispose 方法
+  //   final dynamic instance = RxObjMgr.find<T>(name: widget.name);
+  //   instance?.dispose?.call();
+
+  //   // 删除依赖
+  //   RxObjMgr.delete<T>(name: widget.name);
+  //   super.dispose();
+  // }
+
   @override
   void dispose() {
-    // 尝试调用 dispose 方法
-    final dynamic instance = RxObjMgr.find<T>(name: widget.name);
-    instance.dispose?.call();
+    final dynamic instance = RxObjMgr.findOrNull<T>(
+      name: widget.name,
+    );
 
-    // 删除依赖
-    RxObjMgr.delete<T>(name: widget.name);
+    instance?.dispose?.call();
+    // print("---------------->${widget.name}");
+    RxObjMgr.delete<T>(
+      name: widget.name,
+    );
+
     super.dispose();
   }
 

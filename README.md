@@ -3,8 +3,6 @@
 <p align="center">
   <img src="https://github.com/msfm2018/rxflare/blob/1.4.0/img/0.png?raw=true" width="45%"> 
   <img src="https://github.com/msfm2018/rxflare/blob/1.4.0/img/index.png?raw=true" width="45%"> 
-    <img src="https://github.com/msfm2018/rxflare/blob/1.4.0/img/2.png?raw=true"  width="45%">
-    <img src="https://github.com/msfm2018/rxflare/blob/1.4.0/img/3.png?raw=true" width="45%">
     <img src="https://github.com/msfm2018/rxflare/blob/1.4.0/img/4.png?raw=true" width="45%">
       <img src="https://github.com/msfm2018/rxflare/blob/1.4.0/img/5.png?raw=true" width="45%">
 </p>
@@ -13,7 +11,7 @@
   <a >音乐 https://github.com/msfm2018/localMusicPlay</a>
   <a> 树管理 https://github.com/msfm2018/simple_tree </a>
 
-  <a ></a>
+
 ##  the most basic usage (automatic dependency)
 ```flutter
 final count = 0.obs;
@@ -475,66 +473,87 @@ void main() {
 ```
 #### 4 Flutter 实战
 ```
-class CounterController {
-  int count = 0;
+RxParent + Controller（中大型项目推荐架构）
 
-  void increment() {
-    count++;
+class UserController implements Disposable {
+  final count = 0.obs;
+  late final RxFuture<User> userFuture;
+
+  UserController() {
+    userFuture = RxFuture(() async { ... });
   }
 
+  void increment() => count.value++;
+
+  @override
   void dispose() {
-    print("Controller 被释放");
+    userFuture.dispose();
+    count.dispose();
+    print("UserController 已释放");
   }
 }
-class CounterPage extends StatelessWidget {
+
+/// ====================== Page ======================
+class UserPage extends StatelessWidget {
+  const UserPage({super.key});
+
   @override
   Widget build(BuildContext context) {
-    return RxParent<CounterController>(
-      dependency: CounterController(),
-      child: const CounterView(),
+    return RxParent<UserController>(
+      dependency: UserController(),
+      child: const UserView(),
     );
   }
 }
-class CounterView extends StatefulWidget {
-  const CounterView({super.key});
 
+class UserView extends StatefulWidget {
+  const UserView({super.key});
   @override
-  State<CounterView> createState() => _CounterViewState();
+  State<UserView> createState() => _UserViewState();
 }
 
-class _CounterViewState extends State<CounterView> {
-  late CounterController controller;
+class _UserViewState extends State<UserView> {
+  late UserController controller;
 
   @override
   void initState() {
     super.initState();
-    controller = RxObjMgr.find<CounterController>();
+    controller = RxObjMgr.find<UserController>();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("DI 示例")),
       body: Center(
-        child: Text("count: ${controller.count}"),
+        child: Rx(() => Text('计数: ${controller.count.value}')),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          setState(() {
-            controller.increment();
-          });
-        },
+        onPressed: controller.increment,
         child: const Icon(Icons.add),
       ),
     );
   }
 }
-@override
-void dispose() {
-  final dynamic instance = RxObjMgr.find<T>(name: widget.name);
-  instance.dispose?.call(); // 自动调用
-  RxObjMgr.delete<T>(name: widget.name);
+
+简单释放 RxAutoDispose
+
+class _UserPageState extends State<UserPage> with RxAutoDispose {
+  final count = 0.obs;
+  late final RxFuture<User> userFuture;
+
+  @override
+  void initState() {
+    super.initState();
+
+    userFuture = RxFuture(() async { ... }).autoDispose(this);
+
+    count.listen((v) => print(v)).autoDispose(this);
+  }
+
+  @override
+  Widget build(BuildContext context) { ... }
 }
+
 
 多页隔离
 RxParent<CounterController>(

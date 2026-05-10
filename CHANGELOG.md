@@ -1,4 +1,27 @@
 # Changelog
+## [1.4.2] - 2026-05-10
+
+### Added
+* 完善例程
+* RxAutoDispose 是一个 Mixin，通过 with 方式混入 StatefulWidget，实现资源的自动注册与释放
+```
+class _UserPageState extends State<UserPage> with RxAutoDispose {
+  final count = 0.obs;
+  late final RxFuture<User> userFuture;
+
+  @override
+  void initState() {
+    super.initState();
+
+    userFuture = RxFuture(() async { ... }).autoDispose(this);
+
+    count.listen((v) => print(v)).autoDispose(this);
+  }
+
+  @override
+  Widget build(BuildContext context) { ... }
+}
+```
 ## [1.4.1] - 2026-05-09
 
 ### 优化
