@@ -22,7 +22,8 @@ class RxStack {
   static final List<RxContext> _stack = [];
 
   /// 获取当前顶层上下文
-  static RxContext? get _current => _stack.isNotEmpty ? _stack.last : null;
+  static RxContext? get current => _stack.isNotEmpty ? _stack.last : null;
+
 
   /// 将上下文推入栈顶
   static void push(RxContext ctx) {
@@ -41,7 +42,7 @@ class RxStack {
   /// [state] 要注册的 RxState
   /// 会记录到当前上下文的 states 集合中
   static void register(RxState state) {
-    final ctx = _current;
+    final ctx = current;
     if (ctx != null) {
       // 仅在添加成功时打印日志
       if (ctx.states.add(state)) {
@@ -56,7 +57,7 @@ class RxStack {
   /// [field] 字段标识
   /// 会记录到当前上下文的 fields 集合中
   static void registerField(RxState state, dynamic field) {
-    final ctx = _current;
+    final ctx = current;
     if (ctx != null) {
       final fields = ctx.fields.putIfAbsent(state, () => <dynamic>{});
       if (fields.add(field)) {

@@ -1,4 +1,27 @@
 # Changelog
+## [1.4.5] - 2026-05-11
+### Added
+* Introduced unified reactive extensions:
+* .obs → RxState
+* .obsMap → RxMap
+* .obsList → RxList
+* .obsSet → RxSet
+* Added convenient collection shortcuts:
+* obsMapD for Map<String, dynamic> reactive mapping
+### Improvement
+* Improved developer ergonomics for reactive object creation
+* Simplified common usage patterns for Map/List/Set observables
+```
+final user = {"name": "Tom", "age": 18}.obsMapD;
+
+Rx(() {
+  return Text(user["name"]); 
+});
+
+final todos = ["a", "b"].obsList();
+
+todos[0] = "c";
+```
 ## [1.4.4] - 2026-05-11
 ### Development package classification optimization
 

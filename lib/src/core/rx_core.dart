@@ -176,3 +176,4 @@ extension RxFlareCollectionExtensions on Object {
   RxMap<String, dynamic> get obsMapD => RxMap<String, dynamic>(this as Map<String, dynamic>);
   RxList<Map<String, dynamic>> get obsListMap => RxList<Map<String, dynamic>>(this as List<Map<String, dynamic>>);
 }
+

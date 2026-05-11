@@ -1,81 +1,46 @@
-import '../core/rx_state.dart';
+import 'dart:collection';
 
-/// A reactive Set state container.
+import '../core/rx_state.dart';
+import '../rx_router/rx_stack.dart';
+
+/// A reactive implementation of [Set] backed by [RxState].
 ///
-/// [RxSet] is a specialized reactive state class for managing `Set<T>` data.
 ///
-/// Compared to using `RxState<Set<T>>` directly, this class provides:
+/// This class provides reactive tracking for set operations:
+/// - Element presence tracking (`contains`)
+/// - Size tracking (`length`)
+/// - Mutations (`add`, `remove`)
 ///
-/// - Immutable Set updates
-/// - Automatic reactive notifications
-/// - Native Set-like APIs
-/// - Safer mutation handling
-/// - Cleaner reactive collection management
 ///
-/// ## Example
+/// All mutations follow an immutable update pattern:
+/// a new Set instance is created before updating the state.
 ///
+///
+/// Example:
 /// ```dart
-/// final tags = RxSet<String>({
-///   "flutter",
-///   "dart",
-/// });
+/// final set = RxSet<int>({1, 2, 3});
 ///
-/// tags.add("rxflare");
-///
-/// print(tags.contains("flutter")); // true
+/// set.add(4);       // triggers reactive update
+/// set.contains(1);  // tracked read
 /// ```
 ///
-/// ## Reactive Usage
 ///
-/// ```dart
-/// Rx(() {
-///   return Text("Tags: ${tags.length}");
-/// });
-/// ```
-///
-/// ## Immutable Updates
-///
-/// Every mutation creates a new Set instance internally:
-///
-/// ```dart
-/// final newSet = Set<T>.of(value);
-/// ```
-///
-/// This ensures Flutter widgets and reactive systems
-/// can correctly detect changes and trigger updates.
-///
-/// ## Notes
-///
-/// [RxSet] preserves the behavior of native Dart Set,
-/// including uniqueness guarantees.
-///
-/// Duplicate items will not be added.
+/// Key characteristics:
+/// - Reactive read tracking via [RxStack]
+/// - Immutable updates (Set.copy on mutation)
+/// - Fine-grained dependency tracking support
 class RxSet<T> extends RxState<Set<T>> {
-  /// Creates a reactive Set state.
-  ///
-  /// The [initial] parameter defines the initial Set value.
-  ///
-  /// ## Example
-  ///
-  /// ```dart
-  /// final selectedIds = RxSet<int>({1, 2, 3});
-  /// ```
+  /// Creates a reactive set with an initial value.
   RxSet(super.initial);
 
-  /// Adds an [item] to the Set.
+  /// Adds [item] to the set.
   ///
-  /// Returns `true` if the item was added successfully.
+  /// Returns `true` if the item was not already present and was added.
   ///
-  /// Returns `false` if the item already exists.
-  ///
-  /// This operation performs an immutable update
-  /// and automatically triggers reactive notifications.
-  ///
-  /// ## Example
-  ///
-  /// ```dart
-  /// tags.add("dart");
-  /// ```
+  /// Behavior:
+  /// - If the item already exists, no update is triggered
+  /// - If the item is new, a new Set instance is created
+  /// - Reactive listeners are notified via state update
   bool add(T item) {
     final newSet = Set<T>.of(value);
 
@@ -88,20 +53,14 @@ class RxSet<T> extends RxState<Set<T>> {
     return added;
   }
 
-  /// Removes an [item] from the Set.
+  /// Removes [item] from the set.
   ///
-  /// Returns `true` if the item existed and was removed.
+  /// Returns `true` if the item was present and removed.
   ///
-  /// Returns `false` if the item was not found.
-  ///
-  /// This operation performs an immutable update
-  /// and automatically triggers reactive notifications.
-  ///
-  /// ## Example
-  ///
-  /// ```dart
-  /// tags.remove("flutter");
-  /// ```
+  /// Behavior:
+  /// - If the item does not exist, no update is triggered
+  /// - If removed successfully, a new Set instance is created
+  /// - Reactive listeners are notified via state update
   bool remove(T item) {
     final newSet = Set<T>.of(value);
 
@@ -114,30 +73,56 @@ class RxSet<T> extends RxState<Set<T>> {
     return removed;
   }
 
-  /// Returns whether the Set contains the specified [item].
+  /// Checks whether [item] exists in the set.
   ///
-  /// ## Example
-  ///
-  /// ```dart
-  /// final exists = tags.contains("dart");
-  /// ```
-  bool contains(T item) => value.contains(item);
+  /// This read operation is tracked reactively:
+  /// any computed value or UI depending on this check
+  /// will automatically update when the set changes.
+  bool contains(T item) {
+    RxStack.register(this);
 
-  /// Returns the underlying raw Set value.
-  ///
-  /// ## Example
-  ///
-  /// ```dart
-  /// final rawSet = tags.set;
-  /// ```
-  Set<T> get set => value;
+    return value.contains(item);
+  }
 
-  /// Returns the total number of items in the Set.
+  /// The number of elements in the set.
   ///
-  /// ## Example
+  /// This getter is reactive and will trigger updates
+  /// when the set changes.
+  int get length {
+    RxStack.register(this);
+
+    return value.length;
+  }
+
+  /// Whether the set is empty.
   ///
-  /// ```dart
-  /// print(tags.length);
-  /// ```
-  int get length => value.length;
+  /// Reactive read: updates when the set changes.
+  bool get isEmpty {
+    RxStack.register(this);
+
+    return value.isEmpty;
+  }
+
+  /// Whether the set is not empty.
+  ///
+  /// Reactive read: updates when the set changes.
+  bool get isNotEmpty {
+    RxStack.register(this);
+
+    return value.isNotEmpty;
+  }
+
+  /// Returns an unmodifiable view of the underlying set.
+  ///
+  /// ⚠️ Important:
+  /// - This view is read-only
+  /// - Direct modification is not allowed
+  /// - Use [add] / [remove] for updates
+  ///
+  /// Reactive tracking is applied on access.
+  UnmodifiableSetView<T> get set {
+    RxStack.register(this);
+
+    return UnmodifiableSetView(value);
+  }
 }

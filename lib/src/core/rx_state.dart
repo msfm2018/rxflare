@@ -3,7 +3,6 @@ import 'package:flutter/foundation.dart';
 import '../rx_router/rx_router.dart';
 import '../utils/rx_debug.dart';
 
-
 int _rxStateCounter = 0;
 
 /// [RxState] 是响应式状态的基础单元。
@@ -29,7 +28,17 @@ class RxState<T> {
     _rxStateCounter++;
   }
 
-  bool _deepEquals(dynamic a, dynamic b) {
+  void trackFieldAccess(dynamic field) {
+    final ctx = RxStack.current;
+
+    if (ctx == null) return;
+
+    ctx.states.add(this);
+
+    ctx.fields.putIfAbsent(this, () => {}).add(field);
+  }
+
+  bool deepEquals(dynamic a, dynamic b) {
     if (a is Map && b is Map) return mapEquals(a, b); // 需要 import 'package:flutter/foundation.dart';
     if (a is List && b is List) return listEquals(a, b);
     return a == b;
@@ -41,9 +50,9 @@ class RxState<T> {
     return _value;
   }
 
-  /// 设置新值。如果新旧值通过 [_deepEquals] 判断不一致，则触发全局监听器。
+  /// 设置新值。如果新旧值通过 [deepEquals] 判断不一致，则触发全局监听器。
   set value(T newValue) {
-    if (!_deepEquals(_value, newValue)) {
+    if (!deepEquals(_value, newValue)) {
       _value = newValue;
       _notifyListeners(id);
     }
@@ -79,7 +88,7 @@ class RxState<T> {
 
   // 2. 这里的 internalUpdate 就是 RxComputed 会调用的“后门”
   void internalUpdate(T newValue) {
-    if (!_deepEquals(_value, newValue)) {
+    if (!deepEquals(_value, newValue)) {
       _value = newValue;
       _notifyListeners(id);
     }
@@ -141,7 +150,7 @@ class RxState<T> {
     if (current is Map && current.containsKey(field)) {
       final oldFieldValue = current[field];
 
-      if (!_deepEquals(oldFieldValue, newValue)) {
+      if (!deepEquals(oldFieldValue, newValue)) {
         if (current is Map<String, Object>) {
           final newMap = Map<String, Object>.of(current);
           newMap[field as String] = newValue!;
@@ -156,7 +165,7 @@ class RxState<T> {
           newMap[field] = newValue;
           _value = newMap as T;
         }
-        _notifyFieldListeners(field, notifyGlobal);
+        notifyFieldListeners(field, notifyGlobal);
       }
       return;
     }
@@ -169,13 +178,13 @@ class RxState<T> {
         return;
       }
       final oldItem = current[index];
-      if (_deepEquals(oldItem, newValue)) return;
+      if (deepEquals(oldItem, newValue)) return;
 
       final newList = (current as List).toList();
       newList[index] = newValue;
       _value = newList as T;
 
-      _notifyFieldListeners(field, notifyGlobal);
+      notifyFieldListeners(field, notifyGlobal);
       return;
     }
 
@@ -207,7 +216,7 @@ class RxState<T> {
     }
   }
 
-  void _notifyFieldListeners(dynamic field, bool notifyGlobal) {
+  void notifyFieldListeners(dynamic field, bool notifyGlobal) {
     final listeners = _fieldListeners[field]?.toList();
 
     if (listeners != null && listeners.isNotEmpty) {

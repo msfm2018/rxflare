@@ -1,115 +1,45 @@
 import '../core/rx_state.dart';
-import '../utils/rx_debug.dart';
+import '../rx_router/rx_stack.dart';
 
-/// A reactive List state container.
+/// A reactive list that extends [RxState] and provides fine-grained
+/// reactivity on both list-level and index-level access.
 ///
-/// [RxList] is a specialized reactive state class for managing `List<T>` data.
 ///
-/// Compared to using `RxState<List<T>>` directly, this class provides:
+/// This class allows tracking:
+/// - Whole list changes (add/remove/replace)
+/// - Individual index access tracking
 ///
-/// - Native List-like syntax (`[]`, `[]=`)
-/// - Immutable update behavior
-/// - Automatic reactive notifications
-/// - Safer list operations
-/// - Better readability for reactive collections
-///
-/// ## Example
-///
-/// ```dart
-/// final todos = RxList<String>([
-///   "Learn Flutter",
-///   "Build app",
-/// ]);
-///
-/// todos.add("Deploy app");
-///
-/// print(todos[0]); // Learn Flutter
-/// ```
-///
-/// ## Reactive Usage
-///
-/// ```dart
-/// Rx(() {
-///   return Text(todos[0]);
-/// });
-/// ```
-///
-/// ## Immutable Updates
-///
-/// Every mutation creates a new List instance internally:
-///
-/// ```dart
-/// final newList = List<T>.of(value);
-/// ```
-///
-/// This ensures reactive listeners and Flutter widgets
-/// can properly detect state changes.
+/// It is typically used in reactive UI systems where rebuilds
+/// should be minimized and only triggered for specific dependencies.
 class RxList<T> extends RxState<List<T>> {
-  /// Creates a reactive list state.
-  ///
-  /// The [initial] parameter defines the initial list value.
-  ///
-  /// ## Example
-  ///
-  /// ```dart
-  /// final numbers = RxList<int>([1, 2, 3]);
-  /// ```
+  /// Creates a reactive list with an initial value.
   RxList(super.initial);
 
-  /// Returns the item at the specified [index].
+  /// Gets the element at [index].
   ///
-  /// Behaves like a normal Dart List getter.
+  /// This access is tracked by the reactive system, meaning:
+  /// - The current Rx dependency will subscribe to this list
+  /// - The specific index is also registered for fine-grained updates
   ///
-  /// ## Example
-  ///
-  /// ```dart
-  /// final item = todos[0];
-  /// ```
-  T operator [](int index) => value[index];
+  /// Throws [RangeError] if index is out of bounds.
+  T operator [](int index) {
+    RxStack.register(this);
+    RxStack.registerField(this, index);
 
-  /// Updates the item at the specified [index].
-  ///
-  /// This operation performs an immutable update
-  /// and automatically triggers reactive notifications.
-  ///
-  /// ## Example
-  ///
-  /// ```dart
-  /// todos[0] = "Updated Todo";
-  /// ```
-  ///
-  /// Equivalent to:
-  ///
-  /// ```dart
-  /// todos.updateAt(0, "Updated Todo");
-  /// ```
-  void operator []=(int index, T newValue) {
-    updateAt(index, newValue);
+    return value[index];
   }
 
-  /// Updates the item at the specified [index].
+  /// Updates the element at [index] with [newValue].
   ///
-  /// Internally creates a new immutable List instance
-  /// to ensure proper reactive updates.
+  /// If the new value is equal to the old value (via [deepEquals]),
+  /// no update or notification will be triggered.
   ///
-  /// ## Example
-  ///
-  /// ```dart
-  /// todos.updateAt(1, "New Value");
-  /// ```
-  ///
-  /// If the index is out of bounds,
-  /// a warning message will be printed.
-  ///
-  /// The optional [notifyGlobal] parameter is reserved
-  /// for future fine-grained/global notification strategies.
-  void updateAt(
-    int index,
-    T newValue, {
-    bool notifyGlobal = false,
-  }) {
-    if (index < 0 || index >= value.length) {
-      RxDebug.log(" RxList index out of range: $index");
+  /// After updating, only listeners subscribed to this index
+  /// will be notified via [notifyFieldListeners].
+  void operator []=(int index, T newValue) {
+    final oldValue = value[index];
+
+    if (deepEquals(oldValue, newValue)) {
       return;
     }
 
@@ -118,51 +48,58 @@ class RxList<T> extends RxState<List<T>> {
     newList[index] = newValue;
 
     value = newList;
+
+    notifyFieldListeners(index, false);
   }
 
-  /// Adds a new [item] to the end of the list.
+  /// Updates the value at a specific index.
   ///
-  /// This operation creates a new immutable List instance
-  /// and automatically triggers reactive notifications.
+  /// This is a convenience wrapper around `[]=` for semantic clarity.
   ///
-  /// ## Example
+  /// If [notifyGlobal] is true, global listeners may also be notified
+  /// depending on implementation in [RxState].
+  void updateAt(
+    int index,
+    T newValue, {
+    bool notifyGlobal = false,
+  }) {
+    this[index] = newValue;
+  }
+
+  /// Adds an [item] to the end of the list.
   ///
-  /// ```dart
-  /// todos.add("New Task");
-  /// ```
+  /// This creates a new list instance to maintain immutability guarantees
+  /// required by the reactive system.
   void add(T item) {
     final newList = List<T>.of(value)..add(item);
 
     value = newList;
   }
 
-  /// Removes the item at the specified [index].
+  /// Removes the element at [index].
   ///
-  /// This operation creates a new immutable List instance
-  /// and automatically triggers reactive notifications.
+  /// A new list is created to ensure proper reactive updates.
   ///
-  /// ## Example
-  ///
-  /// ```dart
-  /// todos.removeAt(0);
-  /// ```
-  ///
-  /// Throws a [RangeError] if the index is invalid,
-  /// matching native Dart List behavior.
+  /// Throws [RangeError] if index is out of bounds.
   void removeAt(int index) {
     final newList = List<T>.of(value)..removeAt(index);
 
     value = newList;
   }
 
-  /// Returns the underlying raw List value.
+  /// Returns the underlying raw list.
   ///
-  /// ## Example
-  ///
-  /// ```dart
-  /// final rawList = todos.list;
-  /// ```
-  ///
-  /// Prefer using `[]` for reactive reads when possible.
+  /// ⚠️ Note:
+  /// Modifying this list directly will NOT trigger reactivity.
+  /// Prefer using provided methods like [add], [removeAt], or `[]=` instead.
   List<T> get list => value;
+
+  /// Returns the length of the list.
+  ///
+  /// Accessing this property is tracked reactively, meaning
+  /// UI or computed values depending on length will update automatically.
+  int get length {
+    RxStack.register(this);
+    return value.length;
+  }
 }

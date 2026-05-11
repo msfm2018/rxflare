@@ -9,7 +9,11 @@ rxflare is a **lightweight reactive state management library for Flutter**, focu
 * A minimalist reactive state management solution with **zero configuration, automatic dependency tracking, and partial widget rebuilding**
 * Designed as a lightweight alternative to Provider, GetX, Bloc, and other heavier solutions
 * Ideal for rapid development in small to medium-sized Flutter projects
-
+### Core idea
+* obs → reactive primitives (int, String, bool)
+* obsMap / obsList / obsSet → reactive collections
+* Rx(() => UI) → automatic dependency tracking
+* Field-level updates → only affected UI rebuilds
 ---
 
 ## 2. Key Features (Must-Know)

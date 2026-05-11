@@ -10,6 +10,7 @@ import 'feature/features/home/controller/search_controller.dart';
 
 import 'router_demo.dart';
 import 'auto_dispose/auto_dispose.dart';
+import 'showcase.dart';
 
 final isDarkMode = false.obs;
 
@@ -49,7 +50,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 14, vsync: this);
+    _tabController = TabController(length: 15, vsync: this);
   }
 
   @override
@@ -62,7 +63,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('RxFlare 核心功能演示'),
+        title: const Text('RxFlare Core Features Demo'),
         actions: [
           // 暗黑模式切换按钮
           Rx(() => IconButton(icon: Icon(isDarkMode.value ? Icons.light_mode : Icons.dark_mode), onPressed: () => isDarkMode.value = !isDarkMode.value, tooltip: '切换主题')),
@@ -82,11 +83,12 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
             Tab(text: 'RxFuture分页'),
             Tab(text: 'RxFuture轮询'),
             Tab(text: 'RxFuture防抖'),
-            Tab(text: 'RxFutureDio'),
+            Tab(text: 'RxFutureDio'),          
 
             
             Tab(text: '简单生命周期'),
             Tab(text: '复杂生命周期'),
+             Tab(text: 'Showcase'),
           ],
         ),
       ),
@@ -94,7 +96,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
         controller: _tabController,
         children: [BasicAutoTrackDemo(), MapListPreciseDemo(), ComputedDemo(), EventBusDemo(), PerformanceTestDemo(), 
         PerformanceTestDemoA(), RouterDemo(),FreatureHomePage(),HomeP(),PollPage(),SearchPage(),DioPage(),
-        AutoDisposePage(),DataDispose()],
+        AutoDisposePage(),DataDispose(),Showcase()],
       ),
     );
   }
