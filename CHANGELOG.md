@@ -1,33 +1,35 @@
 # Changelog
+## [1.4.4] - 2026-05-11
+### Development package classification optimization
 
 ## [1.4.3] - 2026-05-10
 
-### 完善优化
-* RxFuture 防抖 / 节流 / 轮询 / 重试
+### Added & Improved
+*  Enhanced RxFuture with debounce, throttle, polling, and retry capabilities.
 ```
 final userRx = RxFuture<User>(
   () => api.getUser(),
-  debounce: Duration(milliseconds: 300),    // 防抖
-  throttle: Duration(seconds: 1),           // 节流
-  maxRetries: 3,                            // 自动重试 3 次
-  retryDelay: Duration(seconds: 1),         // 重试间隔
-  pollInterval: Duration(seconds: 10),      // 每10秒轮询
+  debounce: Duration(milliseconds: 300),    // Debounce
+  throttle: Duration(seconds: 1),           // Throttle
+  maxRetries: 3,                            // Auto retry 3 times
+  retryDelay: Duration(seconds: 1),         // Retry delay
+  pollInterval: Duration(seconds: 10),      // Poll every 10 seconds
 );
 
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // ========== 全局 RxFuture 配置 ==========
+  // ========== Global RxFuture Configuration ==========
   RxFuture.globalOnError = (error, stack) {
-    // 1. 统一打印日志
-    //print("🌐 全局捕获 RxFuture 错误：$error\n$stack");
+    // 1. Unified logging
+    // print("🌐 Global RxFuture error: $error\n$stack");
     
-    // 2. 统一弹窗 / Toast
-    //print("请求失败：${error.toString()}");
+    // 2. Unified Toast / Dialog
+    // print("Request failed: ${error.toString()}");
     
-    // 3. 可在这里做 401 登录过期、token 刷新、跳转登录页
-    // if(error.toString().contains("401")){...}
+    // 3. Handle special cases (e.g. 401 token expiration)
+    // if (error.toString().contains("401")) { ... }
   };
 
   runApp(const MyApp());
@@ -36,8 +38,8 @@ void main() {
 ## [1.4.2] - 2026-05-10
 
 ### Added
-* 完善例程
-* RxAutoDispose 是一个 Mixin，通过 with 方式混入 StatefulWidget，实现资源的自动注册与释放
+* Improved examples and documentation.
+* Added RxAutoDispose mixin – easily manage resource lifecycle by mixing into StatefulWidget.
 ```
 class _UserPageState extends State<UserPage> with RxAutoDispose {
   final count = 0.obs;
@@ -58,31 +60,29 @@ class _UserPageState extends State<UserPage> with RxAutoDispose {
 ```
 ## [1.4.1] - 2026-05-09
 
-### 优化
-* 路由注册优化
-* 优化 register 路由注册机制
-* 移除 path 路径参数，使注册方式更加简洁
-* RxFuture 状态监听增强
+### Improved
 
-* 新增 listenState 方法，用于监听 RxFuture 内部状态变化。
-
-* 状态流转包括：
-
+* Optimized route registration mechanism.
+* Removed path parameter to make route registration cleaner and simpler.
+* Enhanced RxFuture state listening.
+* Added listenState() method to listen for internal state changes of RxFuture.
+* Supported state transitions:
 * loading → done
 * loading → error
-* 其他状态切换
+* Other state switches
 
-* 适用于在状态变化时主动通知 UI 刷新。
+
+* Useful for actively refreshing the UI when state changes.
 
 ## [1.4.0] - 2026-05-08
 
 ### Added
 
-*  集合响应式增强 (RxCollections)：引入了 RxList 、 RxSet、rx_map，旨在通过不可变更新（Immutable Updates）简化集合状态的管理。
+*  RxCollections Enhancement: Introduced RxList, RxSet, and rx_map to simplify collection state management through immutable updates.
 
 * RxList：
-* 支持原生 List 语法：可以通过 [] 读取和 []= 修改元素
-* 自动化响应：内部在进行 add、removeAt 或 updateAt 操作时，会自动创建新的 List 实例并触发响应式通知。
+* Supports native List syntax: read via [] and modify via [] =
+* Automatic reactivity: add, removeAt, updateAt operations automatically create new List instances and trigger updates.
 
 * 示例：
 ```
@@ -96,12 +96,9 @@ Dart
 
 ### Added
 
-*  引入 RxBuilder 组件：
+* Introduced RxBuilder widget: a standard StatelessWidget wrapper for reactive partial UI updates.
 
-* 提供了一个标准的 StatelessWidget 包装器，方便在 Widget 树中直接进行响应式局部刷新。
-
-
-* 示例：
+* 
 ```
 Dart
 RxBuilder(
@@ -111,76 +108,56 @@ RxBuilder(
 ## [1.3.0] - 2026-04-25
 
 ### Added
-* 🚀 引入全新响应式路由系统 `RxRouter`：基于 `RxState` 驱动的 Navigator 2.0 路由管理方案。
 
-* 🧭 多栈管理机制：
-  * 支持全局根栈（`memPages`）
-  * 支持多 Tab 局部栈（`tabPages`）独立并行管理
 
-* ✨ 声明式 + 命令式统一 API：
-  * `rxr.to('/path')`
-  * `rxr.back()`
-  内部自动映射为声明式状态更新
+*  Introduced new reactive routing system RxRouter: A Navigator 2.0 based routing solution driven by RxState.
 
-* 🔗 动态路径匹配：
-  * 支持 `/user/:id` 形式路径参数
-  * 支持完整 URL Query 参数解析
+### Key Features:
 
-* 🛡️ 路由守卫（Guard）：
-  * 在 `RxDef` 中支持异步拦截逻辑
-  * 可用于登录校验、权限控制等场景
-
-* 📦 强类型参数传递：
-  * 基于 `RxArgs` 实现对象级参数传递
-  * 自动生命周期管理与回收
-
-* 🔄 异步结果回传：
-  * `to<T>()` 返回 `Future<T?>`
-  * 支持 `back(result: ...)` 回传页面结果
-
-* 🌐 Web 适配支持：
-  * 提供 `RxRouteParser` 与 `RxRouterDelegate`
-  * 支持浏览器地址栏同步
-  * 支持手动输入 URL 解析
-
-* 🧩 内置 `KeepAliveWrapper`：
-  * 优化 Tab 切换时的页面状态保持
+*  Multi-stack management (global root stack + independent tab stacks)
+*  Unified declarative and imperative API (rxr.to('/path'), rxr.back())
+*  Dynamic path matching (/user/:id) and query parameter parsing
+*  Route guards (async interceptors for auth, permission control, etc.)
+*  Strongly typed arguments passing with automatic lifecycle management
+*  Asynchronous result callback (to<T>() returns Future<T?>)
+*  Full Web support (browser URL sync)
+*  Built-in KeepAliveWrapper for better Tab page state preservation
 
 ## [1.2.0] - 2026-04-18
 ### Added
-* 新增泛型扩展 `RxAnyExtension<T>`，支持任意对象通过 `.obs` 快速转换为 `RxState<T>`：
+* New generic extension RxAnyExtension<T> – convert any object to RxState<T> using .obs:
   ```dart
   final user = User().obs;
   final count = 1.obs;
   ```
-* 统一 .obs 使用方式，减少对基础类型（int、String 等）的重复扩展依赖。
+* Unified .obs usage, reducing redundant extensions for primitive types.
 
 ## [1.1.9] - 2026-04-08
-* 优化了文档可读性。
+* Improved documentation readability.
 
 ## [1.1.8] - 2026-04-07
-* 完善了 API 文档注释 (Completed documentation comments).
-* 优化了文档可读性。
+* Completed API documentation comments.
+* Improved documentation readability.
 
 ## [1.1.7] - 2026-04-07
-* 修复了示例代码中的错误。
+* Fixed errors in example code.
 
 ## [1.1.6] - 2026-04-07
-* 补全了示例项目 (Full demo project implementation).
+* Completed the example project.
 
 ## [1.1.5] - 2026-04-05
-* 优化了嵌套依赖处理逻辑 (Nested dependency handling):
+* Optimized nested dependency handling logic.
   ```dart
   RxA(() {
     RxB(() {
-      // 嵌套依赖支持
+      // Nested dependency support
     });
   });
   ```
 
 ## [1.1.4] -2026-04-01
 
-* 增加例子 列表字段更新 map字段更新
+* Added examples for updating list fields and map fields.
 
 # Changelog
 
@@ -191,20 +168,20 @@ RxBuilder(
 
 ## [1.1.1] - 2026-03-21
 ### Changed
-* 核心响应式逻辑更新，优化了性能。
+* Updated core reactive logic and improved performance.
 
 ## [1.0.0] - 2026-03-18
 ### Added
-* 增加 `listen` 接口，支持对数据变化的监听。
-* 正式发布 1.0.0 稳定版。
+* Added listen interface to support data change listening.
+* Official stable release of version 1.0.0.
 
 ## [0.0.4] - 2026-03-10
-* 修改并优化了示例代码 (Demo)。
+* Improved and optimized demo code.
 
 ## [0.0.3] - 2026-03-05
 ### Added
-* 新增核心响应式组件：`rx_event_simple`, `rx_future`, `RxValue<T>`, `RxStore<T>`, `RxNotifier<T>`。
-* 添加了自定义 Demo 演示。
+* Added core reactive components：`rx_event_simple`, `rx_future`, `RxValue<T>`, `RxStore<T>`, `RxNotifier<T>`。
+* Added custom demo project.
 
 ## [0.0.1] - 2025-06-04
 * Initial release of rxflare.

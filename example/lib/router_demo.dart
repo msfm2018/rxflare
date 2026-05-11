@@ -72,7 +72,7 @@ class RouterHomePage extends StatelessWidget {
           children: [
             ElevatedButton(
               onPressed: () async {
-                // ✅ 现在可以正常跳转了
+                //  现在可以正常跳转了
                 final result = await rxr.to("/detail?id=123&type=vip", arguments: {"name": "张三"});
                 debugPrint("收到详情页返回: $result");
               },
@@ -96,7 +96,7 @@ class DetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // ✅ 使用 rxflare 官方方式获取参数
+    //  使用 rxflare 官方方式获取参数
     final id = rxr.queryItem("id");
     final type = rxr.queryItem("type");
     final args = rxr.args();

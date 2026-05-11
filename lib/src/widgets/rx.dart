@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
-import 'rx_stack.dart';
-import 'rx_debug.dart';
-import 'rx_state.dart';
+
+import '../core/rx_state.dart';
+import '../rx_router/rx_stack.dart';
+import '../utils/rx_debug.dart';
+
 
 typedef RxWidgetBuilder = Widget Function();
 

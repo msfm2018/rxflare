@@ -1,5 +1,5 @@
-import 'rx_state.dart';
-import 'rx_debug.dart';
+import '../core/rx_state.dart';
+import '../utils/rx_debug.dart';
 
 /// RxContext 用于记录当前计算或构建期间的依赖状态
 ///
@@ -45,7 +45,7 @@ class RxStack {
     if (ctx != null) {
       // 仅在添加成功时打印日志
       if (ctx.states.add(state)) {
-        RxDebug.log("➕ 绑定 State: ${state.name ?? state.id}");
+        RxDebug.log(" 绑定 State: ${state.name ?? state.id}");
       }
     }
   }
@@ -60,7 +60,7 @@ class RxStack {
     if (ctx != null) {
       final fields = ctx.fields.putIfAbsent(state, () => <dynamic>{});
       if (fields.add(field)) {
-        RxDebug.log("➕ 绑定 Field: ${state.name ?? state.id}[$field]");
+        RxDebug.log(" 绑定 Field: ${state.name ?? state.id}[$field]");
       }
     }
   }

@@ -1,4 +1,4 @@
-import 'rx_state.dart';
+import '../core/rx_state.dart';
 
 /// A reactive Set state container.
 ///

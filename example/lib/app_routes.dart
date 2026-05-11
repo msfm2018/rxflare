@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:rxflare/rxflare.dart';
 
-import 'feature/features/home/view/freature_home_page.dart';
+import 'feature/features/home/controller/home_controller.dart';
 import 'menu/screens/home_screen.dart';
 import 'router_demo.dart';
 

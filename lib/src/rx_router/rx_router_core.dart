@@ -3,10 +3,10 @@
 // back: 优先处理当前视口（Active），如果触底则报警/扩展。
 
 import 'package:flutter/material.dart';
-import '../rx_core.dart';
+import 'package:rxflare/src/core/rx_core.dart';
 
-import '../rx_debug.dart';
-import '../rx_state.dart';
+import '../core/rx_state.dart';
+import '../utils/rx_debug.dart';
 import './rx_route_args.dart';
 
 /// 全局路由便捷访问实例。
@@ -165,7 +165,7 @@ class RxRouter {
     } else if (_activePages != memPages) {
       // 2. 如果当前在 Tab 栈且已经到底了，尝试切换回全局主栈逻辑 (可选)
       // 这里取决于你的业务：是关掉整个 Tab 页面，还是切换 activeTabIndex
-      RxDebug.log("💡 Tab 栈已到顶，无法继续在内部 back");
+      RxDebug.log(" Tab 栈已到顶，无法继续在内部 back");
     }
   }
 

@@ -118,7 +118,7 @@ class RxEventBus {
 
     // 避免重复注册
     if (list.any((e) => e.originalCallback == callback)) {
-      RxDebug.log('⚠️ [$module] 重复注册 $eventID');
+      RxDebug.log(' [$module] 重复注册 $eventID');
       return;
     }
 
@@ -140,7 +140,7 @@ class RxEventBus {
         try {
           callback(eventID, "sticky", stickyData as T);
         } catch (e) {
-          RxDebug.log('❌ Sticky 回调类型转换失败: $e');
+          RxDebug.log(' Sticky 回调类型转换失败: $e');
         }
       });
     }
@@ -216,7 +216,7 @@ class RxEventBus {
             try {
               await e.wrapperCallback(task.eventID, task.uuid, task.data);
             } catch (e, s) {
-              RxDebug.log('❌ 并发执行错误: $e\n$s');
+              RxDebug.log(' 并发执行错误: $e\n$s');
             }
           }),
         );
@@ -225,7 +225,7 @@ class RxEventBus {
           try {
             await e.wrapperCallback(task.eventID, task.uuid, task.data);
           } catch (e, s) {
-            RxDebug.log('❌ 串行执行错误: $e\n$s');
+            RxDebug.log(' 串行执行错误: $e\n$s');
           }
         }
       }

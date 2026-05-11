@@ -97,37 +97,6 @@ class RxHit {
 
 /// 路由路径解析工具类。
 class RxHiter {
-  /// 将输入的 [input] 路径与已注册的 [routes] 进行匹配。
-  ///
-  /// 如果匹配成功，返回包含路由名和参数的 [RxHit] 对象。
-  // static RxHit? match(String input, Map<String, RxDef> routes) {
-  //   final inputSegments = Uri.parse(input).pathSegments;
-  //   for (final entry in routes.entries) {
-  //     final pattern = Uri.parse(entry.value.path).pathSegments;
-  //     if (pattern.length != inputSegments.length) continue;
-  //     final params = <String, String>{};
-  //     bool ok = true;
-
-  //     for (int i = 0; i < pattern.length; i++) {
-  //       final p = pattern[i];
-  //       final v = inputSegments[i];
-
-  //       if (p.startsWith(':')) {
-  //         // 提取动态参数
-  //         params[p.substring(1)] = v;
-  //       } else if (p != v) {
-  //         ok = false;
-  //         break;
-  //       }
-  //     }
-
-  //     if (ok) {
-  //       return RxHit(entry.key, params);
-  //     }
-  //   }
-
-  //   return null;
-  // }
 
   static RxHit? match(String input, Map<String, RxDef> routes) {
   final inputUri = Uri.parse(input);

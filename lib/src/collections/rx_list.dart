@@ -1,4 +1,5 @@
-import 'rx_state.dart';
+import '../core/rx_state.dart';
+import '../utils/rx_debug.dart';
 
 /// A reactive List state container.
 ///
@@ -108,7 +109,7 @@ class RxList<T> extends RxState<List<T>> {
     bool notifyGlobal = false,
   }) {
     if (index < 0 || index >= value.length) {
-      print("⚠️ RxList index out of range: $index");
+      RxDebug.log(" RxList index out of range: $index");
       return;
     }
 

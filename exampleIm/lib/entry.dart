@@ -36,7 +36,7 @@ class ChatItem {
 
 class Message {
   final String text;
-  final String senderId; // ✅ 新增
+  final String senderId; //  新增
   final bool isMe;
   final int time;
   final double? progress;
@@ -75,7 +75,7 @@ class ChatSession {
   final Color color;
   final int lastTime;
   final bool isPinned;
-  final SessionType type; // ✅ 明确类型
+  final SessionType type; //  明确类型
 
   ChatSession({required this.id, required this.name, required this.lastMsg, required this.unread, required this.color, required this.lastTime, required this.isPinned, required this.type});
 

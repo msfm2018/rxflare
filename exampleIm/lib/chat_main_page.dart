@@ -116,7 +116,7 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
       child: InkWell(
         // 加上点击效果
-        onTap: _simulateAddNewContact, // ✅ 点击这里测试动态添加
+        onTap: _simulateAddNewContact, //  点击这里测试动态添加
         child: Container(
           height: 40,
           decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(4)),
@@ -150,7 +150,7 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
                   : () {
                       final chatService = RxObjMgr.find<ChatService>();
 
-                      // ✅ 关键：传入 selectedIds.value (List<String>)
+                      //  关键：传入 selectedIds.value (List<String>)
                       chatService.createGroupFromChat(currentChat.id, selectedIds.value);
 
                       Navigator.pop(context);
@@ -174,7 +174,7 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
   void _addNewChatMember({required String id, required String name, required String firstMsg, required Color color}) {
     if (chat.messagesMap.containsKey(id)) return;
 
-    // ✅ 修复：传入必填的 senderId
+    //  修复：传入必填的 senderId
     final List<Message> initialData = [
       Message(
         text: firstMsg,
@@ -197,7 +197,7 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
     final newItem = ChatItem(id: id, type: "contact", name: name, msg: firstMsg, unread: 1, color: color, lastTime: DateTime.now().millisecondsSinceEpoch, isPinned: false);
 
     chat.chatList.value = [...chat.chatList.value, newItem];
-    RxDebug.log("✅ 成功为 $name (ID: $id) 建立独立监听通道");
+    RxDebug.log(" 成功为 $name (ID: $id) 建立独立监听通道");
   }
 
   // 2. 模拟文件上传（rxflare 局部更新演示）
@@ -212,15 +212,15 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
     for (double i = 0.2; i <= 1.05; i += 0.2) {
       await Future.delayed(const Duration(milliseconds: 400));
 
-      // ✅ 修复点 1：使用 List<Message> 而不是 List<Map>
+      //  修复点 1：使用 List<Message> 而不是 List<Map>
       var currentMsgs = List<Message>.from(rxMsgs.value);
 
-      // ✅ 修复点 2：使用 copyWith 更新对象，而不是 Map 的解构
+      //  修复点 2：使用 copyWith 更新对象，而不是 Map 的解构
       if (msgIdx < currentMsgs.length) {
         currentMsgs[msgIdx] = currentMsgs[msgIdx].copyWith(progress: i > 1.0 ? 1.0 : i);
       }
 
-      // ✅ 修复点 3：重新赋值触发 rxflare 更新
+      //  修复点 3：重新赋值触发 rxflare 更新
       rxMsgs.value = currentMsgs;
     }
   }
@@ -256,7 +256,7 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
 
     final now = DateTime.now().millisecondsSinceEpoch;
 
-    // ✅ 修复：添加 senderId。如果是本人，通常用 "me"，否则用对方的 id
+    //  修复：添加 senderId。如果是本人，通常用 "me"，否则用对方的 id
     final newMsg = Message(
       text: text,
       isMe: isMe,
@@ -1304,7 +1304,7 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
         Expanded(
           child: Container(
             color: const Color(0xFFF3F3F3),
-            child: _buildContactDetailArea(), // ✅ 放在这里
+            child: _buildContactDetailArea(), //  放在这里
           ),
         ),
       ],
@@ -1319,12 +1319,12 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
         decoration: BoxDecoration(color: const Color(0xFFDBD9D8), borderRadius: BorderRadius.circular(4)),
         child: TextField(
           controller: _contactSearchController,
-          // ✅ 核心：当文字改变时，更新响应式变量
+          //  核心：当文字改变时，更新响应式变量
           // onChanged: (val) => contactSearchText.value = val,
           onChanged: (val) {
             contactSearchText.value = val;
 
-            // ✅ 核心修改：如果搜索框空了，把右侧选中的 ID 也清空
+            //  核心修改：如果搜索框空了，把右侧选中的 ID 也清空
             if (val.trim().isEmpty) {
               chat.selectedContactId.value = "";
             }
@@ -1385,14 +1385,14 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
                 _buildCategoryItem(
                   item,
                   onTap: () {
-                    // ✅ 这里取反改变状态
+                    //  这里取反改变状态
                     chat.isContactsExpanded.value = !chat.isContactsExpanded.value;
                     chat.selectedContactId.value = "contacts";
                   },
-                  isExpanded: isExpanded, // ✅ 使用 Rx 内部读取到的值
+                  isExpanded: isExpanded, //  使用 Rx 内部读取到的值
                   isSelected: selectedId == "contacts",
                 ),
-                // ✅ 状态改变后，这里会根据 true/false 自动显示或隐藏
+                //  状态改变后，这里会根据 true/false 自动显示或隐藏
                 if (isExpanded) _buildEmbeddedContactList(),
               ],
             );
@@ -1414,7 +1414,7 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
     return InkWell(
       onTap: onTap,
       child: Container(
-        // ✅ 核心修复：根据是否选中切换背景色，否则点完没反应
+        //  核心修复：根据是否选中切换背景色，否则点完没反应
         color: isSelected ? const Color(0xFFC5C5C5) : Colors.transparent,
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
         child: Row(
@@ -1442,7 +1442,7 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
     final chat = RxObjMgr.find<ChatService>();
 
     return Rx(() {
-      // ✅ 修复：直接过滤并转为 List<Contact>，不要转成 Map
+      //  修复：直接过滤并转为 List<Contact>，不要转成 Map
       final contacts = chat.allContacts.value.where((e) => e.type == "contacts").toList(); // 👈 删掉 .cast<Map<String, dynamic>>()
 
       final groupedList = chat.getGroupedContacts(contacts);
@@ -1462,7 +1462,7 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
             }
 
             // 2. 渲染联系人行
-            // ✅ 修复：由于我们在 getGroupedContacts 里把对象存到了 item["data"]
+            //  修复：由于我们在 getGroupedContacts 里把对象存到了 item["data"]
             final Contact contactObj = item["data"];
             return _buildContactItem(contactObj);
           },
@@ -1556,15 +1556,15 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
         return Center(child: Opacity(opacity: 0.1, child: Image.network("https://res.wx.qq.com/a/wx_fed/assets/res/OTE0YTAw.png", width: 200)));
       }
 
-      // // ✅ 当点击左侧“联系人”项时
+      // //  当点击左侧“联系人”项时
       // if (selectedId == "contacts") {
       //   return _buildFriendGroupList();
       // }
 
-      // ✅ 3. 如果点击的是具体的联系人（从 allContacts 中找到该用户）
+      //  3. 如果点击的是具体的联系人（从 allContacts 中找到该用户）
       final Contact? contact = chat.allContacts.value.cast<Contact?>().firstWhere((e) => e?.id == selectedId, orElse: () => null);
 
-      // ✅ 2. 判断逻辑
+      //  2. 判断逻辑
       if (contact != null) {
         // 如果是群组类型，显示群组详情界面
         if (contact.type == "groupChats") {
@@ -1583,7 +1583,7 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
     });
   }
 
-  // ✅ 参数类型从 Map 改为 Contact
+  //  参数类型从 Map 改为 Contact
   Widget _buildContactInfoCard(Contact contact) {
     final chat = RxObjMgr.find<ChatService>();
 
@@ -1605,7 +1605,7 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
                     children: [
                       Row(
                         children: [
-                          // ✅ 改为对象访问：contact.name
+                          //  改为对象访问：contact.name
                           Text(contact.name, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
                           const SizedBox(width: 8),
                           const Icon(Icons.person, color: Colors.blue, size: 20),
@@ -1621,11 +1621,11 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
                   width: 65,
                   height: 65,
                   decoration: BoxDecoration(
-                    color: contact.color, // ✅ 改为对象访问：contact.color
+                    color: contact.color, //  改为对象访问：contact.color
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Center(
-                    // ✅ 既然是 Contact 类，你可以直接取名字的首字母
+                    //  既然是 Contact 类，你可以直接取名字的首字母
                     child: Text(contact.name[0], style: const TextStyle(color: Colors.white, fontSize: 24)),
                   ),
                 ),
@@ -1638,7 +1638,7 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
 
           // 2. 详细信息行
           _buildInfoRow("备    注", "点击添加备注"),
-          _buildInfoRow("微信号", "wxid_${contact.id}"), // ✅ contact.id
+          _buildInfoRow("微信号", "wxid_${contact.id}"), //  contact.id
           _buildInfoRow("地    区", "中国 深圳"),
 
           const SizedBox(height: 40),
@@ -1648,7 +1648,7 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
           const SizedBox(height: 40),
           ElevatedButton(
             onPressed: () {
-              // ✅ 核心优化：直接传递对象给 openChatWith，不要零散传参
+              //  核心优化：直接传递对象给 openChatWith，不要零散传参
               chat.openChatWith(contact);
 
               // selectedNavIndex.value = 1; // 切到聊天页
@@ -1690,7 +1690,7 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
       bool isStar = item.isStar; // 直接访问类的布尔字段
 
       return GestureDetector(
-        // ✅ 这里会调用你之前改好的 _showContextMenu(Offset, Contact)
+        //  这里会调用你之前改好的 _showContextMenu(Offset, Contact)
         onSecondaryTapDown: (details) => _showContextMenu(details.globalPosition, item),
         onLongPressStart: (details) => _showContextMenu(details.globalPosition, item),
         onTap: () => chat.selectedContactId.value = item.id,
@@ -1701,7 +1701,7 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
           child: Row(
             children: [
-              // ✅ 记得同步修改 _buildAvatar 的接收类型
+              //  记得同步修改 _buildAvatar 的接收类型
               _buildAvatar(item),
               const SizedBox(width: 12),
               Expanded(child: Text(item.name, style: const TextStyle(fontSize: 14))),
@@ -1714,14 +1714,14 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
     });
   }
 
-  // ✅ 参数 item 类型改为 Contact
+  //  参数 item 类型改为 Contact
   void _showContextMenu(Offset position, Contact item) {
     final overlay = Overlay.of(context);
     final chat = RxObjMgr.find<ChatService>();
 
     late OverlayEntry entry;
 
-    // ✅ 改为点语法访问对象属性
+    //  改为点语法访问对象属性
     bool isStar = item.isStar;
 
     entry = OverlayEntry(
@@ -1747,16 +1747,16 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     _menuItem(isStar ? "取消标星" : "标为星标朋友", () {
-                      chat.toggleStar(item.id); // ✅ item.id
+                      chat.toggleStar(item.id); //  item.id
                       entry.remove();
                     }),
-                    // ✅ 假设你在 Contact 类里定义了 isPinned
+                    //  假设你在 Contact 类里定义了 isPinned
                     _menuItem(item.isPinned ? "取消置顶" : "置顶聊天", () {
                       chat.togglePin(item.id);
                       entry.remove();
                     }),
                     _menuItem("发送消息", () {
-                      // ✅ 直接传对象，比传一堆参数优雅多了
+                      //  直接传对象，比传一堆参数优雅多了
                       chat.openChatWith(item);
                       // selectedNavIndex.value = 1;
                       entry.remove();
@@ -1781,7 +1781,7 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
   void _simulateAddNewContact() {
     final chat = RxObjMgr.find<ChatService>();
 
-    // ✅ 1. 直接构造 Contact 对象，而不是 Map
+    //  1. 直接构造 Contact 对象，而不是 Map
     final newFriend = Contact(
       id: "u${DateTime.now().millisecondsSinceEpoch}",
       name: "新朋友 ${chat.allContacts.value.length + 1}",
@@ -1792,13 +1792,13 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
       isStar: false,
     );
 
-    // ✅ 2. 局部更新。因为 RxFlare 监听的是 value，这样写会触发 UI 刷新
+    //  2. 局部更新。因为 RxFlare 监听的是 value，这样写会触发 UI 刷新
     chat.allContacts.value = [...chat.allContacts.value, newFriend];
 
     // 3. (可选) 给“新的朋友”增加红点计数
     _simulateNewContactRequest();
 
-    RxDebug.log("✅ 已成功添加新联系人：${newFriend.name}");
+    RxDebug.log(" 已成功添加新联系人：${newFriend.name}");
   }
 
   void showRightMenu(BuildContext context, Offset position) {

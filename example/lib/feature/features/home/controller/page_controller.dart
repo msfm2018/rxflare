@@ -1,6 +1,7 @@
-
+import 'package:flutter/material.dart';
 import 'package:rxflare/rxflare.dart';
 import '../models/user_model.dart';
+
 // 模板二：分页加载 + 下拉刷新 + 上拉更多
 class PageControllerv {
   final isLoading = false.obs;
@@ -18,11 +19,7 @@ class PageControllerv {
     try {
       await Future.delayed(const Duration(seconds: 1));
       // 模拟 50 条总数据
-      final allData = List.generate(50, (index) => {
-        "id": index + 1,
-        "name": "用户${index + 1}",
-        "age": 18 + index % 20,
-      });
+      final allData = List.generate(50, (index) => {"id": index + 1, "name": "用户${index + 1}", "age": 18 + index % 20});
 
       final start = (page - 1) * pageSize.value;
       final end = start + pageSize.value;
@@ -67,14 +64,6 @@ class PageControllerv {
   }
 }
 
-
-
-
-// view/home_paged_view.dart
-import 'package:flutter/material.dart';
-import 'package:rxflare/rxflare.dart';
-import '../controller/page_controller.dart';
-
 class HomePagedView extends StatefulWidget {
   const HomePagedView({super.key});
 
@@ -105,10 +94,7 @@ class _HomePagedViewState extends State<HomePagedView> {
         // 2. 错误处理
         if (c.userFuture.hasError && c.userList.value.isEmpty) {
           return Center(
-            child: ElevatedButton(
-              onPressed: () => c.userFuture.retry(),
-              child: Text("加载失败: ${c.userFuture.error}\n点击重试"),
-            ),
+            child: ElevatedButton(onPressed: () => c.userFuture.retry(), child: Text("加载失败: ${c.userFuture.error}\n点击重试")),
           );
         }
 
@@ -165,7 +151,9 @@ class _HomePagedViewState extends State<HomePagedView> {
       if (!c.hasMore.value) {
         return const Padding(
           padding: EdgeInsets.all(16.0),
-          child: Center(child: Text("没有更多数据了", style: TextStyle(color: Colors.grey))),
+          child: Center(
+            child: Text("没有更多数据了", style: TextStyle(color: Colors.grey)),
+          ),
         );
       }
       return const SizedBox.shrink();
@@ -173,16 +161,12 @@ class _HomePagedViewState extends State<HomePagedView> {
   }
 }
 
-
 // 分页展示页面
 class HomeP extends StatelessWidget {
   const HomeP({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return RxParent<PageControllerv>(
-      dependency: PageControllerv(),
-      child: const HomePagedView(),
-    );
+    return RxParent<PageControllerv>(dependency: PageControllerv(), child: const HomePagedView());
   }
 }

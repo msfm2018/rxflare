@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import '../rxflare.dart';
+
+import 'rx.dart';
+
 
 /// 平衡其它系统加一个
 class RxBuilder extends StatelessWidget {

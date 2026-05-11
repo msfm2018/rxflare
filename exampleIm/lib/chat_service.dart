@@ -30,7 +30,6 @@ class ChatService {
 
   final chatList = [
     ChatItem(id: "s1", type: "service", name: "文件传输助手", msg: "等待接收文件...", unread: 0, color: Colors.green, lastTime: DateTime.now().millisecondsSinceEpoch, isPinned: false),
-
     ChatItem(id: "g1", type: "groupChats", name: "拳之森林会员群", msg: "教练：下午有课", unread: 10, color: Colors.teal, lastTime: DateTime.now().millisecondsSinceEpoch - 2000, isPinned: false),
     ChatItem(id: "u1", type: "contact", name: "王小静", msg: "您好！", unread: 0, color: Colors.pinkAccent, lastTime: DateTime.now().millisecondsSinceEpoch - 3000, isPinned: false),
   ].obs;
@@ -89,7 +88,7 @@ class ChatService {
     // 2. 提取普通好友并排序
     final regulars = rawList.where((e) => !e.isStar).toList();
     regulars.sort((a, b) {
-      // ✅ 使用 lpinyin 库获取拼音
+      //  使用 lpinyin 库获取拼音
       String pinyinA = PinyinHelper.getShortPinyin(a.name).toUpperCase();
       String pinyinB = PinyinHelper.getShortPinyin(b.name).toUpperCase();
       return pinyinA.compareTo(pinyinB);
@@ -115,7 +114,7 @@ class ChatService {
         displayList.add({"type": "header", "label": currentLetter});
         lastLetter = currentLetter;
       }
-      // ✅ 包装成统一格式
+      //  包装成统一格式
       displayList.add({"type": "contact", "data": contact});
     }
 
@@ -127,7 +126,7 @@ class ChatService {
     int idx = allContacts.value.indexWhere((e) => e.id == id);
     if (idx == -1) return;
 
-    // ✅ 自动获得代码提示：allContacts.value[idx].isStar
+    //  自动获得代码提示：allContacts.value[idx].isStar
     final current = allContacts.value[idx];
 
     allContacts.updateField(idx, current.copyWith(isStar: !current.isStar));
@@ -176,7 +175,7 @@ class ChatService {
     }
 
     if (!messagesMap.containsKey(contact.id)) {
-      // ✅ 修复：补齐 senderId 参数
+      //  修复：补齐 senderId 参数
       messagesMap[contact.id] = RxValue<List<Message>>([
         Message(
           text: "你们已经成为好友，可以开始聊天了",
@@ -190,7 +189,7 @@ class ChatService {
     selectedId.value = contact.id;
   }
 
-  // ✅ 新增：朋友圈响应式数据
+  //  新增：朋友圈响应式数据
   final momentsList = RxValue<List<Map<String, dynamic>>>([
     {
       "id": "m1",
@@ -218,7 +217,7 @@ class ChatService {
     },
   ]);
 
-  // ✅ 功能：点赞/取消点赞
+  //  功能：点赞/取消点赞
   void toggleLike(String momentId, String currentUserName) {
     int idx = momentsList.value.indexWhere((m) => m["id"] == momentId);
     if (idx == -1) return;
@@ -236,7 +235,7 @@ class ChatService {
     momentsList.updateField(idx, {...moment, "likes": likes});
   }
 
-  // ✅ 功能：发表评论
+  //  功能：发表评论
   void addComment(String momentId, String fromUser, String text) {
     int idx = momentsList.value.indexWhere((m) => m["id"] == momentId);
     if (idx == -1) return;
@@ -249,7 +248,7 @@ class ChatService {
     momentsList.updateField(idx, {...moment, "comments": comments});
   }
 
-  // ✅ 功能：发布新动态
+  //  功能：发布新动态
   void postMoment(String content, List<String> images) {
     final newMoment = {
       "id": DateTime.now().millisecondsSinceEpoch.toString(),
@@ -275,10 +274,10 @@ class ChatService {
     final groupId = "g_${DateTime.now().millisecondsSinceEpoch}";
 
     // 3. 实例化一个新的 Contact
-    // ✅ 修复：删掉 memberIds 参数，因为它在 Contact 类里不存在
+    //  修复：删掉 memberIds 参数，因为它在 Contact 类里不存在
     final newGroup = Contact(id: groupId, name: "${baseContact.name}、${newSelectedIds.length + 1}人的群聊", avatar: "群", color: Colors.blueGrey, type: "groupChats");
 
-    // 4. ✅ 关键步骤：既然类里没字段，就必须存入你的 Map 中
+    // 4.  关键步骤：既然类里没字段，就必须存入你的 Map 中
     groupMembersMap[groupId] = RxValue(allMembers);
 
     // 5. 存入联系人列表
@@ -298,16 +297,16 @@ class ChatService {
     final baseContact = allContacts.value.firstWhere((e) => e.id == baseId, orElse: () => allContacts.value.first);
 
     // 3. 实例化 Contact 对象
-    // ✅ 修复：删掉 memberIds: members 参数，因为类里没定义
+    //  修复：删掉 memberIds: members 参数，因为类里没定义
     final group = Contact(id: groupId, name: "${baseContact.name}、${newIds.length + 1}人的群聊", avatar: "群", color: Colors.teal, type: "groupChats");
 
-    // 4. ✅ 核心：成员信息存入独立的 Map，实现解耦
+    // 4.  核心：成员信息存入独立的 Map，实现解耦
     groupMembersMap[groupId] = RxValue(members);
 
     // 5. 初始化群消息
     String invitedNames = allContacts.value.where((c) => newIds.contains(c.id)).map((c) => c.name).join("、");
 
-    // ✅ 修复：变量名统一使用 groupId，并补齐 senderId
+    //  修复：变量名统一使用 groupId，并补齐 senderId
     messagesMap[groupId] = RxValue<List<Message>>([Message(text: "你邀请了 $invitedNames 加入了群聊", senderId: "system", isMe: false, time: DateTime.now().millisecondsSinceEpoch)]);
 
     // 6. 更新联系人列表并跳转

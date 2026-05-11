@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
-import 'rx_stack.dart';
-import 'rx_debug.dart';
+
+import '../rx_router/rx_router.dart';
+import '../utils/rx_debug.dart';
+
 
 int _rxStateCounter = 0;
 
@@ -15,7 +17,7 @@ class RxState<T> {
   final String? name;
   T _value;
   final List<void Function(dynamic)> _listeners = [];
-  final List<void Function(dynamic)> _listenersWithId = []; // 👈 带 id
+  final List<void Function(dynamic)> _listenersWithId = []; //  带 id
   final Map<dynamic, List<void Function(dynamic)>> _fieldListeners = {};
 
   /// 创建一个响应式状态。
@@ -26,7 +28,6 @@ class RxState<T> {
         name = name ?? "RxState#$_rxStateCounter" {
     _rxStateCounter++;
   }
-
 
   bool _deepEquals(dynamic a, dynamic b) {
     if (a is Map && b is Map) return mapEquals(a, b); // 需要 import 'package:flutter/foundation.dart';
@@ -108,7 +109,7 @@ class RxState<T> {
     }
 
     if (current is int && newValue is double) {
-      RxDebug.log("⚠️ RxState(${name ?? id}): double → int 可能丢失精度: $newValue");
+      RxDebug.log(" RxState(${name ?? id}): double → int 可能丢失精度: $newValue");
 
       final converted = newValue.toInt();
 
@@ -120,7 +121,7 @@ class RxState<T> {
 
     // 3. 类型不匹配
     RxDebug.log(
-      '❌ [类型错误] RxState(${name ?? id}): '
+      ' [类型错误] RxState(${name ?? id}): '
       '无法将 ${newValue.runtimeType} 赋值给 ${current.runtimeType}',
     );
   }
@@ -133,7 +134,7 @@ class RxState<T> {
   void updateField<K extends Object>(K field, Object? newValue, {bool notifyGlobal = false}) {
     final current = _value;
     if (current == null) {
-      RxDebug.log("⚠️ RxState(${name ?? id}) 值为 null，无法更新字段 $field");
+      RxDebug.log(" RxState(${name ?? id}) 值为 null，无法更新字段 $field");
       return;
     }
 
@@ -159,13 +160,12 @@ class RxState<T> {
       }
       return;
     }
- 
 
     if (current is List && field is int) {
       final index = field;
 
       if (index < 0 || index >= current.length) {
-        RxDebug.log("⚠️ List index 越界: $index");
+        RxDebug.log(" List index 越界: $index");
         return;
       }
       final oldItem = current[index];
@@ -185,7 +185,7 @@ class RxState<T> {
         _value = newValue;
         _notifyListeners(id);
       } else {
-        RxDebug.log('⚠️ RxState(${name ?? id}) 更新字段 $field 类型不匹配: 期望 $T，实际 ${newValue.runtimeType}');
+        RxDebug.log(' RxState(${name ?? id}) 更新字段 $field 类型不匹配: 期望 $T，实际 ${newValue.runtimeType}');
       }
     }
   }
@@ -227,7 +227,7 @@ class RxState<T> {
       }
     }
 
-    // ✅ 只有明确要求才触发全局
+    //  只有明确要求才触发全局
     if (notifyGlobal) {
       // print("→ 手动触发全局通知");
       _notifyListeners(id);
@@ -324,7 +324,7 @@ class RxState<T> {
 
     _listeners.add(wrapper);
 
-    // ✅ 初始触发
+    //  初始触发
     wrapper(_value);
 
     bool disposed = false;
@@ -395,5 +395,3 @@ class RxState<T> {
     _notifyListeners(id); // 这里的 notifyListeners 是继承自 ChangeNotifier 的
   }
 }
-
-

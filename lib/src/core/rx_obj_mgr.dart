@@ -65,7 +65,7 @@ class RxObjMgr {
       _factoryMap.remove(key);
       return dependency as T;
     }
-    throw "❌ [注入错误] 未找到标识为 '$key' 的实例";
+    throw " [注入错误] 未找到标识为 '$key' 的实例";
   }
 
   static T? findOrNull<T>({String? name}) {

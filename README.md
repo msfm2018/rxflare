@@ -723,8 +723,8 @@ list.listenByKey(1, (v) {
   print("index 1: $v");
 });
 
-list.updateField(1, 999); // ✅ 触发
-list.updateField(0, 111); // ❌ 不触发
+list.updateField(1, 999); //  触发
+list.updateField(0, 111); //  不触发
 
 5. 条件监听（listenWhere）
 final data = RxState<Map<String, dynamic>>({

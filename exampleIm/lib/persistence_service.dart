@@ -18,7 +18,7 @@ class PersistenceService {
       }
       RxDebug.log("🚀 [持久化] 基础服务已启动，监听对话数: ${_activeIds.length}");
     } catch (e) {
-      RxDebug.log("❌ [持久化] 服务启动失败: $e");
+      RxDebug.log(" [持久化] 服务启动失败: $e");
     }
   }
 
@@ -27,7 +27,7 @@ class PersistenceService {
   // [msgsRx] 消息列表的响应式对象
   void watch(String chatId, RxValue<List<Message>> msgsRx) {
     if (_activeIds.contains(chatId)) {
-      RxDebug.log("⚠️ [持久化] 对话 $chatId 已开启监听，跳过");
+      RxDebug.log(" [持久化] 对话 $chatId 已开启监听，跳过");
       return;
     }
 
@@ -40,15 +40,15 @@ class PersistenceService {
         // 现在 lastMsg 是 Message 类型了
         final Message lastMsg = newMsgs.last;
 
-        // ✅ 这里的访问方式从 lastMsg['text'] 变成 lastMsg.text
+        //  这里的访问方式从 lastMsg['text'] 变成 lastMsg.text
         RxDebug.log("💾 [DB写入] 对话 $chatId -> 内容: ${lastMsg.text}");
       });
 
       _cancelTasks[chatId] = cancel;
-      RxDebug.log("➕ [持久化] 开启监控: $chatId");
+      RxDebug.log(" [持久化] 开启监控: $chatId");
     } catch (e) {
       _activeIds.remove(chatId);
-      RxDebug.log("❌ [持久化] 开启 $chatId 监听失败: $e");
+      RxDebug.log(" [持久化] 开启 $chatId 监听失败: $e");
     }
   }
 

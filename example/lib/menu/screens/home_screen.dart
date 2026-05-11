@@ -28,7 +28,7 @@ class _HomeScreenState extends State<HomeScreen> {
     MenuItem(id: '4', name: '可乐', category: '饮料', price: 8.0, imageUrl: '', description: '冰爽'),
   ]);
 
-@override
+  @override
   Widget build(BuildContext context) {
     // 🧠 2. 联动：根据底栏索引决定 body 显示什么
     return RxBuilder(
@@ -38,7 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
             title: Text(bottomNavIndex.value == 0 ? '点菜助手' : (bottomNavIndex.value == 1 ? '我的订单' : '个人中心')),
             actions: [if (bottomNavIndex.value == 0) _buildCartBadge(context)],
           ),
-          
+
           // 🧠 核心：根据底栏索引切换内容主体
           body: IndexedStack(
             index: bottomNavIndex.value,
@@ -56,7 +56,7 @@ class _HomeScreenState extends State<HomeScreen> {
               const Center(child: Text("个人中心页面")),
             ],
           ),
-          
+
           // --- 底部：功能按钮栏 ---
           bottomNavigationBar: _buildBottomNavigationBar(),
         );
@@ -130,12 +130,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     selectedProductIndex.value = index;
                   },
                   child: Card(
-                    // ✅ 选中变色：选中时为橘色背景，未选中时为白色
+                    //  选中变色：选中时为橘色背景，未选中时为白色
                     color: isSelected ? Colors.orange[50] : Colors.white,
                     elevation: isSelected ? 4 : 1,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
-                      // ✅ 选中时增加边框颜色
+                      //  选中时增加边框颜色
                       side: BorderSide(color: isSelected ? Colors.orange : Colors.transparent, width: 1),
                     ),
                     margin: const EdgeInsets.only(bottom: 10),

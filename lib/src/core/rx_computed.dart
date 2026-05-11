@@ -1,6 +1,6 @@
+import '../rx_router/rx_router.dart';
+import '../utils/rx_debug.dart';
 import 'rx_state.dart';
-import 'rx_stack.dart';
-import 'rx_debug.dart';
 
 /// 创建一个计算属性的快捷方法。
 ///
@@ -20,7 +20,7 @@ RxComputed<T> computed<T>(T Function() fn) => RxComputed<T>(fn);
 /// 响应式计算属性类。
 ///
 /// `RxComputed` 会根据依赖的 [RxState] 自动计算值，并在依赖变化时刷新。
-/// 
+///
 /// 特性：
 /// - 自动追踪依赖的状态对象和字段。
 /// - 当依赖变化时自动更新值。
@@ -58,7 +58,7 @@ class RxComputed<T> extends RxState<T> {
   /// 内部会更新值并记录依赖。
   void _init() {
     _updateValueAndDeps();
-    RxDebug.log("🧬 RxComputed(id: $id) 初始化完成");
+    RxDebug.log(" RxComputed(id: $id) 初始化完成");
   }
 
   // =========================
@@ -119,7 +119,7 @@ class RxComputed<T> extends RxState<T> {
       ..clear()
       ..addAll(newFields);
 
-    RxDebug.log("🧬 Computed 依赖更新: states=${_deps.length}, fields=${_fieldDeps.length}");
+    RxDebug.log(" Computed 依赖更新: states=${_deps.length}, fields=${_fieldDeps.length}");
   }
 
   // =========================
@@ -132,12 +132,14 @@ class RxComputed<T> extends RxState<T> {
   }
 
   @override
+
   /// 不允许手动修改计算属性值
   set value(T newValue) {
-    RxDebug.log("⚠️ 警告: 计算属性不支持手动修改，请修改其依赖项");
+    RxDebug.log(" 警告: 计算属性不支持手动修改，请修改其依赖项");
   }
 
   @override
+
   /// 清理计算属性的所有依赖监听
   void dispose() {
     // 清理状态依赖
