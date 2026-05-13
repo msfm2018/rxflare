@@ -4,7 +4,7 @@ import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:rxflare/rxflare.dart';
-
+import 'rx_state.dart'; // ← 确保导入 RxState
 /// RxObjMgr 是一个全局依赖注入管理器
 ///
 /// 提供单例注入、懒加载和按类型或名称查找实例的功能。
@@ -25,13 +25,6 @@ import 'package:rxflare/rxflare.dart';
 /// // 删除实例
 /// RxObjMgr.delete<MyController>();
 /// ```
-import 'dart:async';
-import 'dart:convert';
-import 'dart:developer' as developer;
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
-
-import 'rx_state.dart'; // ← 确保导入 RxState
 
 /// RxObjMgr 是一个全局依赖注入管理器
 class RxObjMgr {
