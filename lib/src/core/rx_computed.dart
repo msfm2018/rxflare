@@ -1,5 +1,6 @@
 import '../rx_router/rx_router.dart';
 import '../utils/rx_debug.dart';
+import 'rx_obj_mgr.dart';
 import 'rx_state.dart';
 
 /// 创建一个计算属性的快捷方法。
@@ -51,6 +52,8 @@ class RxComputed<T> extends RxState<T> {
   /// [compute] 是计算函数，会在初始化时立即计算一次。
   RxComputed(this.compute) : super(compute()) {
     _init();
+    // 新增：自动注册到管理器
+    RxObjMgr.registerComputed(this, debugName: name);
   }
 
   /// 初始化计算属性。

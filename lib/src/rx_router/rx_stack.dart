@@ -1,3 +1,4 @@
+import '../core/rx_obj_mgr.dart';
 import '../core/rx_state.dart';
 import '../utils/rx_debug.dart';
 
@@ -24,7 +25,6 @@ class RxStack {
   /// 获取当前顶层上下文
   static RxContext? get current => _stack.isNotEmpty ? _stack.last : null;
 
-
   /// 将上下文推入栈顶
   static void push(RxContext ctx) {
     _stack.add(ctx);
@@ -47,6 +47,7 @@ class RxStack {
       // 仅在添加成功时打印日志
       if (ctx.states.add(state)) {
         RxDebug.log(" 绑定 State: ${state.name ?? state.id}");
+        RxObjMgr.registerRxState(state, debugName: state.name ?? state.id);
       }
     }
   }

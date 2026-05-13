@@ -1,4 +1,9 @@
+import 'dart:async';
+import 'dart:convert';
+import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:rxflare/rxflare.dart';
 
 /// RxObjMgr 是一个全局依赖注入管理器
 ///
@@ -20,6 +25,15 @@ import 'package:flutter/material.dart';
 /// // 删除实例
 /// RxObjMgr.delete<MyController>();
 /// ```
+import 'dart:async';
+import 'dart:convert';
+import 'dart:developer' as developer;
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+
+import 'rx_state.dart'; // ← 确保导入 RxState
+
+/// RxObjMgr 是一个全局依赖注入管理器
 class RxObjMgr {
   /// 单例对象池
   static final Map<Object, dynamic> _singletonMap = {};
@@ -27,64 +41,184 @@ class RxObjMgr {
   /// 工厂方法池（懒加载）
   static final Map<Object, dynamic Function()> _factoryMap = {};
 
-  /// 注册单例对象
-  ///
-  /// [dependency] 要注册的对象
-  /// [name] 可选名称，用于区分同类型对象
+  /// 调试模式
+  static bool debugEnabled = true; // kDebugMode;
+
+  /// 活跃的 RxState
+  static final Map<String, dynamic> _rxStates = {};
+
+  /// Computed 属性集合
+  static final Map<String, dynamic> _computed = {};
+
+  /// 已销毁的 RxState（用于 DevTools 显示历史）
+  static final Map<String, dynamic> _disposedRxStates = {};
+  static final Map<String, DateTime> _disposeTimestamps = {};
+
+  /// EventBus 调试事件流
+  static final StreamController<dynamic> _eventController = StreamController<dynamic>.broadcast();
+
+  static Stream<dynamic> get debugEventStream => _eventController.stream;
+
+  // ==================== DevTools 初始化 ====================
+  static void initDevTools() {
+    if (!kDebugMode) return;
+
+     bool isRegistered = false;
+    if (!isRegistered) {
+      try {
+        developer.registerExtension('ext.rxflare.getSnapshot', (method, parameters) async {
+          try {
+            final data = getDebugSnapshot();
+            return developer.ServiceExtensionResponse.result(jsonEncode({
+              'success': true,
+              'data': data,
+              'timestamp': DateTime.now().millisecondsSinceEpoch,
+            }));
+          } catch (e, st) {
+            debugPrint('[RxFlare] getSnapshot Error: $e $st');
+            return developer.ServiceExtensionResponse.error(0, 'Snapshot failed: $e');
+          }
+        });
+
+        isRegistered = true;
+        _log('DEBUG', 'DevTools Service Extension registered successfully.');
+      } catch (e) {
+        debugPrint('[RxFlare] 注册 DevTools 失败: $e');
+      }
+    }
+  }
+
+  /// 获取 DevTools 快照（核心方法）
+  static Map<String, dynamic> getDebugSnapshot() {
+    final rxStatesData = <String, dynamic>{};
+
+    // 1. 活跃的 RxState
+    _rxStates.forEach((key, obj) {
+      try {
+        if (obj is RxState) {
+          rxStatesData[key] = {
+            'status': 'alive',
+            'value': obj.value.toString(),
+            'type': obj.runtimeType.toString(),
+            'name': obj.name ?? '无名称',
+          };
+        } else {
+          rxStatesData[key] = obj.toString();
+        }
+      } catch (e) {
+        rxStatesData[key] = {'status': 'alive', 'value': '<读取失败>'};
+      }
+    });
+
+    // 2. 已销毁的 RxState
+    _disposedRxStates.forEach((key, obj) {
+      rxStatesData[key] = {
+        'status': 'disposed',
+        'value': '<已销毁>',
+        'disposedAt': _disposeTimestamps[key]?.toString() ?? '未知时间',
+        'type': obj.runtimeType.toString(),
+      };
+    });
+
+    return {
+      'singletons': _singletonMap.map((k, v) => MapEntry(k.toString(), v.runtimeType.toString())),
+      'rxStates': rxStatesData,
+      'computed': _computed.map((k, v) => MapEntry(k, v.toString())),
+      'factoryCount': _factoryMap.length,
+      'aliveCount': _rxStates.length,
+      'disposedCount': _disposedRxStates.length,
+    };
+  }
+
+  // ==================== 注册 / 查找 / 删除 ====================
+
   static T put<T>(T dependency, {String? name}) {
     final key = name ?? T;
     _singletonMap[key] = dependency;
+    if (debugEnabled) _log('PUT', 'Registered $T${name != null ? " ($name)" : ""}');
     return dependency;
   }
 
-  /// 懒加载注入
-  ///
-  /// [builder] 工厂函数
-  /// [name] 可选名称，用于区分同类型对象
   static void lazyPut<T>(T Function() builder, {String? name}) {
     final key = name ?? T;
     _factoryMap[key] = builder;
+    if (debugEnabled) _log('LAZY_PUT', 'Lazy registered $T');
   }
 
-  /// 查找实例
-  ///
-  /// 如果未注册单例，则尝试从懒加载工厂创建
-  /// [name] 可选名称
   static T find<T>({String? name}) {
     final key = name ?? T;
-
-    // 从单例池找
     if (_singletonMap.containsKey(key)) {
       return _singletonMap[key] as T;
     }
-
-    // 从懒加载工厂找
     if (_factoryMap.containsKey(key)) {
-      final dependency = _factoryMap[key]!();
-      _singletonMap[key] = dependency;
+      final dep = _factoryMap[key]!();
+      _singletonMap[key] = dep;
       _factoryMap.remove(key);
-      return dependency as T;
+      return dep as T;
     }
-    throw " [注入错误] 未找到标识为 '$key' 的实例";
+    throw " [注入错误] 未找到 '$key'";
   }
 
   static T? findOrNull<T>({String? name}) {
     final key = name ?? T;
-
-    if (_singletonMap.containsKey(key)) {
-      return _singletonMap[key] as T;
-    }
-
-    return null;
+    return _singletonMap[key] as T?;
   }
 
-  /// 删除实例
-  ///
-  /// 会同时删除单例和工厂缓存
   static void delete<T>({String? name}) {
     final key = name ?? T;
     _singletonMap.remove(key);
     _factoryMap.remove(key);
+    if (debugEnabled) _log('DELETE', 'Removed $T');
+  }
+
+  // ==================== RxState 注册与销毁 ====================
+
+  static void registerRxState<T>(T state, {String? debugName}) {
+    if (!debugEnabled) return;
+    final name = debugName ?? '${T}_${state.hashCode}';
+    _rxStates[name] = state;
+    _log('REGISTER_RX', name);
+  }
+
+  static void registerComputed<T>(T computed, {String? debugName}) {
+    if (!debugEnabled) return;
+    final name = debugName ?? 'Computed_${T}_${computed.hashCode}';
+    _computed[name] = computed;
+    _log('REGISTER_COMPUTED', name);
+  }
+
+  /// 移除并记录销毁状态
+  static void unregisterRx(dynamic rxObject) {
+    if (!debugEnabled) return;
+
+    String? removedKey;
+
+    _rxStates.removeWhere((key, value) {
+      if (value == rxObject) {
+        removedKey = key;
+        return true;
+      }
+      return false;
+    });
+
+    _computed.removeWhere((key, value) => value == rxObject);
+
+    if (removedKey != null) {
+      _disposedRxStates[removedKey!] = rxObject;
+      _disposeTimestamps[removedKey!] = DateTime.now();
+      _log('DISPOSED', '$removedKey 已销毁');
+    }
+  }
+
+  static void clearDebugData() {
+    _rxStates.clear();
+    _computed.clear();
+    // _disposedRxStates.clear(); // 保留历史记录
+    _log('DEBUG', 'All active debug data cleared');
+  }
+
+  static void _log(String type, String message) {
+    debugPrint('[RxFlare] $type → $message');
   }
 }
 
@@ -138,15 +272,11 @@ class _RxParentState<T> extends State<RxParent<T>> {
 
   @override
   void dispose() {
-    final dynamic instance = RxObjMgr.findOrNull<T>(
-      name: widget.name,
-    );
+    final dynamic instance = RxObjMgr.findOrNull<T>(name: widget.name);
 
     instance?.dispose?.call();
     // print("---------------->${widget.name}");
-    RxObjMgr.delete<T>(
-      name: widget.name,
-    );
+    RxObjMgr.delete<T>(name: widget.name);
 
     super.dispose();
   }

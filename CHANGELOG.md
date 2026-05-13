@@ -1,4 +1,34 @@
 # Changelog
+
+## [1.5.0] - 2026-05-13
+
+### Added
+* **DevTools Extension**: Added a complete RxFlare State Monitoring Panel
+  - Real-time viewing of all `RxState` (active status + current value)
+  - Support for viewing `Computed` properties
+  - Support for viewing DI Singletons
+  - Added **Disposed** state tracking with visual distinction (marked in red)
+* **DevTools Debugging Enhancements**:
+  - `RxObjMgr.initDevTools()` service extension registration
+  - Improved `getDebugSnapshot()` with structured data support
+  - `unregisterRx` + destroyed history recording functionality
+* **Example Code**: Complete demo page (`HomePage`) with create, update, and destroy RxState demonstrations
+* **RxFlare Inspector**: Standalone DevTools extension UI with auto-refresh (2-second polling)
+
+### Improved
+* More robust error handling and data formatting in `getDebugSnapshot()`
+* Optimized `RxState` registration and disposal flow
+* Enhanced DevTools panel display logic (status color coding, better readability)
+
+### Fixed
+* Data structure parsing issues in DevTools Extension
+* Duplicate service extension registration problem
+
+
+## [1.4.5] - 2026-05-11
+
+### Added
+* Introduced unified reactive extensions
 ## [1.4.5] - 2026-05-11
 ### Added
 * Introduced unified reactive extensions:

@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 
 import '../rx_router/rx_router.dart';
 import '../utils/rx_debug.dart';
+import 'rx_obj_mgr.dart';
 
 int _rxStateCounter = 0;
 
@@ -26,6 +27,8 @@ class RxState<T> {
       : id = id ?? Object(),
         name = name ?? "RxState#$_rxStateCounter" {
     _rxStateCounter++;
+    // 新增：自动注册到管理器
+  RxObjMgr.registerRxState(this, debugName: name ?? "RxState_${id.hashCode}");
   }
 
   void trackFieldAccess(dynamic field) {
