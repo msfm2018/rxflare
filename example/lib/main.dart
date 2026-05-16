@@ -3,6 +3,7 @@ import 'package:rxflare/rxflare.dart';
 
 import 'auto_dispose/data_dispose.dart';
 import 'dev_tool.dart';
+import 'error_boundary_demo.dart';
 import 'feature/features/home/controller/dio_controller.dart';
 import 'feature/features/home/controller/home_controller.dart';
 import 'feature/features/home/controller/page_controller.dart';
@@ -56,7 +57,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 16, vsync: this);
+    _tabController = TabController(length: 17, vsync: this);
   }
 
   @override
@@ -95,6 +96,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
             Tab(text: '复杂生命周期'),
             Tab(text: 'Showcase'),
             Tab(text: 'devtool'),
+            Tab(text: "边界错误"),
           ],
         ),
       ),
@@ -117,6 +119,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
           DataDispose(),
           Showcase(),
           DevTool(),
+          ErrorBoundaryDemo(),
         ],
       ),
     );
