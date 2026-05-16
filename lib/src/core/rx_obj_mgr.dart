@@ -68,15 +68,15 @@ class RxObjMgr {
               'timestamp': DateTime.now().millisecondsSinceEpoch,
             }));
           } catch (e, st) {
-            debugPrint('[RxFlare] getSnapshot Error: $e $st');
-            return developer.ServiceExtensionResponse.error(0, 'Snapshot failed: $e');
+            // debugPrint('[RxFlare] getSnapshot Error: $e $st');
+            return developer.ServiceExtensionResponse.error(0, 'Snapshot failed: $e $st');
           }
         });
 
         isRegistered = true;
         _log('DEBUG', 'DevTools Service Extension registered successfully.');
       } catch (e) {
-        debugPrint('[RxFlare] 注册 DevTools 失败: $e');
+        // debugPrint('[RxFlare] 注册 DevTools 失败: $e');
       }
     }
   }
@@ -211,7 +211,7 @@ class RxObjMgr {
   }
 
   static void _log(String type, String message) {
-    debugPrint('[RxFlare] $type → $message');
+    // debugPrint('[RxFlare] $type → $message');
   }
 }
 
