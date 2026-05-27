@@ -6,7 +6,6 @@ import '../core/rx_state.dart';
 import '../rx_router/rx_stack.dart';
 import '../utils/rx_debug.dart';
 
-
 typedef RxWidgetBuilder = Widget Function();
 
 /// [Rx] 是一个响应式包装组件。
@@ -148,16 +147,16 @@ class _RxState extends State<Rx> {
     // 🔥 自动依赖模式（升级版）
     final RxContext ctx = RxContext();
 
-    // 1️⃣ 开始追踪
+    // 1️ 开始追踪
     RxStack.push(ctx);
 
-    // 2️⃣ 执行 builder
+    // 2️ 执行 builder
     final result = widget.builder();
 
-    // 3️⃣ 停止追踪
+    // 3️ 停止追踪
     RxStack.pop();
 
-    // 4️⃣ 更新监听（state + field） 等待数据的下一次变化时触发刷新
+    // 4️ 更新监听（state + field） 等待数据的下一次变化时触发刷新
     _updateListeners(ctx);
     RxDebug.log("📦 依赖统计: states=${ctx.states.length}, fields=${ctx.fields.length}");
 
