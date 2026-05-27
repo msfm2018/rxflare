@@ -1,52 +1,45 @@
 import 'package:flutter/material.dart';
 import 'package:rxflare/rxflare.dart';
 
-// void main() {
-//   runApp(const MyApp());
-// }
-
-// class MyApp extends StatelessWidget {
-//   const MyApp({super.key});
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return MaterialApp(
-//       title: 'RxFlare 错误边界 Demo',
-//       home: const ErrorBoundaryDemo(),
-//     );
-//   }
-// }
-
 // ==================== 错误安全的 Computed ====================
 // ==================== 错误安全的 Computed (推荐写法) ====================
 class SafeComputed<T> {
-  late final RxState<T?> valueRx;   // 使用 RxState
+  late final RxState<T?> valueRx;
   late final RxState<String?> errorRx;
 
+  T? _lastValue;
+
   SafeComputed(T Function() computedFn) {
-    // 错误状态
     errorRx = RxState<String?>(null);
 
-    // 安全的 computed
-    valueRx = computed(() {
+    valueRx = computed<T?>(() {
       try {
         final result = computedFn();
-        errorRx.value = null;           // 清除之前的错误
+
+        _lastValue = result;
+
+        if (errorRx.value != null) {
+          errorRx.value = null;
+        }
+
         return result;
       } catch (e, stack) {
-        errorRx.value = e.toString();
-        debugPrint('SafeComputed 内部异常: $e\n$stack');
-        
-        // 返回上一次成功的值，防止崩溃
-        return valueRx.value;
+        final errStr = e.toString();
+
+        if (errorRx.value != errStr) {
+          errorRx.value = errStr;
+        }
+
+        debugPrint('SafeComputed error: $e\n$stack');
+
+        return _lastValue; // ✅ 不再依赖自己
       }
-    }) as RxState<T?>;   // computed 返回的结果转为 RxState
+    });
   }
 
   T? get value => valueRx.value;
   String? get error => errorRx.value;
 
-  // 方便在 Rx() 中使用
   RxState<T?> get rxValue => valueRx;
   RxState<String?> get rxError => errorRx;
 }
@@ -61,7 +54,7 @@ class ErrorBoundaryDemo extends StatefulWidget {
 
 class _ErrorBoundaryDemoState extends State<ErrorBoundaryDemo> {
   final number = 10.obs;
-  final divisor = 2.obs;   // 改成 0 会触发除零错误
+  final divisor = 2.obs; // 改成 0 会触发除零错误
 
   // 使用 SafeComputed 包装可能出错的计算
   late final SafeComputed<int> safeResult;
@@ -69,7 +62,7 @@ class _ErrorBoundaryDemoState extends State<ErrorBoundaryDemo> {
   @override
   void initState() {
     super.initState();
-    
+
     safeResult = SafeComputed(() {
       if (divisor.value == 0) {
         throw Exception("除数不能为 0！（模拟计算错误）");
@@ -94,12 +87,9 @@ class _ErrorBoundaryDemoState extends State<ErrorBoundaryDemo> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                ElevatedButton(
-                  onPressed: () => number.value++,
-                  child: const Text('+ 被除数'),
-                ),
+                ElevatedButton(onPressed: () => number.value++, child: const Text('+ 被除数')),
                 const SizedBox(width: 20),
-                Text('${number.value}', style: const TextStyle(fontSize: 24)),
+                Rx(() => Text('${number.value}', style: TextStyle(fontSize: 24))),
               ],
             ),
 
@@ -108,17 +98,12 @@ class _ErrorBoundaryDemoState extends State<ErrorBoundaryDemo> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                ElevatedButton(
-                  onPressed: () => divisor.value--,
-                  child: const Text('- 除数'),
-                ),
+                ElevatedButton(onPressed: () => divisor.value--, child: const Text('- 除数')),
                 const SizedBox(width: 20),
-                Text('${divisor.value}', style: const TextStyle(fontSize: 24)),
+                // Text('${divisor.value}', style: const TextStyle(fontSize: 24)),
+                Rx(() => Text('${divisor.value}', style: TextStyle(fontSize: 24))),
                 const SizedBox(width: 20),
-                ElevatedButton(
-                  onPressed: () => divisor.value++,
-                  child: const Text('+ 除数'),
-                ),
+                ElevatedButton(onPressed: () => divisor.value++, child: const Text('+ 除数')),
               ],
             ),
 
@@ -146,10 +131,7 @@ class _ErrorBoundaryDemoState extends State<ErrorBoundaryDemo> {
                 );
               }
 
-              return Text(
-                '计算结果: ${safeResult.value}',
-                style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
-              );
+              return Text('计算结果: ${safeResult.value}', style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold));
             }),
           ],
         ),

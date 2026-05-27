@@ -53,7 +53,7 @@ class DataDispose extends StatelessWidget {
     // RxParent 自动调用 dispose()
     return RxParent<UserController>(
       dependency: UserController(), // 自动注入
-      name: "data_dispose",           // 可选：多实例隔离
+      name: "data_dispose", // 可选：多实例隔离
       child: const UserView(),
     );
   }
@@ -77,26 +77,22 @@ class _UserViewState extends State<UserView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body:Column(
+      body: Center(
+        child: Rx(
+          () => SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                /// 标题
+                const Text('2. RxParent + Controller', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
 
-        children: [
- /// 标题
-          const Text(
-            '2. RxParent + Controller',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+                const SizedBox(height: 12),
 
-          const SizedBox(height: 12),
-
-          /// 描述卡片
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Text(
-                '''
+                /// 描述卡片
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Text('''
 RxParent 是 RxFlare 官方推荐的页面级依赖注入与生命周期管理容器。
 
 配合 Controller 模式使用，
@@ -115,20 +111,19 @@ RxParent 是 RxFlare 官方推荐的页面级依赖注入与生命周期管理�
 • 团队协作
 • 复杂业务
 • 长期维护项目
-''',
-                style: const TextStyle(
-                  fontSize: 14,
-                  height: 1.7,
+''', style: const TextStyle(fontSize: 14, height: 1.7)),
+                  ),
                 ),
-              ),
+
+                const SizedBox(height: 32),
+
+                Center(child: Rx(() => Text('计数: ${controller.count.value}', style: const TextStyle(fontSize: 48)))),
+              ],
             ),
           ),
+        ),
+      ),
 
-          const SizedBox(height: 32),
-
-Center(child: Rx(() => Text('计数: ${controller.count.value}', style: const TextStyle(fontSize: 48)))),
-        ],
-      ) ,
       floatingActionButton: FloatingActionButton(onPressed: controller.increment, child: const Icon(Icons.add)),
     );
   }

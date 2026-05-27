@@ -1,18 +1,8 @@
-import '../core/rx_obj_mgr.dart';
+import '../core/base_.dart';
 import '../core/rx_state.dart';
 import '../utils/rx_debug.dart';
 
-/// RxContext 用于记录当前计算或构建期间的依赖状态
-///
-/// - [states] 保存当前计算依赖的 RxState 对象
-/// - [fields] 保存字段级别的依赖，key 为 RxState，value 为依赖的字段集合
-class RxContext {
-  /// 当前上下文中依赖的状态对象
-  final Set<RxState> states = {};
 
-  /// 当前上下文中依赖的字段
-  final Map<RxState, Set<dynamic>> fields = {};
-}
 
 /// RxStack 是 RxFlare 的依赖栈
 ///
@@ -47,7 +37,6 @@ class RxStack {
       // 仅在添加成功时打印日志
       if (ctx.states.add(state)) {
         RxDebug.log(" 绑定 State: ${state.name ?? state.id}");
-        RxObjMgr.registerRxState(state, debugName: state.name ?? state.id);
       }
     }
   }

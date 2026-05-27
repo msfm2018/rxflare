@@ -1,15 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../async/rx_future.dart';
+import '../core/base_.dart';
 import '../utils/rx_event_bus.dart';
-
-
-
-
-/// ====================== Disposable 接口 ======================
-abstract class Disposable {
-  void dispose();
-}
 
 /// ====================== RxFuture 兼容扩展（关键） ======================
 /// 让 RxFuture 拥有 .disposable 属性
@@ -22,7 +15,7 @@ extension RxFutureDisposable<T> on RxFuture<T> {
 /// RxFuture 支持 .autoDispose(this)
 extension AutoDisposeRxFuture<T> on RxFuture<T> {
   RxFuture<T> autoDispose(RxAutoDispose mixin) {
-    mixin.autoDispose(disposable);   // 这里使用 .disposable
+    mixin.autoDispose(disposable); // 这里使用 .disposable
     return this;
   }
 }
@@ -71,7 +64,6 @@ class _VoidCallbackDisposable implements Disposable {
 
 /// ====================== RxAutoDispose Mixin ======================
 mixin RxAutoDispose<T extends StatefulWidget> on State<T> {
-  
   final List<Disposable> _disposables = [];
 
   void autoDispose(Disposable disposable) {
@@ -98,4 +90,3 @@ mixin RxAutoDispose<T extends StatefulWidget> on State<T> {
     super.dispose();
   }
 }
-

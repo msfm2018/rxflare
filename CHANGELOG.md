@@ -1,5 +1,30 @@
 # Changelog
+## [1.5.1] - 2026-05-27
 
+### Added
+* **SafeComputed**: Introduced a safe computed wrapper to prevent crashes from runtime exceptions
+  - Gracefully captures errors during computation
+  - Separates `value` and `error` states for UI handling
+  - Preserves last valid value when computation fails
+
+### Improved
+* **RxComputed Stability**:
+  - Prevented potential re-entrant computation issues using internal lock
+  - Improved dependency tracking consistency during rapid updates
+* **Type Safety Enhancements**:
+  - Improved nullable handling in computed states
+  - Reduced unsafe casting patterns
+* **Reactive UI Updates**:
+  - Improved reactivity consistency when accessing nested/computed values
+
+### Fixed
+* Fixed potential self-dependency issue in computed (recursive dependency bug)
+* Fixed unnecessary multiple rebuilds triggered by error state updates
+* Fixed edge cases where computed could enter inconsistent state after exceptions
+
+### Internal
+* Refactored SafeComputed implementation for better separation of concerns
+* Minor code cleanup and documentation improvements
 ## [1.5.0] - 2026-05-13
 
 ### Added

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:rxflare/rxflare.dart';
 
 import 'auto_dispose/data_dispose.dart';
-import 'dev_tool.dart';
 import 'error_boundary_demo.dart';
 import 'feature/features/home/controller/dio_controller.dart';
 import 'feature/features/home/controller/home_controller.dart';
@@ -19,9 +18,6 @@ final isDarkMode = false.obs;
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 2. 初始化 RxFlare 的 DevTools 扩展
-  // 这样当应用启动时，服务扩展就已经在 VM Service 中准备就绪了
-  RxObjMgr.initDevTools();
   // RxDebug.isEnabled = true;
   runApp(const RxFlareDemoApp());
 }
@@ -57,7 +53,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 17, vsync: this);
+    _tabController = TabController(length: 16, vsync: this);
   }
 
   @override
@@ -95,7 +91,6 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
             Tab(text: '简单生命周期'),
             Tab(text: '复杂生命周期'),
             Tab(text: 'Showcase'),
-            Tab(text: 'devtool'),
             Tab(text: "边界错误"),
           ],
         ),
@@ -118,7 +113,6 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
           AutoDisposePage(),
           DataDispose(),
           Showcase(),
-          DevTool(),
           ErrorBoundaryDemo(),
         ],
       ),
@@ -221,11 +215,28 @@ class ComputedDemo extends StatelessWidget {
           children: [
             const Text("🛒 商品购买", style: TextStyle(fontSize: 28)),
             const SizedBox(height: 30),
+
             Text("单价: ${price.value} 元", style: const TextStyle(fontSize: 24)),
             Text("数量: ${quantity.value}", style: const TextStyle(fontSize: 24)),
-            const Divider(height: 40),
-            Text("总价: ${total.value} 元", style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold)),
+
             const SizedBox(height: 20),
+
+            /// 🔥 增加按钮（关键）
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton(onPressed: () => quantity.value--, child: const Text("➖")),
+                const SizedBox(width: 20),
+                ElevatedButton(onPressed: () => quantity.value++, child: const Text("➕")),
+              ],
+            ),
+
+            const Divider(height: 40),
+
+            Text("总价: ${total.value} 元", style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold)),
+
+            const SizedBox(height: 20),
+
             Text(isExpensive.value ? "💰 属于高消费！" : "🛍️ 性价比不错", style: TextStyle(fontSize: 24, color: isExpensive.value ? Colors.red : Colors.green)),
           ],
         ),

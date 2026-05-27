@@ -1,33 +1,29 @@
 import '../rx_router/rx_router.dart';
 import '../utils/rx_debug.dart';
-import 'rx_obj_mgr.dart';
+import 'base_.dart';
 import 'rx_state.dart';
 
-/// 创建一个计算属性的快捷方法。
+/// Creates a computed reactive value.
 ///
-/// [fn] 是计算函数，会返回计算值。
-/// 使用示例：
-///
+/// Example:
 /// ```dart
 /// final count = RxState<int>(0);
 /// final doubled = computed(() => count.value * 2);
 ///
-/// doubled.listen((val) => print('doubled = $val'));
-///
-/// count.value = 5; // 输出: doubled = 10
+/// doubled.listen((value) => print(value));
+/// count.value = 5; // prints 10
 /// ```
 RxComputed<T> computed<T>(T Function() fn) => RxComputed<T>(fn);
 
-/// 响应式计算属性类。
+/// A reactive computed value that automatically tracks dependencies.
 ///
-/// `RxComputed` 会根据依赖的 [RxState] 自动计算值，并在依赖变化时刷新。
+/// `RxComputed` automatically re-evaluates when any of its dependent
+/// `RxState` or field-level dependencies change.
 ///
-/// 特性：
-/// - 自动追踪依赖的状态对象和字段。
-/// - 当依赖变化时自动更新值。
-/// - 不允许手动修改值，只能修改依赖的状态。
-///
-/// 示例：
+/// Features:
+/// - Automatic dependency tracking (state + field-level)
+/// - Lazy recomputation on dependency change
+/// - Read-only reactive value (cannot be set manually)
 ///
 /// ```dart
 /// final a = RxState<int>(1);
@@ -35,75 +31,81 @@ RxComputed<T> computed<T>(T Function() fn) => RxComputed<T>(fn);
 /// final sum = RxComputed<int>(() => a.value + b.value);
 ///
 /// sum.listen((val) => print('sum = $val'));
-/// a.value = 3; // 输出: sum = 5
+/// a.value = 3; //  sum = 5
 /// ```
 class RxComputed<T> extends RxState<T> {
-  /// 计算函数
+  /// The computation function used to derive the value.
   final T Function() compute;
 
-  /// 🔥 记录依赖的状态对象
+  /// Set of dependent reactive states.
   final Set<RxState> _deps = {};
 
-  /// 🔥 记录依赖的字段
+  /// Field-level dependency tracking per state.
   final Map<RxState, Set<dynamic>> _fieldDeps = {};
 
-  /// 构造函数。
+  /// Prevents recursive recomputation loops.
+  bool _computing = false;
+
+  /// Creates a computed reactive value.
   ///
-  /// [compute] 是计算函数，会在初始化时立即计算一次。
+  /// The initial value is evaluated immediately.
   RxComputed(this.compute) : super(compute()) {
     _init();
-    // 新增：自动注册到管理器
-    RxObjMgr.registerComputed(this, debugName: name);
   }
 
-  /// 初始化计算属性。
-  ///
-  /// 内部会更新值并记录依赖。
+  /// Initializes dependency tracking.
   void _init() {
     _updateValueAndDeps();
     RxDebug.log(" RxComputed(id: $id) 初始化完成");
   }
 
   // =========================
-  // 🔥 核心方法：重算 + 依赖追踪
+  // Core recomputation logic
   // =========================
+
   void _updateValueAndDeps() {
-    final ctx = RxContext();
+    if (_computing) return;
+    _computing = true;
 
-    // 1️⃣ 开启依赖追踪
-    RxStack.push(ctx);
+    try {
+      final ctx = RxContext();
 
-    final newValue = compute();
+      // Start dependency collection
+      RxStack.push(ctx);
 
-    // 2️⃣ 停止追踪
-    RxStack.pop();
+      final newValue = compute();
 
-    // 3️⃣ 更新值
-    internalUpdate(newValue);
+      // Stop dependency collection
+      RxStack.pop();
 
-    // 4️⃣ 更新依赖绑定（状态 + 字段）
-    _updateDeps(ctx);
+      // Update dependency graph
+      _updateDeps(ctx);
+
+      // Update value
+      internalUpdate(newValue);
+    } finally {
+      _computing = false;
+    }
   }
 
   // =========================
-  // 🔥 依赖 diff 更新（核心）
+  // Dependency diffing system
   // =========================
   void _updateDeps(RxContext ctx) {
     final newStates = ctx.states;
     final newFields = ctx.fields;
 
-    // ========= 状态依赖 =========
+    // Remove stale state dependencies
     for (final dep in _deps.difference(newStates)) {
       dep.removeListener(_refresh);
     }
     for (final dep in newStates.difference(_deps)) {
-      dep.addInternalListener(_refresh);
+      dep.addListener(_refresh);
     }
     _deps
       ..clear()
       ..addAll(newStates);
 
-    // ========= 字段依赖 =========
     _fieldDeps.forEach((state, oldFields) {
       final newFs = newFields[state] ?? {};
       for (final field in oldFields.difference(newFs)) {
@@ -113,6 +115,7 @@ class RxComputed<T> extends RxState<T> {
 
     newFields.forEach((state, newFs) {
       final oldFs = _fieldDeps[state] ?? {};
+
       for (final field in newFs.difference(oldFs)) {
         state.addFieldListener(field, _refresh);
       }
@@ -121,15 +124,13 @@ class RxComputed<T> extends RxState<T> {
     _fieldDeps
       ..clear()
       ..addAll(newFields);
-
-    RxDebug.log(" Computed 依赖更新: states=${_deps.length}, fields=${_fieldDeps.length}");
   }
 
   // =========================
-  // 🔥 依赖变化触发刷新
+  // Reactive trigger
   // =========================
 
-  /// 当依赖的状态或字段变化时刷新计算值
+  /// Recomputes the value when dependencies change.
   void _refresh([dynamic _]) {
     _updateValueAndDeps();
   }
@@ -138,19 +139,24 @@ class RxComputed<T> extends RxState<T> {
 
   /// 不允许手动修改计算属性值
   set value(T newValue) {
-    RxDebug.log(" 警告: 计算属性不支持手动修改，请修改其依赖项");
+    RxDebug.log(
+      'Warning: RxComputed is read-only. '
+      'Update its dependencies instead.',
+    );
   }
 
-  @override
+  // =========================
+  // Cleanup
+  // =========================
 
-  /// 清理计算属性的所有依赖监听
+  /// Disposes all dependency listeners.
+  @override
   void dispose() {
     // 清理状态依赖
     for (final dep in _deps) {
       dep.removeListener(_refresh);
     }
 
-    // 清理字段依赖
     _fieldDeps.forEach((state, fields) {
       for (final field in fields) {
         state.removeFieldListener(field, _refresh);

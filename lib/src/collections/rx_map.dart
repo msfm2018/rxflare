@@ -67,6 +67,6 @@ class RxMap<K, V> extends RxState<Map<K, V>> {
 
     value = newMap;
 
-    notifyFieldListeners(key, false);
+    notifyField(key);
   }
 }

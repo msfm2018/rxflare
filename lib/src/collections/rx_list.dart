@@ -35,7 +35,7 @@ class RxList<T> extends RxState<List<T>> {
   /// no update or notification will be triggered.
   ///
   /// After updating, only listeners subscribed to this index
-  /// will be notified via [notifyFieldListeners].
+  /// will be notified via [notifyField].
   void operator []=(int index, T newValue) {
     final oldValue = value[index];
 
@@ -49,7 +49,7 @@ class RxList<T> extends RxState<List<T>> {
 
     value = newList;
 
-    notifyFieldListeners(index, false);
+    notifyField(index);
   }
 
   /// Updates the value at a specific index.

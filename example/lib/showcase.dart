@@ -13,18 +13,18 @@ class AppController {
   final username = "Tom".obs;
 
   // final user = RxMap<String, dynamic>({"name": "Tom", "age": 18});
-  final user ={"name": "Tom", "age": 18}.obsMapD;
+  final user = {"name": "Tom", "age": 18}.obsMapD;
   // final user = {"name": "Tom"}.obsMap<String, dynamic>();
-
- 
 
   final stats = RxMap<String, dynamic>({"score": 100, "level": 1});
 
   /// RxList Demo
-  final todos = ["Learn Flutter", "Learn RxFlare"].obsList();
+
+  final todos = ["Learn Flutter", "Learn RxFlare"].obsList;
+  final tags = {"flutter", "dart"}.obsSet;
 
   /// RxSet Demo（例如：收藏 / 选中集合）
-  final tags = {"flutter", "dart"}.obsSet();
+
   void increment() {
     counter.value++;
   }
