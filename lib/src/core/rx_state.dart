@@ -46,7 +46,6 @@ class RxState<T> {
   /// Internal setter that updates the value and notifies all global listeners.
   /// Returns true if the value actually changed.
   bool _setValue(T newValue) {
-    
     if (!deepEquals(_value, newValue)) {
       _value = newValue;
       _notifyListeners(id);
@@ -200,7 +199,6 @@ class RxState<T> {
   ///
   /// Supports any key type such as int, String, or Object.
   /// These listeners are triggered only when the specified field changes.
-  @protected
   void addFieldListener(dynamic field, void Function(dynamic) listener) {
     // _fieldListeners.putIfAbsent(field, () => []).add(listener);
     final list = _fieldListeners.putIfAbsent(field, () => []);
@@ -213,7 +211,6 @@ class RxState<T> {
   ///
   /// If the listener list becomes empty, the field entry will be removed
   /// to reduce memory usage.
-  @protected
   void removeFieldListener(dynamic field, void Function(dynamic) listener) {
     final fieldListeners = _fieldListeners[field];
     if (fieldListeners != null) {
@@ -254,7 +251,6 @@ class RxState<T> {
   /// Adds a global listener.
   ///
   /// The listener will be triggered whenever the entire state changes.
-  @protected
   void addListener(void Function(dynamic) listener) {
     if (!_listeners.contains(listener)) {
       _listeners.add(listener);
@@ -400,7 +396,6 @@ class RxState<T> {
   }
 
   /// Removes a global listener.
-  @protected
   void removeListener(void Function(dynamic) listener) {
     _listeners.remove(listener);
   }
