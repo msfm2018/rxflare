@@ -1,6 +1,6 @@
 name: rxflare
 description: A high-performance reactive state management library for Flutter featuring automatic dependency tracking and granular field-level updates.
-version: 1.5.1
+version: 1.5.2
 homepage: https://github.com/msfm2018/rxflare
 repository: https://github.com/msfm2018/rxflare
 issue_tracker: https://github.com/msfm2018/rxflare/issues
@@ -16,15 +16,13 @@ environment:
   flutter: ">=1.17.0"
 
 dependencies:
-  devtools_app_shared: ^0.5.1
-  devtools_extensions: ^0.5.1
   flutter:
     sdk: flutter
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^5.0.0
+  flutter_lints: ^6.0.0
 
 flutter:
 
