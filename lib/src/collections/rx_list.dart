@@ -76,6 +76,58 @@ class RxList<T> extends RxState<List<T>> {
     value = newList;
   }
 
+  /// Adds multiple items to the list.
+  ///
+  /// This creates a new list instance to ensure reactivity.
+  void addAll(Iterable<T> items) {
+    value = List<T>.of(value)..addAll(items);
+  }
+
+  /// Inserts an item at the given index.
+  ///
+  /// A new list instance is created to trigger reactive updates.
+  void insert(int index, T item) {
+    value = List<T>.of(value)..insert(index, item);
+  }
+
+  /// Removes the first occurrence of the given item.
+  ///
+  /// Returns `true` if the item was removed, otherwise `false`.
+  /// A new list instance is assigned if removal succeeds.
+  bool remove(T item) {
+    final newList = List<T>.of(value);
+    if (newList.remove(item)) {
+      value = newList;
+      return true;
+    }
+    return false;
+  }
+
+  /// Maps each element using the provided function.
+  ///
+  /// This method also registers the current Rx context
+  /// to ensure proper reactive tracking.
+  ///
+  /// Useful when transforming reactive lists without losing reactivity.
+  List<R> map<R>(R Function(T) toElement) {
+    RxStack.register(this); // 保持响应式
+    return value.map(toElement).toList();
+  }
+
+  /// Removes all elements that satisfy the given condition.
+  ///
+  /// A new list instance is created to notify listeners.
+  void removeWhere(bool Function(T) test) {
+    value = List<T>.of(value)..removeWhere(test);
+  }
+
+  /// Clears all elements from the list.
+  ///
+  /// Resets the list to an empty state and notifies listeners.
+  void clear() {
+    value = <T>[];
+  }
+
   /// Removes the element at [index].
   ///
   /// A new list is created to ensure proper reactive updates.

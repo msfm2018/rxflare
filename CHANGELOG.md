@@ -1,4 +1,22 @@
 # Changelog
+## [1.5.3] - 2026-05-29
+
+### Added
+* Added list mutation APIs to improve usability and reactivity consistency:
+  - `addAll(Iterable<T> items)`  
+  - `insert(int index, T item)`  
+  - `remove(T item) -> bool`  
+  - `removeWhere(bool Function(T) test)`  
+  - `clear()`  
+  - `map<R>(R Function(T) toElement)`
+
+### Behavior
+* All mutating methods create a new `List<T>` instance to ensure reactive updates.
+* `map()` preserves reactive context via `RxStack.register(this)`.
+
+### Notes
+* These APIs are designed for reactive state management scenarios where immutability is required for change detection.
+
 ## [1.5.2] - 2026-05-28
 ### Updated
 * Upgraded `flutter_lints` to ^6.0.0 for improved code analysis.
