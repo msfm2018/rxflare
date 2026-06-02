@@ -1,4 +1,22 @@
 # Changelog
+## [1.5.4] - 2026-06-02
+
+### Added
+
+* Added semantic and reactive query APIs for `RxList`:
+
+  * `filter(bool Function(T) test)` → alias of `where`, improves readability for search scenarios
+  * `maybeFirst(bool Function(T) test)` → safe nullable query
+  * `find(bool Function(T) test)` → semantic alias of `firstWhere`
+  * `findIndex(bool Function(T) test)` → index lookup with reactivity support
+
+* Added reactive-safe batch update APIs:
+
+  * `updateWhere(bool Function(T) test, T Function(T) update)`
+  * `replaceWhere(bool Function(T) test, T newValue)`
+
+
+
 ## [1.5.3] - 2026-05-29
 
 ### Added

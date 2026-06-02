@@ -52,17 +52,154 @@ class RxList<T> extends RxState<List<T>> {
     notifyField(index);
   }
 
+  /// Returns a new list containing all elements that satisfy the [test] predicate.
+  ///
+  /// This method is **reactive** — it registers the current Rx context,
+  /// so any changes to the original list will trigger rebuilds in UI.
+  List<T> where(bool Function(T element) test) {
+    RxStack.register(this);
+    return value.where(test).toList();
+  }
+
+  /// Returns a new list containing all elements that satisfy the [test] predicate.
+  ///
+  /// Same as [where], but more semantic for filtering (recommended for search).
+  List<T> filter(bool Function(T element) test) {
+    RxStack.register(this);
+    return value.where(test).toList();
+  }
+
+  /// Returns the first element or null if not found.
+  ///
+  /// Alias of [firstWhereOrNull] for semantic clarity.
+  T? maybeFirst(bool Function(T element) test) {
+    return firstWhereOrNull(test);
+  }
+
+  /// Finds the first element that matches [test].
+  ///
+  /// Alias of [firstWhere] for more readable API.
+  T find(bool Function(T element) test) {
+    return firstWhere(test);
+  }
+
+  /// Finds the index of the first matching element.
+  ///
+  /// Returns -1 if not found.
+  int findIndex(bool Function(T element) test) {
+    RxStack.register(this);
+    return value.indexWhere(test);
+  }
+
+  /// Updates all elements that satisfy [test] using [update].
+  ///
+  /// Only triggers update if at least one element changes.
+  void updateWhere(bool Function(T element) test, T Function(T element) update) {
+    bool changed = false;
+    final newList = List<T>.of(value);
+
+    for (int i = 0; i < newList.length; i++) {
+      final item = newList[i];
+
+      if (test(item)) {
+        final newItem = update(item);
+
+        if (!deepEquals(item, newItem)) {
+          newList[i] = newItem;
+          changed = true;
+
+          notifyField(i);
+        }
+      }
+    }
+
+    if (changed) {
+      value = newList;
+    }
+  }
+
+  /// Replaces all elements that match [test] with [newValue].
+  void replaceWhere(bool Function(T element) test, T newValue) {
+    bool changed = false;
+    final newList = List<T>.of(value);
+
+    for (int i = 0; i < newList.length; i++) {
+      if (test(newList[i])) {
+        if (!deepEquals(newList[i], newValue)) {
+          newList[i] = newValue;
+          changed = true;
+
+          notifyField(i);
+        }
+      }
+    }
+
+    if (changed) {
+      value = newList;
+    }
+  }
+
+  /// Safely gets element at [index].
+  ///
+  /// Returns null if index is out of bounds.
+  T? safeIndex(int index) {
+    RxStack.register(this);
+
+    if (index < 0 || index >= value.length) return null;
+
+    RxStack.registerField(this, index);
+    return value[index];
+  }
+
+  /// Returns the first element that satisfies [test].
+  ///
+  /// This access is tracked reactively so UI can rebuild
+  /// when underlying list changes.
+  T firstWhere(bool Function(T element) test, {T Function()? orElse}) {
+    RxStack.register(this);
+
+    final index = value.indexWhere(test);
+
+    if (index != -1) {
+      return value[index];
+    }
+
+    if (orElse != null) return orElse();
+
+    throw StateError('No element found');
+  }
+
+  T? firstWhereOrNull(bool Function(T) test) {
+    RxStack.register(this);
+
+    for (final item in value) {
+      if (test(item)) return item;
+    }
+    return null;
+  }
+
+  T singleWhere(bool Function(T) test) {
+    RxStack.register(this);
+    return value.singleWhere(test);
+  }
+
+  int indexWhere(bool Function(T) test) {
+    RxStack.register(this);
+    return value.indexWhere(test);
+  }
+
+  bool contains(T item) {
+    RxStack.register(this);
+    return value.contains(item);
+  }
+
   /// Updates the value at a specific index.
   ///
   /// This is a convenience wrapper around `[]=` for semantic clarity.
   ///
   /// If [notifyGlobal] is true, global listeners may also be notified
   /// depending on implementation in [RxState].
-  void updateAt(
-    int index,
-    T newValue, {
-    bool notifyGlobal = false,
-  }) {
+  void updateAt(int index, T newValue, {bool notifyGlobal = false}) {
     this[index] = newValue;
   }
 
@@ -141,7 +278,7 @@ class RxList<T> extends RxState<List<T>> {
 
   /// Returns the underlying raw list.
   ///
-  /// ⚠️ Note:
+  ///  Note:
   /// Modifying this list directly will NOT trigger reactivity.
   /// Prefer using provided methods like [add], [removeAt], or `[]=` instead.
   List<T> get list => value;
