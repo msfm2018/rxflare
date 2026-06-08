@@ -21,7 +21,7 @@ class _PublishMomentPageState extends State<PublishMomentPage> {
       return;
     }
 
-    final chat = RxObjMgr.find<ChatService>();
+    final chat = RxDI.find<ChatService>();
     // 调用 Service 的发布方法
     chat.postMoment(_textController.text, _selectedImages);
 

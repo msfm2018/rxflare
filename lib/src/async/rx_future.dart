@@ -7,9 +7,9 @@ import '../core/rx_state.dart';
 /// RxFuture
 /// =======================================================
 ///
-/// 支持：
+/// Support:
 ///
-///  自动依赖联动
+///  Automatic dependency linkage
 ///  CancelToken
 ///  debounce
 ///  throttle
@@ -25,9 +25,6 @@ import '../core/rx_state.dart';
 ///  concurrent control
 ///  global error handler
 ///
-/// 设计目标：
-///
-/// ReactQuery / SWR / Riverpod AsyncValue 风格
 ///
 /// =======================================================
 
@@ -99,7 +96,7 @@ class RxFuture<T> extends RxState<AsyncSnapshot<T>> {
   final bool enableCache;
   final Duration cacheMaxAge;
 
-  /// 数据多久认为是 fresh
+  ///How long is the data considered as fresh?
   final Duration staleTime;
 
   final int maxConcurrentRequests;

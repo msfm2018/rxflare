@@ -1,7 +1,3 @@
-// memPages: 负责大局（登录、主页、全屏详情）。
-// tabPages: 负责局部。
-// back: 优先处理当前视口（Active），如果触底则报警/扩展。
-
 import 'package:flutter/material.dart';
 import 'package:rxflare/src/core/rx_core.dart';
 
@@ -9,82 +5,81 @@ import '../core/rx_state.dart';
 import '../utils/rx_debug.dart';
 import './rx_route_args.dart';
 
-/// 全局路由便捷访问实例。
+/// Global router instance for convenient access.
 final rxr = RxRouter.I;
 
+/// Utility class for generating unique page identifiers.
 class RxUtils {
   static int _counter = 0;
 
-  // /// 生成全局唯一的标识符，用于区分不同的页面实例。
+  /// Generates a globally unique ID for distinguishing page instances.
   static String generateId() {
     _counter++;
     return 'rx_id_${DateTime.now().millisecondsSinceEpoch}_$_counter';
   }
 }
 
-/// RxRouter 是 RxFlare 路由系统的核心管理器。
+/// **RxRouter** is the core manager of the RxFlare routing system.
 ///
-/// 它负责管理全局路由栈 ([memPages])、多 Tab 局部栈 ([tabPages])、
-/// 路由跳转 ([to])、返回 ([back]) 以及参数存取。
+/// It manages:
+/// - Global route stack (`memPages`) for full-screen pages (login, home, dialogs, etc.)
+/// - Tab-specific local stacks (`tabPages`)
+/// - Navigation (`to`), back navigation (`back`), and parameter handling
 class RxRouter {
   RxRouter._();
   String initialRoute = "/";
   final navigatorKey = GlobalKey<NavigatorState>();
 
-  /// 获取 RxRouter 的单例实例。
+  /// Singleton instance of [RxRouter].
   static final I = RxRouter._();
 
-  // final _uuid = RxUtils.generateId(); // const Uuid();
-
-  ///  根路由栈。负责全局大局逻辑，如：登录页、主页、全屏弹窗等。
+  /// Root route stack for global navigation (login, home, full-screen pages, etc.).
   final memPages = RxState<List<RxPage>>([]);
 
-  /// 多 Tab 局部栈集合。Key 为 Tab 索引，Value 为该 Tab 独立的路由栈。
+  /// Tab-specific route stacks. Key = tab index, Value = independent stack for that tab.
   final Map<int, RxState<List<RxPage>>> tabPages = {};
 
-  /// 当前激活的 Tab 索引。
+  /// Currently active tab index.
   final activeTabIndex = 0.obs;
 
-  /// 已注册的路由配置映射表。
-  final _routes = <String, RxDef>{};
+  /// Registered route definitions.
+  final _routes = <String, RxRoute>{};
 
   // =====================
-  // 注册
+  // Route Registration
   // =====================
 
-  /// 注册路由定义表。
+  /// Registers a map of route definitions.
   ///
-  /// [map] 包含路径与对应的构建器及守卫逻辑。
-  // void register(Map<String, RxDef> map) {
-  //   _routes.addAll(map);
-  // }
-  void register(Map<String, RxDef> map) {
+  /// [map] should contain path → [RxRoute] mappings.
+  void register(Map<String, RxRoute> map) {
     for (var entry in map.entries) {
       final key = entry.key;
       final def = entry.value;
 
-      // 如果用户没传 path，则使用 key 作为 path
       final effectivePath = def.path ?? key;
 
-      _routes[key] = RxDef(
+      _routes[key] = RxRoute(
         builder: def.builder,
-        path: effectivePath, // 内部统一保存
+        path: effectivePath,
         guard: def.guard,
       );
     }
   }
 
   // =====================
-  // 当前状态
+  // Current State
   // =====================
-  /// 获取当前活跃的路由栈（根据 [activeTabIndex] 自动选择 Tab 栈或根栈）。
+
+  /// Returns the currently active route stack (tab stack or global stack).
   RxState<List<RxPage>> get _activePages {
     return tabPages[activeTabIndex.value] ?? memPages;
   }
 
-  /// 获取当前视口顶部的页面信息。
+  /// Returns the top page of the current active stack.
   RxPage? get current => _activePages.value.isNotEmpty ? _activePages.value.last : null;
 
+  /// Ensures the router is initialized with the initial route.
   void ensureInitialized() {
     if (memPages.value.isNotEmpty) return;
 
@@ -98,25 +93,25 @@ class RxRouter {
     ];
   }
 
-  // =====================
-  // 跳转 API
+// =====================
+  // Navigation API
   // =====================
 
-  /// 跳转至指定路径。
+  /// Navigates to a new route.
   ///
-  /// [path] 支持带参数的路径（如 `/detail/123`）或带 Query 的路径（如 `/search?q=flutter`）。
-  /// [arguments] 可选的自定义参数对象。
+  /// [path] can include path parameters (`/detail/123`) or query parameters (`/search?q=flutter`).
+  /// [arguments] allows passing custom objects.
   ///
-  /// 返回一个 [Future]，可在目标页面调用 [back] 时获取返回值。
+  /// Returns a [Future] that completes when the target page calls [back] with a result.
   Future<T?> to<T>(String path, {dynamic arguments}) async {
     final uri = Uri.parse(path);
 
-    final match = RxHiter.match(path, _routes);
+    final match = RxMatcher.match(path, _routes);
     if (match == null) return null;
 
     final config = _routes[match.name]!;
 
-    //  路由守卫检查
+    // Route guard check
     if (config.guard != null) {
       final ok = await config.guard!();
       if (!ok) return null;
@@ -125,94 +120,83 @@ class RxRouter {
     final pageId = RxUtils.generateId();
 
     if (arguments != null) {
-      // RxArgs.I.set(pageId, arguments);
       _setArgs(pageId, arguments);
     }
 
     final memPage = RxPage(
       name: match.name,
       pageId: pageId,
-      params: match.params, //  路径参数
+      params: match.params,
       query: uri.queryParameters, //URL query
     );
 
     _activePages.value = [..._activePages.value, memPage];
 
-    return RxRes.wait<T>(pageId);
+    return RxResult.wait<T>(pageId);
   }
 
   // =====================
-  // 返回 API
+  // Back Navigation
   // =====================
 
-  /// 返回上一页。
+  /// Pops the current page.
   ///
-  /// [result] 可选的回传给 [to] 方法的等待者的值。
+  /// [result] will be returned to the waiting [to()] call if any.
   void back<T>({T? result}) {
     final stack = _activePages.value;
-    // if (stack.length <= 1) return;
     if (stack.length > 1) {
       if (stack.isNotEmpty) {
-        // 增加一层判空保护
         final newStack = List<RxPage>.from(stack);
         final removed = newStack.removeLast();
 
         _removeArgs(removed.pageId);
-        RxRes.complete(removed.pageId, result);
+        RxResult.complete(removed.pageId, result);
 
         _activePages.value = newStack;
       }
     } else if (_activePages != memPages) {
-      // 2. 如果当前在 Tab 栈且已经到底了，尝试切换回全局主栈逻辑 (可选)
-      // 这里取决于你的业务：是关掉整个 Tab 页面，还是切换 activeTabIndex
-      RxDebug.log(" Tab 栈已到顶，无法继续在内部 back");
+      RxDebug.log("Tab stack reached bottom, cannot pop further internally.");
     }
   }
 
   // =====================
-  // 参数访问 API
+  // Parameter Access
   // =====================
 
-  /// 获取当前页面的自定义参数对象。
+  /// Gets custom arguments passed via [to()].
   T? args<T>() {
     final id = current?.pageId;
     if (id == null) return null;
     return RxArgs.I.get<T>(id);
   }
 
-  // =====================
-  // query 参数（?id=123）  获取当前页面的所有 Query 参数。
-  // =====================
+  /// Returns all query parameters (`?key=value`) of the current page.
   Map<String, String> query() {
     return current?.query ?? {};
   }
 
-  /// 获取指定 Key 的 Query 参数值。
+  /// Gets a specific query parameter.
   String? queryItem(String key) {
     return current?.query[key];
   }
 
-  // =====================
-  // path 参数（/user/:id）
-  // =====================
+  /// Returns all path parameters (`/user/:id`).
   Map<String, String> params() {
     return current?.params ?? {};
   }
 
-  /// 获取指定 Key 的路径参数值。
+  /// Gets a specific path parameter.
   String? param(String key) {
     return current?.params[key];
   }
 
-  // =====================
-  // 当前 pageId（调试用）
-  // =====================
+  /// Returns current page ID (mainly for debugging).
   String? pageId() {
     return current?.pageId;
   }
 
   // =====================
-  // 参数存储 API（内部）
+  // Internal Argument Management
   // =====================
   void _setArgs(String pageId, dynamic value) {
     RxArgs.I.set(pageId, value);
@@ -223,13 +207,10 @@ class RxRouter {
   }
 
   // =====================
-  // Tab 管理
+  // Tab Management
   // =====================
 
-  /// 初始化指定索引的 Tab 路由栈。
-  ///
-  /// [index] Tab 索引。
-  /// [initial] 初始页面列表。
+  /// Initializes a tab's route stack.
   void initTab(int index, List<RxPage> initial) {
     tabPages[index] = RxState(initial);
   }
@@ -240,15 +221,17 @@ class RxRouter {
     tabPages[index] = RxState(initial);
   }
 
-  /// 切换当前激活的 Tab。
+  /// Switches the active tab.
   void switchTab(int index) {
     activeTabIndex.value = index;
   }
 }
 
-/// 适配 Navigator 2.0 的路由委托类。
-///
-/// 负责将 [RxRouter] 中的状态映射为 Flutter 的 [Navigator] 页面栈。
+// =====================
+// RouterDelegate & Parser (Navigator 2.0)
+// =====================
+
+/// Simple route configuration class (kept for compatibility).
 class RxRouteConfig {
   final String? location;
   final dynamic state;
@@ -258,11 +241,12 @@ class RxRouteConfig {
   static RxRouteConfig home() => RxRouteConfig(location: '/');
 }
 
+/// RouterDelegate implementation that connects [RxRouter] state to Flutter's Navigator.
 class RxRouterDelegate extends RouterDelegate<Object> with ChangeNotifier, PopNavigatorRouterDelegateMixin<Object> {
   @override
   final navigatorKey = GlobalKey<NavigatorState>();
 
-  /// 指定监听的特定栈。如果为 null，则默认监听全局根栈及所有 Tab 栈。
+  ///Specify a specific stack to listen to. If null, the global root stack and all Tab stacks are monitored by default.
   final RxState<List<RxPage>>? customStack;
 
   final List<void Function()> _unbinders = [];
@@ -272,10 +256,10 @@ class RxRouterDelegate extends RouterDelegate<Object> with ChangeNotifier, PopNa
 
     final target = customStack ?? RxRouter.I.memPages;
 
-    // 绑定状态变化，自动通知 Flutter 重新构建
+    //If the binding status changes, Flutter will be automatically notified to rebuild.
     _unbinders.add(target.bind((_) => notifyListeners()));
 
-    // 全局模式下绑定所有 Tab
+    //bind all tabs in global mode
     if (customStack == null) {
       for (var s in RxRouter.I.tabPages.values) {
         _unbinders.add(s.bind((_) => notifyListeners()));
@@ -285,7 +269,6 @@ class RxRouterDelegate extends RouterDelegate<Object> with ChangeNotifier, PopNa
 
   @override
   void dispose() {
-    // 销毁 Delegate 时，自动解除所有 RxState 的绑定
     for (var unbind in _unbinders) {
       unbind();
     }
@@ -295,7 +278,7 @@ class RxRouterDelegate extends RouterDelegate<Object> with ChangeNotifier, PopNa
   @override
   Widget build(BuildContext context) {
     final router = RxRouter.I;
-    // 使用指定的栈，如果没有则使用全局逻辑
+    //Use the specified stack, or use global logic if not.
     final stack = customStack?.value ?? router._activePages.value;
     return Navigator(
       key: navigatorKey,
@@ -320,27 +303,26 @@ class RxRouterDelegate extends RouterDelegate<Object> with ChangeNotifier, PopNa
     );
   }
 
-  // 【新增】重写这个属性是关键！
-  // 当 notifyListeners() 被调用时，Router 会读取这个配置并同步到浏览器地址栏
+  //When notifyListeners () is called, the Router will read this configuration and synchronize it to the browser address bar.
   @override
   Object? get currentConfiguration {
     final stack = customStack?.value ?? RxRouter.I._activePages.value;
     if (stack.isEmpty) return "/";
 
-    // 找到当前页面的完整路径（包含 query）
+    //Find the full path of the current page (including query)
     final lastPage = stack.last;
     var path = lastPage.name;
 
-    // 如果有路径参数，需要还原它（例如将 /detail 和 {id:123} 还原为 /detail/123）
-    // 这里简单处理，或者直接从你的 RxPage 里存一个完整原始路径
+    //If there is a path parameter, you need to restore it (for example, restore /detail and {id:123} to /detail/123).
+    //Simple processing here, or directly save a complete original path from your RxPage.
     return path;
   }
 
-  // 当浏览器点击后退时，Flutter 会调用这个方法
+  //Flutter calls this method when the browser clicks Back.
   @override
   Future<void> setNewRoutePath(Object configuration) async {
     final path = configuration.toString();
-    // 逻辑：如果浏览器请求的路径和当前栈顶不同，则执行跳转
+    //Logic: If the path requested by the browser is different from the current stack top, jump is executed.
     if (RxRouter.I.current?.name != path) {
       RxRouter.I.to(path);
     }
@@ -359,7 +341,7 @@ class RxRouteParser extends RouteInformationParser<Object> {
   }
 }
 
-/// 内部包装类，用于在 Tab 切换时保持页面状态。
+/// Internal wrapper to keep page state alive when switching tabs.
 class _KeepAliveWrapper extends StatefulWidget {
   final Widget child;
   const _KeepAliveWrapper({required this.child});

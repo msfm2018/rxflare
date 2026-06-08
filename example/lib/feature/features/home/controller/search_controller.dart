@@ -49,7 +49,7 @@ class _SearchViewState extends State<SearchView> {
   @override
   void initState() {
     super.initState();
-    c = RxObjMgr.find<SearchController>();
+    c = RxDI.find<SearchController>();
   }
 
   @override
@@ -129,6 +129,6 @@ class SearchPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return RxParent<SearchController>(dependency: SearchController(), child: const SearchView());
+    return RxProvider<SearchController>(dependency: SearchController(), child: const SearchView());
   }
 }

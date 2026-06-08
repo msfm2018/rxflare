@@ -11,7 +11,7 @@ class PersistenceService {
 
   PersistenceService() {
     try {
-      final chatService = RxObjMgr.find<ChatService>();
+      final chatService = RxDI.find<ChatService>();
       // 初始化监听所有现有对话
       for (var entry in chatService.messagesMap.entries) {
         watch(entry.key, entry.value);

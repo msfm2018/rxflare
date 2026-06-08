@@ -49,7 +49,7 @@ class _CounterPageState extends State<AutoDisposePage> with RxAutoDispose {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             /// 标题
-            const Text('生命周期管理：RxAutoDispose 与 RxParent ', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+            const Text('生命周期管理：RxAutoDispose 与 RxProvider ', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
             const Text('1. RxAutoDispose', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
 
             const SizedBox(height: 12),

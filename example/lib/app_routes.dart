@@ -7,10 +7,10 @@ import 'router_demo.dart';
 
 class AppRoutes {
   static final routes = {
-    "/": RxDef(builder: () => MainTabWrapper()),
-    "/RouterHomePage": RxDef(builder: () => const RouterHomePage()),
-    "/HomeScreen": RxDef(builder: () => const HomeScreen()),
-    "/admin": RxDef(
+    "/": RxRoute(builder: () => MainTabWrapper()),
+    "/RouterHomePage": RxRoute(builder: () => const RouterHomePage()),
+    "/HomeScreen": RxRoute(builder: () => const HomeScreen()),
+    "/admin": RxRoute(
       builder: () => const Scaffold(body: Center(child: Text("管理员专区"))),
       // 路由守卫：只有异步返回 true 才能进入
       guard: () async {
@@ -20,9 +20,8 @@ class AppRoutes {
         return result == "error";
       },
     ),
-
-    "/login": RxDef(builder: () => const LoginPage()),
-    "/detail": RxDef(builder: () => const DetailPage()),
-    "/feature": RxDef(builder: () => const FreatureHomePage()),
+    "/login": RxRoute(builder: () => const LoginPage()),
+    "/detail": RxRoute(builder: () => const DetailPage()),
+    "/feature": RxRoute(builder: () => const FreatureHomePage()),
   };
 }

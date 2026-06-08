@@ -56,7 +56,7 @@ Built-in handling for:
 
 Simplifies asynchronous UI development.
 
-### 6. Dependency Management (`RxObjMgr` + `RxParent`)
+### 6. Dependency Management (`RxDI` + `RxProvider`)
 
 Supports:
 
@@ -76,7 +76,68 @@ Supports:
 * Object passing
 * Returning results between pages
 
-### 8. Automatic Disposal (`RxAutoDispose`)
+### 8. Routing (RxMaterialApp + rxr)
+* RxFlare provides a lightweight Navigator 2.0 based routing system with support for path parameters, query parameters, object passing, and page result returning.
+* 1. Recommended: RxMaterialApp
+* RxMaterialApp is the official convenient wrapper. It automatically handles route registration and router setup, so you don't need to manually write routerDelegate, routeInformationParser, or call rxr.register().
+```flutter
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return   // Your reactive wrapper
+       RxMaterialApp(
+        routes: AppRoutes.routes,   // Auto registered
+        initialRoute: "/",  //default
+       
+    );
+  }
+}
+```
+* 2. Define Routes
+```flutter 
+class AppRoutes {
+  static final Map<String, RxRoute> routes = {
+    '/': RxRoute(builder: () => const HomePage()),
+    '/login': RxRoute(builder: () => const LoginPage()),
+    '/detail/:id': RxRoute(builder: () => const DetailPage()),
+    '/profile': RxRoute(
+      builder: () => const ProfilePage(),
+      guard: () async => await checkLogin(), // Optional guard
+    ),
+  };
+}
+```
+* 3. Navigation & Parameters
+```flutter
+// Navigate
+rxr.to('/detail/123?type=hot', arguments: MyData());
+
+// Get parameters (inside target page)
+final id = rxr.param('id');           // Path parameter
+final type = rxr.queryItem('type');   // Query parameter
+final obj = rxr.args<MyData>();       // Custom object
+
+// Navigate with result
+final result = await rxr.to<String>('/edit');
+print(result);
+
+// Go back with result
+rxr.back(result: "Saved successfully");
+```
+* RxMaterialApp Parameters
+* RxMaterialApp forwards most properties of MaterialApp.router:
+
+* routes (required)
+* initialRoute (default: "/")
+* theme, darkTheme, themeMode
+* builder
+* localizationsDelegates, supportedLocales
+* debugShowCheckedModeBanner
+* title, color, scrollBehavior, scaffoldMessengerKey, etc.
+
+### 9. Automatic Disposal (`RxAutoDispose`)
 
 Helps prevent memory leaks and reduces cleanup boilerplate.
 
@@ -91,7 +152,7 @@ Helps prevent memory leaks and reduces cleanup boilerplate.
 * Precise Map/List updates: `updateField` / `updateAt` / `getItem`
 * Events: `RxEventBus.on / notify / off`
 * Async handling: `RxFuture`
-* Dependency management: `RxObjMgr.put / find` + `RxParent`
+* Dependency management: `RxDI.put / find` + `RxProvider`
 * Routing: `rxr.to / back / param / queryItem`
 
 ---
@@ -530,7 +591,7 @@ if (userRx.hasError) return Text("错误: ${userRx.error}");
 
 Text(userRx.data ?? "");
 ```
-### RxObjMgr + RxParent
+### RxDI + RxProvider
 #### 最基础用法（手动 put / find）
 ```
 class UserController {
@@ -539,10 +600,10 @@ class UserController {
 
 void main() {
   // 注册
-  RxObjMgr.put(UserController());
+  RxDI.put(UserController());
 
   // 获取
-  final c = RxObjMgr.find<UserController>();
+  final c = RxDI.find<UserController>();
   print(c.name); // Tom
 }
 ```
@@ -555,14 +616,14 @@ class ApiService {
 }
 
 void main() {
-  RxObjMgr.lazyPut<ApiService>(() => ApiService());
+  RxDI.lazyPut<ApiService>(() => ApiService());
 
   // 此时还没创建
 
-  final api = RxObjMgr.find<ApiService>();
+  final api = RxDI.find<ApiService>();
   // 👉 这里才真正创建
 
-  final api2 = RxObjMgr.find<ApiService>();
+  final api2 = RxDI.find<ApiService>();
   // 👉 不会重复创建（单例）
 }
 ```
@@ -573,11 +634,11 @@ class Counter {
 }
 
 void main() {
-  RxObjMgr.put(Counter(), name: "A");
-  RxObjMgr.put(Counter(), name: "B");
+  RxDI.put(Counter(), name: "A");
+  RxDI.put(Counter(), name: "B");
 
-  final a = RxObjMgr.find<Counter>(name: "A");
-  final b = RxObjMgr.find<Counter>(name: "B");
+  final a = RxDI.find<Counter>(name: "A");
+  final b = RxDI.find<Counter>(name: "B");
 
   a.value = 10;
   b.value = 20;
@@ -588,7 +649,7 @@ void main() {
 ```
 #### 4 Flutter 实战
 ```
-RxParent + Controller（中大型项目推荐架构）
+RxProvider + Controller（中大型项目推荐架构）
 
 class UserController implements Disposable {
   final count = 0.obs;
@@ -614,7 +675,7 @@ class UserPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return RxParent<UserController>(
+    return RxProvider<UserController>(
       dependency: UserController(),
       child: const UserView(),
     );
@@ -633,7 +694,7 @@ class _UserViewState extends State<UserView> {
   @override
   void initState() {
     super.initState();
-    controller = RxObjMgr.find<UserController>();
+    controller = RxDI.find<UserController>();
   }
 
   @override
@@ -671,20 +732,20 @@ class _UserPageState extends State<UserPage> with RxAutoDispose {
 
 
 多页隔离
-RxParent<CounterController>(
+RxProvider<CounterController>(
   name: "pageA",
   dependency: CounterController(),
   child: PageA(),
 )
 
-RxParent<CounterController>(
+RxProvider<CounterController>(
   name: "pageB",
   dependency: CounterController(),
   child: PageB(),
 )
 获取
-final cA = RxObjMgr.find<CounterController>(name: "pageA");
-final cB = RxObjMgr.find<CounterController>(name: "pageB");
+final cA = RxDI.find<CounterController>(name: "pageA");
+final cB = RxDI.find<CounterController>(name: "pageB");
 
 结合 RxFuture（高级组合）
 class UserController {
@@ -704,7 +765,7 @@ class UserController {
 class UserPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return RxParent<UserController>(
+    return RxProvider<UserController>(
       dependency: UserController(),
       child: const UserView(),
     );
@@ -724,7 +785,7 @@ class _UserViewState extends State<UserView> {
   @override
   void initState() {
     super.initState();
-    c = RxObjMgr.find<UserController>();
+    c = RxDI.find<UserController>();
 
     c.userRx.listen(() {
       setState(() {});
@@ -901,8 +962,8 @@ final b = RxState<int>(2);
 ##  Define and register routes
 ```
 rxr.register({
-  '/home': RxDef(builder: () => const HomePage(), path: '/home'),
-  '/detail/:id': RxDef(builder: () => const DetailPage(), path: '/detail/:id'),
+  '/home': RxRoute(builder: () => const HomePage(), path: '/home'),
+  '/detail/:id': RxRoute(builder: () => const DetailPage(), path: '/detail/:id'),
 });
 
 // 跳转

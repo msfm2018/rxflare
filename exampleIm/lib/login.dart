@@ -7,7 +7,7 @@ class LoginPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = RxObjMgr.find<LoginController>();
+    final c = RxDI.find<LoginController>();
 
     return Scaffold(
       body: Center(
@@ -28,7 +28,6 @@ class LoginPage extends StatelessWidget {
                 obscureText: true,
               ),
               const SizedBox(height: 30),
-
               Rx(() => c.isLoading.value ? const CircularProgressIndicator() : _buildLoginButton(c)),
             ],
           ),

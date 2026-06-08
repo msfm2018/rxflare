@@ -35,8 +35,8 @@ class _PollViewState extends State<PollView> {
   @override
   void initState() {
     super.initState();
-    // 假设在 RxParent 中注入的名字为 "pollx"
-    c = RxObjMgr.find<PollController>();
+    // 假设在 RxProvider 中注入的名字为 "pollx"
+    c = RxDI.find<PollController>();
   }
 
   @override
@@ -124,6 +124,6 @@ class PollPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return RxParent<PollController>(dependency: PollController(), child: const PollView());
+    return RxProvider<PollController>(dependency: PollController(), child: const PollView());
   }
 }

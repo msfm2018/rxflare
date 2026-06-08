@@ -77,8 +77,8 @@ class _HomePagedViewState extends State<HomePagedView> {
   @override
   void initState() {
     super.initState();
-    // 对应 RxParent 注入的名称
-    c = RxObjMgr.find<PageControllerv>();
+    // 对应 RxProvider 注入的名称
+    c = RxDI.find<PageControllerv>();
   }
 
   @override
@@ -167,6 +167,6 @@ class HomeP extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return RxParent<PageControllerv>(dependency: PageControllerv(), child: const HomePagedView());
+    return RxProvider<PageControllerv>(dependency: PageControllerv(), child: const HomePagedView());
   }
 }

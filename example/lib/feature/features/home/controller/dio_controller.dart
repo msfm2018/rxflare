@@ -73,7 +73,7 @@ class DioPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return RxParent<DioController>(dependency: DioController(), child: const DioView());
+    return RxProvider<DioController>(dependency: DioController(), child: const DioView());
   }
 }
 
@@ -95,7 +95,7 @@ class _DioViewState extends State<DioView> {
   void initState() {
     super.initState();
 
-    c = RxObjMgr.find<DioController>();
+    c = RxDI.find<DioController>();
   }
 
   @override

@@ -1,4 +1,46 @@
 # Changelog
+# Changelog
+
+## [1.6.0] - 2026-06-08
+
+### Added
+
+* Added `RxMaterialApp` — a convenient wrapper for `MaterialApp.router`
+  * Automatically registers routes (`rxr.register`)
+  * Automatically calls `ensureInitialized()`
+  * No need to manually configure `routerDelegate` and `routeInformationParser`
+  * Forwards most `MaterialApp.router` properties (`theme`, `builder`, `localizationsDelegates`, etc.)
+  * Makes routing setup as simple as GoRouter
+
+* Added `RxEventBus.once()`
+  * Registers a one-time event listener
+  * Automatically unregisters after the first event is received
+
+### Breaking Changes
+* Renamed several public APIs:
+* `RxObjMgr` → `RxDI`
+* `RxParent` → `RxProvider`
+* `RxHiter` → `RxMatcher`
+* `RxRes` → `RxResult`
+* `RxDef` → `RxRoute`
+
+### Improved
+
+* Improved API naming consistency across routing, dependency injection, and event modules
+* Updated public API names to better align with common Flutter ecosystem conventions
+
+### Example
+
+```dart
+return Rx(() => RxMaterialApp(
+  routes: AppRoutes.routes,
+  initialRoute: "/",
+  theme: ThemeData(...),
+  darkTheme: ThemeData(...),
+  themeMode: ThemeMode.light,
+  // ... other properties
+));
+
 ## [1.5.4] - 2026-06-02
 
 ### Added
@@ -74,7 +116,7 @@
   - Support for viewing DI Singletons
   - Added **Disposed** state tracking with visual distinction (marked in red)
 * **DevTools Debugging Enhancements**:
-  - `RxObjMgr.initDevTools()` service extension registration
+  - `RxDI.initDevTools()` service extension registration
   - Improved `getDebugSnapshot()` with structured data support
   - `unregisterRx` + destroyed history recording functionality
 * **Example Code**: Complete demo page (`HomePage`) with create, update, and destroy RxState demonstrations

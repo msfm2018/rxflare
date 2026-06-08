@@ -11,18 +11,16 @@ import 'persistence_service.dart';
 void main() {
 // 1. 初始化你的页面表
 
-
-
   // rxr.to(0);
   RxDebug.isEnabled = false;
 
   // 注入服务
-  RxObjMgr.put(AuthService());
+  RxDI.put(AuthService());
   // 2. 注入数据源 (ChatService)
-  RxObjMgr.put(ChatService());
-  // RxObjMgr.put(ChatService());
+  RxDI.put(ChatService());
+  // RxDI.put(ChatService());
   // 3. 启动持久化服务（它一创建就会开始监听 messagesMap）
-  RxObjMgr.put(PersistenceService());
+  RxDI.put(PersistenceService());
   runApp(const MyApp());
 }
 
@@ -31,22 +29,24 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(debugShowCheckedModeBanner: false, home: //RxRouterView()
-         Rx(() {
-          final auth = RxObjMgr.find<AuthService>();
-          if (auth.isLogin.value) {
-            return const WeChatMainPage();
-          } else {
-            return getLoginPage();
-          }
-        }),
-        );
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: //RxRouterView()
+          Rx(() {
+        final auth = RxDI.find<AuthService>();
+        if (auth.isLogin.value) {
+          return const WeChatMainPage();
+        } else {
+          return getLoginPage();
+        }
+      }),
+    );
   }
 }
 
-// 需要内存释放的 都放到 RxParent 中
+// 需要内存释放的 都放到 RxProvider 中
 Widget getLoginPage() {
-  return RxParent<LoginController>(dependency: LoginController(), child: const LoginPage());
+  return RxProvider<LoginController>(dependency: LoginController(), child: const LoginPage());
 }
 
 // class ChatService {

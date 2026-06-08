@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:rxflare/rxflare.dart';
-// 2. RxParent + Controller（中大型项目推荐架构）
-// 特点：采用 Controller 模式，业务逻辑与 UI 分离，RxParent 自动管理 Controller 的生命周期。
+// 2. RxProvider + Controller（中大型项目推荐架构）
+// 特点：采用 Controller 模式，业务逻辑与 UI 分离，RxProvider 自动管理 Controller 的生命周期。
 // 适用场景：
 
 // 中大型项目
@@ -13,7 +13,7 @@ import 'package:rxflare/rxflare.dart';
 
 // 逻辑与 UI 完全分离
 // Controller 可复用、可测试
-// RxParent 自动调用 dispose()
+// RxProvider 自动调用 dispose()
 // 适合团队协作和大型项目
 class User {
   final String? name;
@@ -50,8 +50,8 @@ class DataDispose extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // RxParent 自动调用 dispose()
-    return RxParent<UserController>(
+    // RxProvider 自动调用 dispose()
+    return RxProvider<UserController>(
       dependency: UserController(), // 自动注入
       name: "data_dispose", // 可选：多实例隔离
       child: const UserView(),
@@ -71,7 +71,7 @@ class _UserViewState extends State<UserView> {
   @override
   void initState() {
     super.initState();
-    controller = RxObjMgr.find<UserController>(name: "data_dispose");
+    controller = RxDI.find<UserController>(name: "data_dispose");
   }
 
   @override
@@ -84,7 +84,7 @@ class _UserViewState extends State<UserView> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 /// 标题
-                const Text('2. RxParent + Controller', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                const Text('2. RxProvider + Controller', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
 
                 const SizedBox(height: 12),
 
@@ -93,7 +93,7 @@ class _UserViewState extends State<UserView> {
                   child: Padding(
                     padding: const EdgeInsets.all(16),
                     child: Text('''
-RxParent 是 RxFlare 官方推荐的页面级依赖注入与生命周期管理容器。
+RxProvider 是 RxFlare 官方推荐的页面级依赖注入与生命周期管理容器。
 
 配合 Controller 模式使用，
 可以实现业务逻辑与 UI 完全分离。
@@ -123,7 +123,6 @@ RxParent 是 RxFlare 官方推荐的页面级依赖注入与生命周期管理�
           ),
         ),
       ),
-
       floatingActionButton: FloatingActionButton(onPressed: controller.increment, child: const Icon(Icons.add)),
     );
   }

@@ -2,56 +2,57 @@ import '../core/base_.dart';
 import '../core/rx_state.dart';
 import '../utils/rx_debug.dart';
 
-
-
-/// RxStack 是 RxFlare 的依赖栈
+/// **RxStack** is the internal dependency tracking stack used by RxFlare.
 ///
-/// 用于在响应式计算或 Widget 构建时追踪状态和字段依赖。
-/// 通过 push/pop 管理嵌套上下文，并提供注册方法。
+/// It manages nested contexts during reactive computations and widget building.
+/// Using a push/pop mechanism, it enables accurate automatic dependency tracking
+/// for both state-level and field-level dependencies.
 class RxStack {
-  /// 内部栈，用于存储嵌套上下文
+  /// Internal stack that holds active [RxContext]s.
   static final List<RxContext> _stack = [];
 
-  /// 获取当前顶层上下文
+  /// Returns the current top-most context, or `null` if the stack is empty.
   static RxContext? get current => _stack.isNotEmpty ? _stack.last : null;
 
-  /// 将上下文推入栈顶
+  /// Pushes a new context onto the stack.
+  ///
+  /// Called at the beginning of a reactive builder execution.
   static void push(RxContext ctx) {
     _stack.add(ctx);
   }
 
-  /// 弹出栈顶上下文
+  /// Pops the top context from the stack.
+  ///
+  /// Called after a reactive builder finishes execution.
   static void pop() {
     if (_stack.isNotEmpty) {
       _stack.removeLast();
     }
   }
 
-  /// 注册 state 级依赖
+  /// Registers a state-level dependency.
   ///
-  /// [state] 要注册的 RxState
-  /// 会记录到当前上下文的 states 集合中
+  /// The [state] will be added to the current context's state dependencies.
   static void register(RxState state) {
     final ctx = current;
     if (ctx != null) {
       // 仅在添加成功时打印日志
       if (ctx.states.add(state)) {
-        RxDebug.log(" 绑定 State: ${state.name ?? state.id}");
+        RxDebug.log("  Bound State: ${state.name ?? state.id}");
       }
     }
   }
 
-  /// 注册字段级依赖
+  /// Registers a field-level dependency.
   ///
-  /// [state] 所属 RxState
-  /// [field] 字段标识
-  /// 会记录到当前上下文的 fields 集合中
+  /// The combination of [state] and [field] (key or index) will be recorded
+  /// in the current context for precise updates.
   static void registerField(RxState state, dynamic field) {
     final ctx = current;
     if (ctx != null) {
       final fields = ctx.fields.putIfAbsent(state, () => <dynamic>{});
       if (fields.add(field)) {
-        RxDebug.log(" 绑定 Field: ${state.name ?? state.id}[$field]");
+        RxDebug.log("  Bound Field: ${state.name ?? state.id}[$field]");
       }
     }
   }

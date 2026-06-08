@@ -8,7 +8,7 @@ class LoginController {
   final pwdCtrl = TextEditingController(text: "123");
   final isLoading = false.obs;
 
-  // 被 RxParent 销毁时，这个方法会被执行
+  // 被 RxProvider 销毁时，这个方法会被执行
   void dispose() {
     userCtrl.dispose();
     pwdCtrl.dispose();
@@ -17,7 +17,7 @@ class LoginController {
 
   void login() async {
     if (isLoading.value) return;
-    final auth = RxObjMgr.find<AuthService>();
+    final auth = RxDI.find<AuthService>();
     isLoading.value = true;
     try {
       await auth.login(userCtrl.text, pwdCtrl.text);

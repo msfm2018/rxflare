@@ -6,70 +6,81 @@ import '../core/rx_state.dart';
 import '../rx_router/rx_stack.dart';
 import '../utils/rx_debug.dart';
 
+/// Signature for the builder function used by [Rx].
 typedef RxWidgetBuilder = Widget Function();
 
-/// [Rx] 是一个响应式包装组件。
+/// The core reactive widget of **RxFlare**.
 ///
-/// 当其内部 builder 函数依赖的 [RxState] 发生变化时，该组件会自动重新构建。
+/// [Rx] automatically tracks dependencies on [RxState] objects during the
+/// `builder` execution and rebuilds only when those dependencies change.
+///
+/// It supports two modes:
+/// - **Automatic dependency tracking** (default, recommended)
+/// - **Manual dependency specification** (`Rx.custom`)
+///
+/// **Example (Automatic):**
+/// ```dart
+/// final count = 0.obs;
+///
+/// Rx(() => Text('Count: ${count.value}'));
+/// ```
 class Rx extends StatefulWidget {
-  /// 构建函数，在其中访问 [RxState.value] 即可自动建立依赖。
+  /// The builder function. Any accessed [RxState] inside will be automatically tracked.
   final RxWidgetBuilder builder;
 
-  /// 手动指定的依赖列表（可选）。如果提供，则跳过自动依赖追踪。
+  /// Manually specified dependencies (for advanced performance optimization).
+  /// When provided, automatic tracking is disabled.
   final List<RxState>? deps;
 
-  /// 基础构造函数：开启自动依赖追踪。
+  /// Creates an [Rx] widget with **automatic dependency tracking**.
   const Rx(this.builder, {super.key}) : deps = null;
 
-  /// 自定义构造函数：手动管理依赖，适用于性能极端优化的特殊场景。
+  /// Creates an [Rx] widget with **manual dependencies** (advanced use).
   const Rx.custom({required this.builder, required this.deps, super.key});
 
   @override
   State<Rx> createState() => _RxState();
 }
 
-/// _RxState 是 RxFlare 内部使用的 State 类
+/// Internal state class for [Rx].
 ///
-/// 用于管理 Rx Widget 的依赖追踪和刷新机制：
-///
-/// - state 级依赖（RxState）
-/// - field 级依赖（Map/字段）
-/// - 自动/手动模式支持
-/// - 防抖刷新，避免重复 setState
+/// Manages:
+/// - Automatic & manual dependency tracking
+/// - State-level and field-level listeners
+/// - Debounced / microtask-based rebuilding
+/// - Proper cleanup on dispose
 class _RxState extends State<Rx> {
-  /// 依赖的状态对象集合（state 级依赖）
+  /// All state-level dependencies being listened to.
   final Set<RxState> _dependencies = {};
 
-  /// 字段级依赖集合（RxState -> Set）
+  /// Field-level dependencies (RxState → Set of keys/indices).
   final Map<RxState, Set<dynamic>> _fieldDeps = {};
 
-  /// 防抖定时器（可选）
+  /// Debounce timer (currently unused but kept for future extensions).
   Timer? _debounceTimer;
 
-  /// 防抖标记，防止重复刷新
+  /// Prevents multiple simultaneous refresh schedules.
   bool _scheduled = false;
 
   @override
   void initState() {
     super.initState();
 
-    // 手动依赖模式
     if (widget.deps != null) {
       _updateStateListeners(Set.from(widget.deps!));
     }
   }
 
-  // =========================
-  // 🔥 state 依赖更新
-  // =========================
-  /// 更新 state 级依赖监听器
+  // ======================
+  // State-level Listeners
+  // ======================
   void _updateStateListeners(Set<RxState> newDeps) {
-    // 移除旧的监听器
+    // Remove old listeners
     for (final dep in _dependencies.difference(newDeps)) {
       dep.removeListener(refresh);
     }
 
-    // 添加新的
+    // Add new listeners
     for (final dep in newDeps.difference(_dependencies)) {
       dep.addListener(refresh);
     }
@@ -79,12 +90,11 @@ class _RxState extends State<Rx> {
       ..addAll(newDeps);
   }
 
-  // =========================
-  // 🔥 field 依赖更新（核心）
-  // =========================
-  /// 更新 field 级依赖监听器
+  // ======================
+  // Field-level Listeners (Core Feature)
+  // ======================
   void _updateFieldListeners(Map<RxState, Set<dynamic>> newFieldDeps) {
-    // 移除旧的 field listener
+    // Remove old field listeners
     _fieldDeps.forEach((state, oldFields) {
       final newFields = newFieldDeps[state] ?? {};
 
@@ -93,7 +103,7 @@ class _RxState extends State<Rx> {
       }
     });
 
-    //  添加新的 field listener
+    // Add new field listeners
     newFieldDeps.forEach((state, newFields) {
       final oldFields = _fieldDeps[state] ?? {};
 
@@ -102,31 +112,22 @@ class _RxState extends State<Rx> {
       }
     });
 
-    //  同步更新
     _fieldDeps
       ..clear()
       ..addAll(newFieldDeps);
   }
 
-  // =========================
-  // 🔥 统一更新入口
-  // =========================
-  /// 更新 state + field 依赖监听器
   void _updateListeners(RxContext ctx) {
     _updateStateListeners(ctx.states);
     _updateFieldListeners(ctx.fields);
   }
 
-  // =========================
-  // 响应更新（防抖）
-  // =========================
-
-  /// 响应依赖变化触发刷新
+  /// Triggers a rebuild when dependencies change.
   ///
-  /// [triggerInfo] 可选，用于日志显示
+  /// Uses `scheduleMicrotask` to batch updates efficiently.
   void refresh([dynamic triggerInfo]) {
     if (!mounted || _scheduled) return;
-    RxDebug.log("🔥 [触发刷新] 来源: ${triggerInfo.toString()} -> 准备执行 setState");
+    RxDebug.log("🔥 [Rx Refresh] Triggered by: $triggerInfo");
     _scheduled = true;
 
     scheduleMicrotask(() {
@@ -137,28 +138,28 @@ class _RxState extends State<Rx> {
 
   @override
   Widget build(BuildContext context) {
-    RxDebug.log("🛠️ Rx Widget 构建中...");
+    RxDebug.log("🛠️ Rx Widget rebuilding...");
 
     if (widget.deps != null) {
-      // 手动依赖模式
+      // Manual dependency mode
       return widget.builder();
     }
 
-    // 🔥 自动依赖模式（升级版）
+    // === Automatic Dependency Tracking ===
     final RxContext ctx = RxContext();
 
-    // 1️ 开始追踪
+    // Start tracking
     RxStack.push(ctx);
 
-    // 2️ 执行 builder
     final result = widget.builder();
 
-    // 3️ 停止追踪
+    // Stop tracking
     RxStack.pop();
 
-    // 4️ 更新监听（state + field） 等待数据的下一次变化时触发刷新
     _updateListeners(ctx);
-    RxDebug.log("📦 依赖统计: states=${ctx.states.length}, fields=${ctx.fields.length}");
+    RxDebug.log(
+      "📦 Rx dependencies tracked: states=${ctx.states.length}, fields=${ctx.fields.length}",
+    );
 
     return result;
   }
@@ -176,12 +177,12 @@ class _RxState extends State<Rx> {
   void dispose() {
     _debounceTimer?.cancel();
 
-    // 清理 state listener
+    // Clean up state listeners
     for (final dep in _dependencies) {
       dep.removeListener(refresh);
     }
 
-    // 🔥 清理 field listener（必须有）
+    // Clean up field listeners
     _fieldDeps.forEach((state, fields) {
       for (final field in fields) {
         state.removeFieldListener(field, refresh);

@@ -1,48 +1,66 @@
 import 'dart:async';
 import 'rx_debug.dart';
 
-/// 事件优先级枚举
+/// Event priority.
 ///
-/// `high` > `normal` > `low`，用于决定事件分发顺序。
+/// Determines dispatch order:
+/// high → normal → low
 enum EventPriority { high, normal, low }
 
-/// 事件回调函数类型
+/// Callback signature for event listeners.
 ///
-/// [T] 是事件数据类型。回调包含：
-/// - [eventID] 事件 ID
-/// - [uuid] 唯一标识
-/// - [data] 事件数据
-typedef EventCallback<T> = Future<void> Function(int eventID, String uuid, T data);
+/// Parameters:
+/// - eventID: event identifier
+/// - uuid: unique event instance identifier
+/// - data: event payload
+typedef EventCallback<T> = Future<void> Function(
+  int eventID,
+  String uuid,
+  T data,
+);
 
-/// 事件标记，用于取消注册
+/// Token used to unregister listeners.
 ///
-/// 每个实例生成唯一 ID。
+/// Each token instance represents
+/// a unique listener registration.
 class EventToken {
-  /// 唯一 ID
   final String id = DateTime.now().microsecondsSinceEpoch.toString();
 }
 
-/// 内部包装类，用于存储原始回调和包装后的回调
+/// Internal wrapper used to store listener metadata.
 class _EventWrapper {
-  /// 包装后的回调，统一存储 dynamic
+  /// Wrapped callback with dynamic payload support.
   final Future<void> Function(int eventID, String uuid, dynamic data) wrapperCallback;
 
-  /// 原始回调引用，用于 off() 时比对
+  /// Original callback reference.
+  ///
+  /// Used when removing listeners.
   final dynamic originalCallback;
 
-  /// 可选 Token
+  /// Optional listener token.
   final EventToken? token;
 
   _EventWrapper({required this.wrapperCallback, required this.originalCallback, this.token});
 }
 
-/// 内部事件任务
+/// Internal event dispatch task.
 class _EventTask {
+  /// Module name.
   final String module;
+
+  /// Event identifier.
   final int eventID;
+
+  /// Event payload.
   final dynamic data;
+
+  /// Event instance identifier.
   final String uuid;
+
+  /// Dispatch priority.
   final EventPriority priority;
+
+  /// Whether listeners should be executed in parallel.
   final bool parallel;
 
   _EventTask({
@@ -55,57 +73,61 @@ class _EventTask {
   });
 }
 
-/// 全局事件总线
+/// Global event bus.
 ///
-/// 提供事件注册、发送、Sticky 缓存、优先级和并发/串行分发。
+/// Supports:
+/// - Event publishing
+/// - Event subscriptions
+/// - One-time listeners
+/// - Sticky events
+/// - Priority scheduling
+/// - Parallel dispatch
+/// - Sequential dispatch
 ///
-/// 示例：
+/// Example:
 ///
 /// ```dart
-/// final token = EventToken();
-///
 /// RxEventBus.on<String>(
 ///   module: 'chat',
 ///   eventID: 1,
-///   token: token,
-///   callback: (id, uuid, data) async {
-///     print('收到事件 $id: $data');
+///   callback: (id, uuid, msg) async {
+///     print(msg);
 ///   },
 /// );
 ///
-/// RxEventBus.notify<String>(
+/// RxEventBus.notify(
 ///   module: 'chat',
 ///   eventID: 1,
-///   data: 'Hello World',
+///   data: 'Hello',
 /// );
-///
-/// // 移除事件
-/// RxEventBus.offByToken(token);
 /// ```
 class RxEventBus {
-  /// 注册表：模块 -> 事件ID -> 事件回调列表
+  /// Registered listeners.
+  ///
+  /// Structure:
+  /// module -> eventID -> listeners
   static final Map<String, Map<int, List<_EventWrapper>>> _listeners = {};
 
-  /// Sticky 事件缓存
+  /// Sticky event cache.
+  ///
+  /// Stores the most recent sticky event
+  /// for each module and event identifier.
   static final Map<String, Map<int, dynamic>> _sticky = {};
 
-  /// 任务队列
+  /// Pending dispatch queue.
   static final List<_EventTask> _queue = [];
 
-  /// 是否正在处理队列
+  /// Whether the queue is currently being processed.
   static bool _isProcessing = false;
 
-  // =========================
-  // 注册事件
-  // =========================
-
-  /// 注册事件回调
+  /// Registers an event listener.
   ///
-  /// [module] 模块名
-  /// [eventID] 事件 ID
-  /// [callback] 回调函数
-  /// [token] 可选，用于 later 移除监听器
-  /// [sticky] 是否启用 Sticky 回调（会立即回调最近的缓存事件）
+  /// Parameters:
+  /// - [module] Module name.
+  /// - [eventID] Event identifier.
+  /// - [callback] Listener callback.
+  /// - [token] Optional token for later removal.
+  /// - [sticky] Immediately receives the latest sticky event if available.
   static void on<T>({
     required String module,
     required int eventID,
@@ -116,13 +138,13 @@ class RxEventBus {
     final moduleMap = _listeners.putIfAbsent(module, () => {});
     final list = moduleMap.putIfAbsent(eventID, () => []);
 
-    // 避免重复注册
     if (list.any((e) => e.originalCallback == callback)) {
-      RxDebug.log(' [$module] 重复注册 $eventID');
+      RxDebug.log(
+        '[$module] Listener already registered for event $eventID',
+      );
       return;
     }
 
-    // 包装回调，解决类型逆变
     final wrapper = _EventWrapper(
       wrapperCallback: (id, uuid, data) async {
         return await callback(id, uuid, data as T);
@@ -133,33 +155,29 @@ class RxEventBus {
 
     list.add(wrapper);
 
-    // Sticky 回调
     if (sticky && _sticky[module]?[eventID] != null) {
       final stickyData = _sticky[module]![eventID];
       Future.microtask(() {
         try {
           callback(eventID, "sticky", stickyData as T);
         } catch (e) {
-          RxDebug.log(' Sticky 回调类型转换失败: $e');
+          RxDebug.log(' Sticky callback error: $e');
         }
       });
     }
   }
 
-  // =========================
-  // 发送事件
-  // =========================
-
-  /// 发送事件
+  /// Dispatches an event.
   ///
-  /// [module] 模块名
-  /// [eventID] 事件 ID
-  /// [data] 事件数据
-  /// [uuid] 唯一标识，可选
-  /// [priority] 事件优先级
-  /// [parallel] 是否并发执行
-  /// [sticky] 是否缓存为 Sticky 事件
-  /// [delay] 延迟发送
+  /// Parameters:
+  /// - [module] Module name.
+  /// - [eventID] Event identifier.
+  /// - [data] Event payload.
+  /// - [uuid] Optional event instance identifier.
+  /// - [priority] Dispatch priority.
+  /// - [parallel] Whether listeners execute concurrently.
+  /// - [sticky] Whether to cache as a sticky event.
+  /// - [delay] Optional dispatch delay.
   static void notify<T>({
     required String module,
     required int eventID,
@@ -190,15 +208,60 @@ class RxEventBus {
     }
   }
 
-  /// 内部入队
+  /// RxEventBus.once`<String>`(
+  ///   module: 'chat',
+  ///   eventID: 2,
+  ///   callback: (id, uuid, msg) async {
+  ///     print('Received once: $msg');
+  ///   },
+  /// );
+  /// Registers a one-time event listener.
+  ///
+  /// The listener is automatically removed
+  /// after receiving the first event.
+  static void once<T>({
+    required String module,
+    required int eventID,
+    required EventCallback<T> callback,
+    bool sticky = false,
+  }) {
+    late EventCallback<T> wrapper;
+
+    wrapper = (
+      int id,
+      String uuid,
+      T data,
+    ) async {
+      off(
+        module: module,
+        eventID: eventID,
+        callback: wrapper,
+      );
+
+      await callback(
+        id,
+        uuid,
+        data,
+      );
+    };
+
+    on<T>(
+      module: module,
+      eventID: eventID,
+      callback: wrapper,
+      sticky: sticky,
+    );
+  }
+
+  ///Join the team internally
   static void _enqueue(_EventTask task) {
     _queue.add(task);
-    // 优先级排序，高的在前
     _queue.sort((a, b) => a.priority.index.compareTo(b.priority.index));
+
     _processQueue();
   }
 
-  /// 内部处理队列
+  ///internal processing queue
   static void _processQueue() async {
     if (_isProcessing || _queue.isEmpty) return;
     _isProcessing = true;
@@ -208,7 +271,7 @@ class RxEventBus {
       final listeners = _listeners[task.module]?[task.eventID];
       if (listeners == null || listeners.isEmpty) continue;
 
-      RxDebug.log("🚀 分发事件 ${task.eventID} (${task.priority})");
+      RxDebug.log(" Distribution event ${task.eventID} (${task.priority})");
 
       if (task.parallel) {
         await Future.wait(
@@ -216,7 +279,7 @@ class RxEventBus {
             try {
               await e.wrapperCallback(task.eventID, task.uuid, task.data);
             } catch (e, s) {
-              RxDebug.log(' 并发执行错误: $e\n$s');
+              RxDebug.log(' Concurrent execution error: $e\n$s');
             }
           }),
         );
@@ -225,7 +288,7 @@ class RxEventBus {
           try {
             await e.wrapperCallback(task.eventID, task.uuid, task.data);
           } catch (e, s) {
-            RxDebug.log(' 串行执行错误: $e\n$s');
+            RxDebug.log(' Serial execution error: $e\n$s');
           }
         }
       }
@@ -234,13 +297,11 @@ class RxEventBus {
     _isProcessing = false;
   }
 
-  // =========================
-  // 移除事件
-  // =========================
-
-  /// 移除事件回调
+  /// Removes event listeners.
   ///
-  /// 如果 [callback] 为 null，则移除该模块该事件 ID 下所有回调
+  /// If [callback] is null,
+  /// all listeners registered for the specified
+  /// module and event identifier are removed.
   static void off({required String module, required int eventID, dynamic callback}) {
     final list = _listeners[module]?[eventID];
     if (list == null) return;
@@ -252,21 +313,24 @@ class RxEventBus {
     }
   }
 
-  /// 通过 [EventToken] 移除监听器
+  /// Removes all listeners associated
+  /// with the specified [token].
   static void offByToken(EventToken token) {
     for (final moduleMap in _listeners.values) {
       for (final list in moduleMap.values) {
         list.removeWhere((e) => e.token == token);
       }
     }
-    RxDebug.log('🗑️ 已通过 Token 移除监听器');
+    RxDebug.log('The listener has been removed through Token.');
   }
 
-  /// 清空所有事件和缓存
+  /// Clears all listeners,
+  /// sticky events,
+  /// and pending tasks.
   static void clearAll() {
     _listeners.clear();
     _sticky.clear();
     _queue.clear();
-    RxDebug.log('🧼 已清空事件总线');
+    RxDebug.log('Empty event bus.');
   }
 }
