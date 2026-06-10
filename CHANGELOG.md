@@ -1,5 +1,21 @@
 # Changelog
-# Changelog
+## [1.6.1] - 2026-06-09
+
+### Added
+
+* Added `RxComputedExtensions`
+  * Introduced `.v` shorthand for accessing `RxComputed.value`
+  * Added `.current` alias for improved readability
+
+* Added typed computed helper functions
+  * `rxBool()` for creating `RxComputed<bool>`
+  * `rxInt()` for creating `RxComputed<int>`
+  * `rxString()` for creating `RxComputed<String>`
+  * `rxDouble()` for creating `RxComputed<double>`
+
+* Simplified computed value declarations
+  * Reduces boilerplate when creating common computed types
+  * Improves code readability and consistency with existing reactive APIs
 
 ## [1.6.0] - 2026-06-08
 

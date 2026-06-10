@@ -1,5 +1,5 @@
 
-import '../src/core/base_.dart';
+import '../core/base_.dart';
 
 /// Global dependency injection container.
 ///

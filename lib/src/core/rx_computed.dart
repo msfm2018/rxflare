@@ -169,3 +169,39 @@ class RxComputed<T> extends RxState<T> {
     super.dispose();
   }
 }
+
+// ========================
+// Reactive computed value helpers
+// ========================
+/// Shorthand extension for accessing the current value
+/// of an [RxComputed].
+///
+/// Example:
+/// ```dart
+/// final isDark = rxBool(() => themeMode.value == ThemeMode.dark);
+///
+/// Container(
+///   color: isDark.v ? Colors.black : Colors.white,
+/// );
+/// ```
+extension RxComputedExtensions<T> on RxComputed<T> {
+  /// Returns the current computed value.
+  ///
+  /// Useful when a plain value is required, such as
+  /// widget properties that do not automatically
+  /// subscribe to reactive updates.
+  T get v => value;
+  T get current => value;
+}
+
+/// Creates a computed boolean value.
+RxComputed<bool> rxBool(bool Function() fn) => computed(fn);
+
+/// Creates a computed integer value.
+RxComputed<int> rxInt(int Function() fn) => computed(fn);
+
+/// Creates a computed string value.
+RxComputed<String> rxString(String Function() fn) => computed(fn);
+
+/// Creates a computed double value.
+RxComputed<double> rxDouble(double Function() fn) => computed(fn);
