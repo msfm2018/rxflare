@@ -968,6 +968,8 @@ rxr.register({
 
 // 跳转
 rxr.to('/detail/123?type=hot', arguments: MyData());
+rxr.off('/detail');
+rxr.offAll('/detail');
 
 // 获取参数
 final id = rxr.param('id');        // 路径参数
