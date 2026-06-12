@@ -59,11 +59,7 @@ class RxRouter {
 
       final effectivePath = def.path ?? key;
 
-      _routes[key] = RxRoute(
-        builder: def.builder,
-        path: effectivePath,
-        guard: def.guard,
-      );
+      _routes[key] = RxRoute(builder: def.builder, path: effectivePath, guard: def.guard);
     }
   }
 
@@ -83,17 +79,10 @@ class RxRouter {
   void ensureInitialized() {
     if (memPages.value.isNotEmpty) return;
 
-    memPages.value = [
-      RxPage(
-        name: initialRoute,
-        pageId: RxUtils.generateId(),
-        params: {},
-        query: {},
-      ),
-    ];
+    memPages.value = [RxPage(name: initialRoute, pageId: RxUtils.generateId(), params: {}, query: {})];
   }
 
-// =====================
+  // =====================
   // Navigation API
   // =====================
 
@@ -131,6 +120,85 @@ class RxRouter {
     );
 
     _activePages.value = [..._activePages.value, memPage];
+
+    return RxResult.wait<T>(pageId);
+  }
+
+  // =====================
+  // Replace & Clear Navigation APIs
+  // =====================
+
+  /// Replaces the current page with a new page.
+  ///
+  /// Removes the top page from the navigation stack and pushes
+  /// the new page onto the stack.
+  Future<T?> off<T>(String path, {dynamic arguments}) async {
+    final uri = Uri.parse(path);
+    final match = RxMatcher.match(path, _routes);
+    if (match == null) return null;
+
+    final config = _routes[match.name]!;
+    if (config.guard != null) {
+      final ok = await config.guard!();
+      if (!ok) return null;
+    }
+
+    final pageId = RxUtils.generateId();
+    if (arguments != null) {
+      _setArgs(pageId, arguments);
+    }
+
+    final memPage = RxPage(name: match.name, pageId: pageId, params: match.params, query: uri.queryParameters);
+
+    // Core logic:
+    // Copy the current stack, remove the top page,
+    // then push the new page.
+    final stack = List<RxPage>.from(_activePages.value);
+    if (stack.isNotEmpty) {
+      final removed = stack.removeLast();
+      // Clean up arguments associated with the removed page
+      // to prevent memory leaks.
+      _removeArgs(removed.pageId);
+    }
+    stack.add(memPage);
+
+    _activePages.value = stack;
+
+    return RxResult.wait<T>(pageId);
+  }
+
+  /// Clears the entire navigation stack and navigates
+  /// to a new page.
+  ///
+  /// After calling this method, the new page becomes
+  /// the only page in the stack.
+  Future<T?> offAll<T>(String path, {dynamic arguments}) async {
+    final uri = Uri.parse(path);
+    final match = RxMatcher.match(path, _routes);
+    if (match == null) return null;
+
+    final config = _routes[match.name]!;
+    if (config.guard != null) {
+      final ok = await config.guard!();
+      if (!ok) return null;
+    }
+
+    final pageId = RxUtils.generateId();
+    if (arguments != null) {
+      _setArgs(pageId, arguments);
+    }
+
+    final memPage = RxPage(name: match.name, pageId: pageId, params: match.params, query: uri.queryParameters);
+
+    // Clean up arguments for all existing pages
+    // before resetting the stack.
+    for (var page in _activePages.value) {
+      _removeArgs(page.pageId);
+    }
+
+    // Replace the entire stack with a new stack
+    // containing only the target page.
+    _activePages.value = [memPage];
 
     return RxResult.wait<T>(pageId);
   }

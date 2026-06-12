@@ -1,8 +1,8 @@
 export 'src/core/rx_core.dart';
 export 'src/core/rx_state.dart';
 export 'src/core/rx_computed.dart';
-export 'src/di/rx_di.dart';
-export 'src/di/rx_provider.dart';
+export 'di/rx_di.dart';
+export 'di/rx_provider.dart';
 export 'src/core/base_.dart';
 
 export 'src/widgets/rx.dart';

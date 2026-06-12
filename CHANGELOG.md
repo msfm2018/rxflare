@@ -1,22 +1,15 @@
 # Changelog
-## [1.6.1] - 2026-06-09
+
+## [1.6.2] - 2026-06-12
 
 ### Added
+- Added `off(path, {arguments})` method to `RxRouter` to replace the current route with a new one.
+- Added `offAll(path, {arguments})` method to `RxRouter` to clear the entire navigation stack and push a new root route.
 
-* Added `RxComputedExtensions`
-  * Introduced `.v` shorthand for accessing `RxComputed.value`
-  * Added `.current` alias for improved readability
-
-* Added typed computed helper functions
-  * `rxBool()` for creating `RxComputed<bool>`
-  * `rxInt()` for creating `RxComputed<int>`
-  * `rxString()` for creating `RxComputed<String>`
-  * `rxDouble()` for creating `RxComputed<double>`
-
-* Simplified computed value declarations
-  * Reduces boilerplate when creating common computed types
-  * Improves code readability and consistency with existing reactive APIs
-
+### Changed
+- Improved navigation stack management for declarative routing (Navigator 2.0).
+## [1.6.1] - 2026-06-10
+### fixed bug
 ## [1.6.0] - 2026-06-08
 
 ### Added
