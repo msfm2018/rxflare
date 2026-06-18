@@ -25,9 +25,7 @@ class RxState<T> {
   /// Creates a reactive state.
   /// [id] is optional and defaults to a new [Object].
   /// [name] is optional and defaults to "RxState#`<index>`".
-  RxState(this._value, {dynamic id, String? name})
-      : id = id ?? Object(),
-        name = name ?? "RxState#$_rxStateCounter" {
+  RxState(this._value, {dynamic id, String? name}) : id = id ?? Object(), name = name ?? "RxState#$_rxStateCounter" {
     _rxStateCounter++;
   }
 
@@ -265,6 +263,89 @@ class RxState<T> {
     if (!_listenersWithId.contains(listener)) {
       _listenersWithId.add(listener);
     }
+  }
+
+  /// Executes an asynchronous action and updates the state.
+  ///
+  /// Provides loading and error callbacks for common async scenarios
+  /// such as loading data from APIs, databases, or local files.
+  ///
+  /// Example:
+  /// ```dart
+  /// await songs.runAsyncWithStatus(
+  ///   asyncAction: repo.loadMusic,
+  ///   onLoading: (loading) => isLoading.value = loading,
+  ///   onError: (error) => debugPrint(error.toString()),
+  /// );
+  /// ```
+  Future<void> runAsyncWithStatus({required Future<T> Function() asyncAction, void Function(bool loading)? onLoading, void Function(Object error)? onError}) async {
+    onLoading?.call(true);
+
+    try {
+      final result = await asyncAction();
+      update(result);
+    } catch (e, stack) {
+      RxDebug.log("RxState(${name ?? id}) runAsync error: $e\n$stack");
+
+      onError?.call(e);
+
+      rethrow;
+    } finally {
+      onLoading?.call(false);
+    }
+  }
+
+  /// Executes an asynchronous action with automatic retry support.
+  ///
+  /// The action will be retried when an exception is thrown.
+  ///
+  /// - [retryCount] Number of retry attempts.
+  /// - [retryDelay] Delay between retry attempts.
+  /// - Set [retryCount] to `0` to disable retries.
+  ///
+  /// Example:
+  /// ```dart
+  /// await songs.runAsync(
+  ///   asyncAction: repo.loadMusic,
+  ///   retryCount: 3,
+  ///   retryDelay: Duration(seconds: 1),
+  /// );
+  /// ```
+  Future<void> runAsync({
+    required Future<T> Function() asyncAction,
+    void Function(bool loading)? onLoading,
+    void Function(Object error)? onError,
+    int retryCount = 3,
+    Duration retryDelay = const Duration(seconds: 2),
+  }) async {
+    await runAsyncWithStatus(
+      onLoading: onLoading,
+      onError: onError,
+      asyncAction: () async {
+        Object? lastError;
+
+        for (int attempt = 1; attempt <= retryCount + 1; attempt++) {
+          try {
+            RxDebug.log("⏳ [${name ?? id}] attempt $attempt/${retryCount + 1}");
+
+            return await asyncAction();
+          } catch (e) {
+            lastError = e;
+
+            if (attempt > retryCount) {
+              RxDebug.log("❌ [${name ?? id}] failed after ${retryCount + 1} attempts: $e");
+              rethrow;
+            }
+
+            RxDebug.log("⚠️ [${name ?? id}] retry after error: $e");
+
+            await Future.delayed(retryDelay);
+          }
+        }
+
+        throw lastError!;
+      },
+    );
   }
 
   /// Binds a listener to the state.

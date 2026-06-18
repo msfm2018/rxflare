@@ -1,4 +1,9 @@
 # Changelog
+## [1.6.4] - 2026-06-18
+
+### Added
+- Added `RxState.runAsyncWithStatus()` for async state updates with loading and error handling.
+- Added `RxState.runAsync()` with configurable retry logic and loading/error callbacks.
 
 ## [1.6.3] - 2026-06-12
 ### fixed log

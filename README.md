@@ -403,6 +403,44 @@ Rx(() {
   if (userFuture.hasError) return Text("错误: ${userFuture.error}");
   return Text("用户: ${userFuture.data?.name}");
 });
+
+
+final isLoading = false.obs;
+final songs = <MediaItem>[].obs;
+
+Future<void> loadMusic() async {
+  await songs.runAsyncWithStatus(
+    onLoading: (loading) {
+      isLoading.value = loading;
+    },
+    onError: (error) {
+      print("加载失败: $error");
+    },
+    asyncAction: () async {
+      return await repo.loadMusic();
+    },
+  );
+}
+
+
+Future<void> loadMusic() async {
+  await songs.runAsync(
+    retryCount: 3,
+    retryDelay: const Duration(seconds: 1),
+
+    onLoading: (loading) {
+      isLoading.value = loading;
+    },
+
+    onError: (error) {
+      print("最终失败: $error");
+    },
+
+    asyncAction: () async {
+      return await repo.loadMusic();
+    },
+  );
+}
 ```
 ## Strongly typed (generic T)
 ```
