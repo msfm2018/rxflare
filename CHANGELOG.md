@@ -1,4 +1,10 @@
 # Changelog
+## [1.6.5] - 2026-07-25
+
+### Added
+- Added  demo exampleRoute
+
+
 ## [1.6.4] - 2026-06-18
 
 ### Added
