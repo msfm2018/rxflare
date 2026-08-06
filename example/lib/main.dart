@@ -12,12 +12,16 @@ import 'feature/features/home/controller/search_controller.dart';
 import 'router_demo.dart';
 import 'auto_dispose/auto_dispose.dart';
 import 'showcase.dart';
+import 'translations.dart';
 
 final isDarkMode = false.obs;
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-
+  RxLocale.init(
+    translations: translations,
+    // supported: RxLocale.supportedLocales,
+  );
   // RxDebug.isEnabled = true;
   runApp(const RxFlareDemoApp());
 }
@@ -29,7 +33,7 @@ class RxFlareDemoApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return Rx(
       () => MaterialApp(
-        title: 'RxFlare 完整演示',
+        title: 'app_title'.tr,
         theme: ThemeData.light(),
         darkTheme: ThemeData.dark(),
         themeMode: isDarkMode.value ? ThemeMode.dark : ThemeMode.light,
@@ -66,33 +70,37 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('RxFlare Core Features Demo'),
+        title: Rx(() => Text('core_features_title'.tr)),
         actions: [
           // 暗黑模式切换按钮
-          Rx(() => IconButton(icon: Icon(isDarkMode.value ? Icons.light_mode : Icons.dark_mode), onPressed: () => isDarkMode.value = !isDarkMode.value, tooltip: '切换主题')),
+          Rx(() => IconButton(icon: Icon(isDarkMode.value ? Icons.light_mode : Icons.dark_mode), onPressed: () => isDarkMode.value = !isDarkMode.value, tooltip: 'toggle_theme'.tr)),
         ],
-        bottom: TabBar(
-          controller: _tabController,
-
-          tabs: const [
-            Tab(text: '基础自动追踪'),
-            Tab(text: 'Map/List 精准'),
-            Tab(text: 'Computed 计算'),
-            Tab(text: 'EventBus 总线'),
-            Tab(text: '性能测试'),
-            Tab(text: '性能测试2'),
-            Tab(text: '路由'),
-            Tab(text: 'RxFuture用法'),
-            Tab(text: 'RxFuture分页'),
-            Tab(text: 'RxFuture轮询'),
-            Tab(text: 'RxFuture防抖'),
-            Tab(text: 'RxFutureDio'),
-
-            Tab(text: '简单生命周期'),
-            Tab(text: '复杂生命周期'),
-            Tab(text: 'Showcase'),
-            Tab(text: "边界错误"),
-          ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(kToolbarHeight),
+          child: Rx(
+            () => TabBar(
+              controller: _tabController,
+              isScrollable: true,
+              tabs: [
+                Tab(text: 'tab_basic'.tr),
+                Tab(text: 'tab_map_list'.tr),
+                Tab(text: 'tab_computed'.tr),
+                Tab(text: 'tab_eventbus'.tr),
+                Tab(text: 'tab_performance'.tr),
+                Tab(text: 'tab_performance2'.tr),
+                Tab(text: 'tab_router'.tr),
+                Tab(text: 'tab_rxfuture'.tr),
+                Tab(text: 'tab_rxfuture_page'.tr),
+                Tab(text: 'tab_rxfuture_poll'.tr),
+                Tab(text: 'tab_rxfuture_debounce'.tr),
+                Tab(text: 'tab_rxfuture_dio'.tr),
+                Tab(text: 'tab_lifecycle_simple'.tr),
+                Tab(text: 'tab_lifecycle_complex'.tr),
+                Tab(text: 'tab_showcase'.tr),
+                Tab(text: 'tab_error_boundary'.tr),
+              ],
+            ),
+          ),
         ),
       ),
       body: TabBarView(
@@ -134,12 +142,21 @@ class BasicAutoTrackDemo extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          // Rx(
+          //   () => Column(
+          //     children: [
+          //       Text('姓名：${name.value}', style: const TextStyle(fontSize: 28)),
+          //       Text('计数：${count.value}', style: const TextStyle(fontSize: 42, color: Colors.deepPurple)),
+          //       Text('状态：${isActive.value ? "🟢 激活" : "🔴 关闭"}', style: const TextStyle(fontSize: 24)),
+          //     ],
+          //   ),
+          // ),
           Rx(
             () => Column(
               children: [
-                Text('姓名：${name.value}', style: const TextStyle(fontSize: 28)),
-                Text('计数：${count.value}', style: const TextStyle(fontSize: 42, color: Colors.deepPurple)),
-                Text('状态：${isActive.value ? "🟢 激活" : "🔴 关闭"}', style: const TextStyle(fontSize: 24)),
+                Text('name_label'.trParams({'name': name.value}), style: const TextStyle(fontSize: 28)),
+                Text('count_label'.trParams({'count': '${count.value}'}), style: const TextStyle(fontSize: 42, color: Colors.deepPurple)),
+                Text('status_label'.trParams({'status': isActive.value ? 'status_active'.tr : 'status_inactive'.tr}), style: const TextStyle(fontSize: 24)),
               ],
             ),
           ),
@@ -172,22 +189,18 @@ class MapListPreciseDemo extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Rx(() => Text("👤 姓名: ${user.getItem('name')}", style: const TextStyle(fontSize: 26))),
-          const SizedBox(height: 12),
-          Rx(() => Text("🎂 年龄: ${user.getItem('age')} 岁", style: const TextStyle(fontSize: 26))),
-          const SizedBox(height: 12),
-          Rx(() => Text("🏆 分数: ${user.getItem('score')}", style: const TextStyle(fontSize: 26, color: Colors.orange))),
-          const SizedBox(height: 12),
-          Rx(() => Text(user.getItem('vip') ? "💎 VIP 用户" : "普通用户", style: const TextStyle(fontSize: 26))),
-
+          Rx(() => Text('user_name'.trParams({'name': '${user.getItem('name')}'}), style: const TextStyle(fontSize: 26))),
+          Rx(() => Text('user_age'.trParams({'age': '${user.getItem('age')}'}), style: const TextStyle(fontSize: 26))),
+          Rx(() => Text('user_score'.trParams({'score': '${user.getItem('score')}'}), style: const TextStyle(fontSize: 26, color: Colors.orange))),
+          Rx(() => Text(user.getItem('vip') ? 'user_vip'.tr : 'user_normal'.tr, style: const TextStyle(fontSize: 26))),
           const SizedBox(height: 60),
           Wrap(
             spacing: 12,
             children: [
-              ElevatedButton(onPressed: () => user.updateField("name", "Jerry"), child: const Text("改名")),
-              ElevatedButton(onPressed: () => user.updateField("age", user.getItem("age") + 1), child: const Text("年龄+1")),
-              ElevatedButton(onPressed: () => user.updateField("score", user.getItem("score") + 10), child: const Text("加分")),
-              ElevatedButton(onPressed: () => user.updateField("vip", !user.getItem("vip")), child: const Text("切换VIP")),
+              ElevatedButton(onPressed: () => user.updateField("name", "Jerry"), child: Text('btn_change_name'.tr)),
+              ElevatedButton(onPressed: () => user.updateField("age", user.getItem("age") + 1), child: Text('btn_age_plus'.tr)),
+              ElevatedButton(onPressed: () => user.updateField("score", user.getItem("score") + 10), child: Text('btn_add_score'.tr)),
+              ElevatedButton(onPressed: () => user.updateField("vip", !user.getItem("vip")), child: Text('btn_toggle_vip'.tr)),
             ],
           ),
         ],
@@ -213,11 +226,11 @@ class ComputedDemo extends StatelessWidget {
         () => Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text("🛒 商品购买", style: TextStyle(fontSize: 28)),
+            Text('product_title'.tr, style: const TextStyle(fontSize: 28)),
             const SizedBox(height: 30),
 
-            Text("单价: ${price.value} 元", style: const TextStyle(fontSize: 24)),
-            Text("数量: ${quantity.value}", style: const TextStyle(fontSize: 24)),
+            Text('unit_price'.trParams({'price': '${price.value}'}), style: const TextStyle(fontSize: 24)),
+            Text('quantity'.trParams({'quantity': '${quantity.value}'}), style: const TextStyle(fontSize: 24)),
 
             const SizedBox(height: 20),
 
@@ -233,11 +246,11 @@ class ComputedDemo extends StatelessWidget {
 
             const Divider(height: 40),
 
-            Text("总价: ${total.value} 元", style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold)),
+            Text('total_price'.trParams({'total': '${total.value}'}), style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold)),
 
             const SizedBox(height: 20),
 
-            Text(isExpensive.value ? "💰 属于高消费！" : "🛍️ 性价比不错", style: TextStyle(fontSize: 24, color: isExpensive.value ? Colors.red : Colors.green)),
+            Text(isExpensive.value ? 'high_consumption'.tr : 'good_value'.tr, style: TextStyle(fontSize: 24, color: isExpensive.value ? Colors.red : Colors.green)),
           ],
         ),
       ),
@@ -254,7 +267,8 @@ class EventBusDemo extends StatefulWidget {
 }
 
 class _EventBusDemoState extends State<EventBusDemo> {
-  final List<String> messages = [];
+  // final List<String> messages = [];
+  final messages = <String>[].obs;   // 改成响应式列表
   final token = EventToken();
 
   @override
@@ -266,9 +280,7 @@ class _EventBusDemoState extends State<EventBusDemo> {
       eventID: 1001,
       token: token,
       callback: (id, uuid, data) async {
-        setState(() {
-          messages.add("收到消息: $data");
-        });
+         messages.add('received_message'.trParams({'msg': data}));
       },
     );
   }
@@ -280,7 +292,7 @@ class _EventBusDemoState extends State<EventBusDemo> {
   }
 
   void sendMessage() {
-    final text = "你好，这是第 ${messages.length + 1} 条消息";
+    final text = 'message_content'.trParams({'num': '${messages.length + 1}'});
     RxEventBus.notify<String>(module: "chat", eventID: 1001, data: text);
   }
 
@@ -294,11 +306,11 @@ class _EventBusDemoState extends State<EventBusDemo> {
         ),
         const Divider(),
         Expanded(
-          child: ListView.builder(
+          child:Rx(() => ListView.builder(
             itemCount: messages.length,
-            itemBuilder: (context, index) => ListTile(leading: const Icon(Icons.message), title: Text(messages[index])),
+            itemBuilder: (context, index) => ListTile(leading: const Icon(Icons.message), title: Text(messages.value[index])),
           ),
-        ),
+        )),
       ],
     );
   }
@@ -342,18 +354,18 @@ class _PerformanceTestDemoStateA extends State<PerformanceTestDemoA> {
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
-              Text("列表项数量: 1000", style: Theme.of(context).textTheme.titleLarge),
+              Text('list_item_count'.tr, style: Theme.of(context).textTheme.titleLarge),
               Rx(
                 () => Text(
-                  "页面 build 次数: ${totalRebuildCount.value}",
+                  'page_build_count'.trParams({'count': '${totalRebuildCount.value}'}),
                   style: const TextStyle(color: Colors.blue, fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ),
-              Rx(() => Text("更新操作次数: ${updateCount.value}", style: const TextStyle(color: Colors.orange, fontSize: 16))),
+              Rx(() => Text('update_count'.trParams({'count': '${updateCount.value}'}), style: const TextStyle(color: Colors.orange, fontSize: 16))),
               const SizedBox(height: 16),
-              ElevatedButton.icon(onPressed: updateRandomItem, icon: const Icon(Icons.update), label: const Text("随机更新一项")),
+              ElevatedButton.icon(onPressed: updateRandomItem, icon: const Icon(Icons.update), label: Text('random_update'.tr)),
               const SizedBox(height: 8),
-              const Text("注意观察控制台：只有对应项的 Rx 会重绘", style: TextStyle(color: Colors.grey)),
+              Text('observe_console'.tr, style: TextStyle(color: Colors.grey)),
             ],
           ),
         ),
@@ -370,7 +382,7 @@ class _PerformanceTestDemoStateA extends State<PerformanceTestDemoA> {
                 return ListTile(
                   dense: true,
                   title: Text(item["title"] as String),
-                  subtitle: Text("分数: ${item["score"]}", style: const TextStyle(fontWeight: FontWeight.bold)),
+                  subtitle: Text('score_label'.trParams({'score': '${item["score"]}'}), style: const TextStyle(fontWeight: FontWeight.bold)),
                   trailing: Chip(
                     label: Text("+10", style: TextStyle(color: Theme.of(context).primaryColor)),
                     backgroundColor: Colors.deepPurple.withValues(alpha: .15),

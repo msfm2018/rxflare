@@ -19,3 +19,5 @@ export 'src/collections/rx_set.dart';
 export 'src/rx_router/rx_router.dart';
 
 export 'src/async/rx_future.dart';
+
+export 'src/local/rx_locale.dart';

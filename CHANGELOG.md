@@ -1,4 +1,16 @@
 # Changelog
+
+## [1.6.6] - 2026-08-06
+
+### Added
+- **Internationalization (i18n) support** with `RxLocale`
+  - Automatic system language detection (follows device locale)
+  - Reactive translation with `.tr` and `.trParams`
+  - Built-in fallback mechanism (exact match → language match → English)
+  - Support for a wide range of languages and regional variants (zh_CN, zh_TW, zh_HK, en_US, en_GB, ja, ko, de, fr, es, pt_BR, etc.)
+  - Lightweight implementation with zero third-party dependencies
+  - Fully integrated with RxFlare's reactive system (auto rebuild on language change)
+
 ## [1.6.5] - 2026-07-25
 
 ### Added
