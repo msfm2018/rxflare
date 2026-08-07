@@ -1061,3 +1061,280 @@ RxBuilder(
 );
 
 ```
+## Internationalization (i18n)
+
+RxFlare provides a lightweight built-in internationalization system.
+
+Features:
+
+- Automatic locale detection
+- Reactive language switching
+- Placeholder parameters
+- Support for language + country code (`en_US`, `zh_CN`, etc.)
+
+---
+
+### 1. Define translations
+
+Create a translation file:
+
+`translations.dart`
+
+```dart
+final translations = {
+
+  // ========== English ==========
+  'en': {
+    'hello': 'Hello',
+    'welcome': 'Welcome to RxFlare',
+    'count': 'Current count: {count}',
+  },
+
+  'en_US': {
+    'hello': 'Hello',
+    'welcome': 'Welcome to RxFlare',
+    'count': 'Current count: {count}',
+  },
+
+
+  // ========== Simplified Chinese ==========
+  'zh': {
+    'hello': '你好',
+    'welcome': '欢迎使用 RxFlare',
+    'count': '当前计数：{count}',
+  },
+
+  'zh_CN': {
+    'hello': '你好',
+    'welcome': '欢迎使用 RxFlare',
+    'count': '当前计数：{count}',
+  },
+
+
+  // ========== Traditional Chinese ==========
+  'zh_TW': {
+    'hello': '你好',
+    'welcome': '歡迎使用 RxFlare',
+    'count': '目前計數：{count}',
+  },
+
+
+  // ========== Japanese ==========
+  'ja': {
+    'hello': 'こんにちは',
+    'welcome': 'RxFlareへようこそ',
+    'count': '現在のカウント：{count}',
+  },
+
+
+  // ========== Korean ==========
+  'ko': {
+    'hello': '안녕하세요',
+    'welcome': 'RxFlare에 오신 것을 환영합니다',
+    'count': '현재 카운트: {count}',
+  },
+
+
+  // ========== German ==========
+  'de': {
+    'hello': 'Hallo',
+    'welcome': 'Willkommen bei RxFlare',
+    'count': 'Aktuelle Zählung: {count}',
+  },
+
+
+  // ========== French ==========
+  'fr': {
+    'hello': 'Bonjour',
+    'welcome': 'Bienvenue sur RxFlare',
+    'count': 'Compte actuel : {count}',
+  },
+
+
+  // ========== Spanish ==========
+  'es': {
+    'hello': 'Hola',
+    'welcome': 'Bienvenido a RxFlare',
+    'count': 'Recuento actual: {count}',
+  },
+
+
+  // ========== Portuguese ==========
+  'pt': {
+    'hello': 'Olá',
+    'welcome': 'Bem-vindo ao RxFlare',
+    'count': 'Contagem atual: {count}',
+  },
+
+};
+```
+
+---
+
+### 2. Initialize localization
+
+Initialize before `runApp`:
+
+```dart
+import 'translations.dart';
+
+
+void main() {
+
+  WidgetsFlutterBinding.ensureInitialized();
+
+
+  RxLocale.init(
+    translations: translations,
+  );
+
+
+  runApp(
+    const MyApp(),
+  );
+}
+```
+
+---
+
+### 3. Use translations
+
+Use `.tr` for normal text:
+
+```dart
+Text(
+  'hello'.tr,
+)
+```
+
+The UI automatically updates when the locale changes.
+
+---
+
+### 4. Dynamic parameters
+
+Translations support placeholders:
+
+```dart
+'count': 'Current count: {count}'
+```
+
+Use:
+
+```dart
+Text(
+  'count'.trParams({
+    'count': '10',
+  }),
+)
+```
+
+Output:
+
+```
+Current count: 10
+```
+
+---
+
+### 5. Change language
+
+Change locale dynamically:
+
+```dart
+// English
+RxLocale.change(
+  const RxLocale('en'),
+);
+
+
+// Simplified Chinese
+RxLocale.change(
+  const RxLocale(
+    'zh',
+    'CN',
+  ),
+);
+```
+
+All widgets using `.tr` will rebuild automatically.
+
+---
+
+### Complete example
+
+```dart
+class HomePage extends StatelessWidget {
+
+  HomePage({super.key});
+
+
+  final count = 0.obs;
+
+
+  @override
+  Widget build(BuildContext context) {
+
+    return Scaffold(
+
+      appBar: AppBar(
+        title: Rx(() => Text(
+          'welcome'.tr,
+        )),
+      ),
+
+
+      body: Center(
+
+        child: Column(
+
+          mainAxisAlignment:
+          MainAxisAlignment.center,
+
+
+          children: [
+
+            Rx(() => Text(
+              'hello'.tr,
+              style: const TextStyle(
+                fontSize: 28,
+              ),
+            )),
+
+
+            Rx(() => Text(
+              'count'.trParams({
+                'count':
+                '${count.value}',
+              }),
+            )),
+
+
+            ElevatedButton(
+
+              onPressed: () {
+                count.value++;
+              },
+
+              child:
+              const Text('+1'),
+
+            ),
+
+          ],
+        ),
+      ),
+    );
+  }
+}
+```
+
+---
+
+RxFlare i18n keeps the same reactive philosophy:
+
+- `.tr` → reactive translation lookup
+- `Rx(() => Widget)` → automatic rebuild
+- `RxLocale.change()` → global language update
+
+No additional localization delegate or generated files are required.
