@@ -1,4 +1,19 @@
 # Changelog
+## [1.6.7] - 2026-08-09
+
+### Fixed
+
+- Fixed several internationalization (i18n) issues
+  - Improved system locale synchronization
+  - Fixed locale fallback and regional language matching
+  - Improved JSON translation loading and merging
+  - Fixed plural translation parsing and parameter replacement issues
+  - Improved reactive UI updates after language changes
+
+### Improved
+
+- Enhanced `RxLocale` stability and lifecycle handling
+- Improved compatibility with more device locale configurations
 
 ## [1.6.6] - 2026-08-06
 

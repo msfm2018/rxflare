@@ -72,6 +72,10 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
       appBar: AppBar(
         title: Rx(() => Text('core_features_title'.tr)),
         actions: [
+          TextButton(onPressed: () => RxLocale.setLocale(const Locale('zh')), child: Text("中文")),
+          TextButton(onPressed: () => RxLocale.setLocale(const Locale('en')), child: Text("english")),
+          TextButton(onPressed: () => RxLocale.setLocale(const Locale('ja')), child: Text("japanese")),
+          Rx(() => Text(RxLocale.locale.languageCode)),
           // 暗黑模式切换按钮
           Rx(() => IconButton(icon: Icon(isDarkMode.value ? Icons.light_mode : Icons.dark_mode), onPressed: () => isDarkMode.value = !isDarkMode.value, tooltip: 'toggle_theme'.tr)),
         ],
@@ -268,7 +272,7 @@ class EventBusDemo extends StatefulWidget {
 
 class _EventBusDemoState extends State<EventBusDemo> {
   // final List<String> messages = [];
-  final messages = <String>[].obs;   // 改成响应式列表
+  final messages = <String>[].obs; // 改成响应式列表
   final token = EventToken();
 
   @override
@@ -280,7 +284,7 @@ class _EventBusDemoState extends State<EventBusDemo> {
       eventID: 1001,
       token: token,
       callback: (id, uuid, data) async {
-         messages.add('received_message'.trParams({'msg': data}));
+        messages.add('received_message'.trParams({'msg': data}));
       },
     );
   }
@@ -306,7 +310,8 @@ class _EventBusDemoState extends State<EventBusDemo> {
         ),
         const Divider(),
         Expanded(
-          child:Rx(() => ListView.builder(
+            child: Rx(
+          () => ListView.builder(
             itemCount: messages.length,
             itemBuilder: (context, index) => ListTile(leading: const Icon(Icons.message), title: Text(messages.value[index])),
           ),
