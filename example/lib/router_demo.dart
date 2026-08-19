@@ -1,24 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:rxflare/rxflare.dart';
 
-import 'app_routes.dart';
-
-class RouterDemo extends StatelessWidget {
-  const RouterDemo({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    // 1. 注册路由（这里一定要正确）
-    rxr.register(AppRoutes.routes);
-
-    // 2. 必须用 Router + Delegate，不能用 Navigator！
-    return Router(
-      routerDelegate: RxRouterDelegate(), // 核心
-      routeInformationParser: RxRouteParser(), // 核心
-    );
-  }
-}
-
 class MainTabWrapper extends StatefulWidget {
   const MainTabWrapper({super.key});
 
@@ -41,7 +23,7 @@ class _MainTabWrapperState extends State<MainTabWrapper> {
     return RxBuilder(
       builder: (context) => Scaffold(
         body: IndexedStack(
-          index: rxr.activeTabIndex.value, // 假设这里已变为响应式
+          index: rxr.activeTabIndex.value,
           children: [
             Router(routerDelegate: RxRouterDelegate(customStack: rxr.tabPages[0])),
             Router(routerDelegate: RxRouterDelegate(customStack: rxr.tabPages[1])),
@@ -49,10 +31,10 @@ class _MainTabWrapperState extends State<MainTabWrapper> {
         ),
         bottomNavigationBar: BottomNavigationBar(
           currentIndex: rxr.activeTabIndex.value,
-          onTap: (index) => rxr.switchTab(index), // 内部修改 RxState 即可
+          onTap: (index) => rxr.switchTab(index),
           items: const [
-            BottomNavigationBarItem(icon: Icon(Icons.home), label: "首页"),
-            BottomNavigationBarItem(icon: Icon(Icons.person), label: "我的"),
+            BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
+            BottomNavigationBarItem(icon: Icon(Icons.person), label: "Me"),
           ],
         ),
       ),
@@ -73,16 +55,16 @@ class RouterHomePage extends StatelessWidget {
             ElevatedButton(
               onPressed: () async {
                 //  现在可以正常跳转了
-                final result = await rxr.to("/detail?id=123&type=vip", arguments: {"name": "张三"});
-                debugPrint("收到详情页返回: $result");
+                final result = await rxr.to("/detail?id=123&type=vip", arguments: {"name": "ZhangSan"});
+                debugPrint("return: $result");
               },
-              child: const Text("跳转详情"),
+              child: const Text("detail"),
             ),
             ElevatedButton(
               onPressed: () {
                 rxr.to("/admin");
               },
-              child: const Text("进入管理页"),
+              child: const Text("into admin"),
             ),
           ],
         ),

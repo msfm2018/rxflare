@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:rxflare/rxflare.dart';
 
-// void main() {
-//   runApp(const MyApp());
-// }
-
 class AppController {
   final counter = 0.obs;
 
@@ -12,18 +8,12 @@ class AppController {
 
   final username = "Tom".obs;
 
-  // final user = RxMap<String, dynamic>({"name": "Tom", "age": 18});
   final user = {"name": "Tom", "age": 18}.obsMapD;
-  // final user = {"name": "Tom"}.obsMap<String, dynamic>();
 
   final stats = RxMap<String, dynamic>({"score": 100, "level": 1});
 
-  /// RxList Demo
-
   final todos = ["Learn Flutter", "Learn RxFlare"].obsList;
   final tags = {"flutter", "dart"}.obsSet;
-
-  /// RxSet Demo（例如：收藏 / 选中集合）
 
   void increment() {
     counter.value++;
@@ -41,19 +31,16 @@ class AppController {
     stats["score"] = stats["score"] + 10;
   }
 
-  /// 修改第一个 todo
   void updateTodo() {
     if (todos.length > 0) {
       todos[0] = "Updated ${counter.value}";
     }
   }
 
-  /// 添加 todo
   void addTodo() {
     todos.add("New Todo ${todos.length}");
   }
 
-  /// 删除最后一个 todo
   void removeTodo() {
     if (todos.length > 0) {
       todos.removeAt(todos.length - 1);
@@ -88,15 +75,6 @@ class AppController {
   }
 }
 
-// class MyApp extends StatelessWidget {
-//   const MyApp({super.key});
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return MaterialApp(debugShowCheckedModeBanner: false, home: HomePage());
-//   }
-// }
-
 class Showcase extends StatelessWidget {
   Showcase({super.key});
 
@@ -113,7 +91,6 @@ class Showcase extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            /// counter
             Rx(() {
               debugPrint("🔥 Counter Widget Rebuild");
 

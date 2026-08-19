@@ -37,6 +37,7 @@ dependencies:
   rxflare: 
     path: ../
   dio: ^5.9.2
+  layerx: ^1.0.1
   # rxflare: ^1.4.1
 
 dev_dependencies:
