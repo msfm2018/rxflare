@@ -174,7 +174,12 @@ Helps prevent memory leaks and reduces cleanup boilerplate.
 
 **Achieve highly precise UI updates with minimal code — powered by automatic dependency tracking and field-level reactive updates for both simplicity and performance.**
 
+## Apps in Production (Google Play)
 
+`rxflare` is battle-tested in real-world applications available on Google Play:
+
+* **Countdown Widget‑Days Reminder** — Leverages `rxflare` for precise state synchronization and low-overhead UI updates.
+* **easynote** — Utilizes field-level reactive updates (`getItem` / `updateField`) to handle efficient note listing and content dynamic updates.
 # screenshot
 
 <p align="center">
