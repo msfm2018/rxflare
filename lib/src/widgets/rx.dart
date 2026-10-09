@@ -195,3 +195,20 @@ class _RxState extends State<Rx> {
     super.dispose();
   }
 }
+
+
+/// [Obx] 是 [Rx] 的响应式包装组件。
+///
+/// 会自动监听在 [builder] 中访问过的所有 [RxState] / `.obs` 变量，
+/// 当这些变量发生改变时自动触发局部刷新。
+class Obx extends Rx {
+  /// 创建一个具有 **自动依赖追踪** 的响应式组件。
+  const Obx(super.builder, {super.key});
+
+  /// 创建一个 **手动指定依赖** 的响应式组件（高级用法）。
+  const Obx.custom({
+    required super.builder,
+    required super.deps,
+    super.key,
+  }) : super.custom();
+}

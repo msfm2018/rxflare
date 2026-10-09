@@ -22,6 +22,27 @@ extension RxAnyExtension<T> on T {
   RxState<T> get obs => RxState<T>(this);
 }
 
+/// ==============================
+/// Boolean Enhancements for RxState
+/// ==============================
+
+/// Provides additional utility methods for `RxState<bool>`.
+///
+/// Example:
+/// ```dart
+/// final isExpanded = false.obs;
+/// isExpanded.toggle(); // value becomes true
+/// ```
+extension RxBoolExtension on RxState<bool> {
+  /// Toggles the boolean value and triggers UI update.
+  ///
+  /// Returns the new boolean value.
+  bool toggle() {
+    value = !value;
+    return value;
+  }
+}
+
 /// Type aliases for `RxState`.
 ///
 /// These aliases improve readability and allow developers to

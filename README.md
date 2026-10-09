@@ -1343,3 +1343,43 @@ RxFlare i18n keeps the same reactive philosophy:
 - `RxLocale.change()` → global language update
 
 No additional localization delegate or generated files are required.
+
+
+//[obx] is the responsive packaging component of [Rx].
+///
+///will automatically listen to all [rx state]/`. OBS` variables accessed in [builder].
+///Automatically trigger local refresh when these variables change.
+class Obx extends Rx {
+  ///Create a responsive component with * * automatic dependency tracking * *.
+  const Obx(super.builder, {super.key});
+
+///Create a * * responsive component that manually specifies a dependency * * (advanced usage).
+  const Obx.custom({
+    required super.builder,
+    required super.deps,
+    super.key,
+  }) : super.custom();
+}    
+
+
+
+/// ==============================
+/// Boolean Enhancements for RxState
+/// ==============================
+
+/// Provides additional utility methods for `RxState<bool>`.
+///
+/// Example:
+/// ```dart
+/// final isExpanded = false.obs;
+/// isExpanded.toggle(); // value becomes true
+/// ```
+extension RxBoolExtension on RxState<bool> {
+  /// Toggles the boolean value and triggers UI update.
+  ///
+  /// Returns the new boolean value.
+  bool toggle() {
+    value = !value;
+    return value;
+  }
+}
