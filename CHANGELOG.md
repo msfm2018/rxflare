@@ -1,4 +1,10 @@
 # Changelog
+## [1.7.3] - 2026-10-21
+### Fixed
+- Fixed example
+## [1.7.2] - 2026-10-21
+### Fixed
+- Fixed example
 ## [1.7.1] - 2026-10-21
 ### Fixed
 - Fixed example
