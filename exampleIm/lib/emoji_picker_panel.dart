@@ -1,6 +1,4 @@
-
-
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class EmojiPickerPanel extends StatelessWidget {
   final Function(String) onEmojiSelected;
@@ -9,9 +7,42 @@ class EmojiPickerPanel extends StatelessWidget {
 
   // 微信常用的表情列表（你可以根据需要添加更多）
   final List<String> emojis = [
-    "😀", "😁", "😂", "🤣", "😃", "😄", "😅", "😆", "😉", "😊", "😋", "😎",
-    "😍", "😘", "😗", "😙", "😚", "🙂", "🤗", "🤩", "🤔", "🤨", "😐", "😑",
-    "😶", "🙄", "😏", "😣", "😥", "😮", "🤐", "😯", "😪", "😫", "😴", "😌"
+    "😀",
+    "😁",
+    "😂",
+    "🤣",
+    "😃",
+    "😄",
+    "😅",
+    "😆",
+    "😉",
+    "😊",
+    "😋",
+    "😎",
+    "😍",
+    "😘",
+    "😗",
+    "😙",
+    "😚",
+    "🙂",
+    "🤗",
+    "🤩",
+    "🤔",
+    "🤨",
+    "😐",
+    "😑",
+    "😶",
+    "🙄",
+    "😏",
+    "😣",
+    "😥",
+    "😮",
+    "🤐",
+    "😯",
+    "😪",
+    "😫",
+    "😴",
+    "😌",
   ];
 
   @override
@@ -41,7 +72,10 @@ class EmojiPickerPanel extends StatelessWidget {
               child: GestureDetector(
                 onTap: () => onEmojiSelected(emojis[index]),
                 child: Center(
-                  child: Text(emojis[index], style: const TextStyle(fontSize: 20)),
+                  child: Text(
+                    emojis[index],
+                    style: const TextStyle(fontSize: 20),
+                  ),
                 ),
               ),
             );

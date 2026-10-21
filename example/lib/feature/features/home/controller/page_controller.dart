@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:rxflare/rxflare.dart';
 import '../models/user_model.dart';
 
@@ -19,7 +19,14 @@ class PageControllerv {
     try {
       await Future.delayed(const Duration(seconds: 1));
       // 模拟 50 条总数据
-      final allData = List.generate(50, (index) => {"id": index + 1, "name": "用户${index + 1}", "age": 18 + index % 20});
+      final allData = List.generate(
+        50,
+        (index) => {
+          "id": index + 1,
+          "name": "用户${index + 1}",
+          "age": 18 + index % 20,
+        },
+      );
 
       final start = (page - 1) * pageSize.value;
       final end = start + pageSize.value;
@@ -94,7 +101,10 @@ class _HomePagedViewState extends State<HomePagedView> {
         // 2. 错误处理
         if (c.userFuture.hasError && c.userList.value.isEmpty) {
           return Center(
-            child: ElevatedButton(onPressed: () => c.userFuture.retry(), child: Text("加载失败: ${c.userFuture.error}\n点击重试")),
+            child: ElevatedButton(
+              onPressed: () => c.userFuture.retry(),
+              child: Text("加载失败: ${c.userFuture.error}\n点击重试"),
+            ),
           );
         }
 
@@ -107,7 +117,8 @@ class _HomePagedViewState extends State<HomePagedView> {
           child: NotificationListener<ScrollNotification>(
             onNotification: (ScrollNotification scrollInfo) {
               // 滚动到距离底部 100 像素时预加载
-              if (scrollInfo.metrics.pixels >= scrollInfo.metrics.maxScrollExtent - 100) {
+              if (scrollInfo.metrics.pixels >=
+                  scrollInfo.metrics.maxScrollExtent - 100) {
                 c.loadMore();
               }
               return false;
@@ -167,6 +178,9 @@ class HomeP extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return RxProvider<PageControllerv>(dependency: PageControllerv(), child: const HomePagedView());
+    return RxProvider<PageControllerv>(
+      dependency: PageControllerv(),
+      child: const HomePagedView(),
+    );
   }
 }

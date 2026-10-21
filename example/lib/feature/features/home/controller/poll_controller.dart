@@ -1,5 +1,5 @@
 // 轮询请求（RxFuture.poll 工厂 + 自带缓存
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:rxflare/rxflare.dart';
 
 class PollController {
@@ -16,7 +16,8 @@ class PollController {
     // 更新数据
     notice.value = list;
     // 更新同步时间状态，这会触发所有监听该变量的 UI
-    lastSyncTime.value = "${DateTime.now().hour}:${DateTime.now().minute}:${DateTime.now().second}";
+    lastSyncTime.value =
+        "${DateTime.now().hour}:${DateTime.now().minute}:${DateTime.now().second}";
 
     return list;
   }
@@ -50,7 +51,11 @@ class _PollViewState extends State<PollView> {
             () => c.pollFuture.isRefreshing
                 ? const Padding(
                     padding: EdgeInsets.symmetric(horizontal: 16),
-                    child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
                   )
                 : const Icon(Icons.timer, color: Colors.green),
           ),
@@ -70,7 +75,10 @@ class _PollViewState extends State<PollView> {
               children: [
                 const Icon(Icons.error_outline, size: 48, color: Colors.red),
                 Text("轮询连接失败: ${c.pollFuture.error}"),
-                ElevatedButton(onPressed: () => c.pollFuture.retry(), child: const Text("手动重试")),
+                ElevatedButton(
+                  onPressed: () => c.pollFuture.retry(),
+                  child: const Text("手动重试"),
+                ),
               ],
             ),
           );
@@ -88,10 +96,18 @@ class _PollViewState extends State<PollView> {
                 children: [
                   const Icon(Icons.info_outline, size: 16),
                   const SizedBox(width: 8),
-                  Text("系统每 5 秒自动更新一次", style: Theme.of(context).textTheme.bodySmall),
+                  Text(
+                    "系统每 5 秒自动更新一次",
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
                   const Spacer(),
                   // 直接监听 lastSyncTime
-                  Rx(() => Text("最后同步: ${c.lastSyncTime.value}", style: Theme.of(context).textTheme.bodySmall)),
+                  Rx(
+                    () => Text(
+                      "最后同步: ${c.lastSyncTime.value}",
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -114,7 +130,10 @@ class _PollViewState extends State<PollView> {
         );
       }),
       // 允许用户手动立即刷新，且受防抖/节流保护
-      floatingActionButton: FloatingActionButton(onPressed: () => c.pollFuture.refresh(force: true), child: const Icon(Icons.refresh)),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => c.pollFuture.refresh(force: true),
+        child: const Icon(Icons.refresh),
+      ),
     );
   }
 }
@@ -124,6 +143,9 @@ class PollPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return RxProvider<PollController>(dependency: PollController(), child: const PollView());
+    return RxProvider<PollController>(
+      dependency: PollController(),
+      child: const PollView(),
+    );
   }
 }

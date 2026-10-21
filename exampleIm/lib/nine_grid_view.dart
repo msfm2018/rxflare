@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class NineGridView extends StatelessWidget {
   final List<String> images;
@@ -32,7 +32,8 @@ class NineGridView extends StatelessWidget {
           mainAxisSpacing: 4,
         ),
         itemCount: images.length,
-        itemBuilder: (context, index) => Image.network(images[index], fit: BoxFit.cover),
+        itemBuilder: (context, index) =>
+            Image.network(images[index], fit: BoxFit.cover),
       ),
     );
   }

@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'package:rxflare/rxflare.dart';
 import '../models/user_model.dart';
+
 // 搜索防抖（直接用 RxFuture.search 工厂）
 
 class SearchController {
@@ -9,7 +10,10 @@ class SearchController {
   final searchList = <UserModel>[].obs;
 
   // 1. 将 keyword 设为依赖，触发 500ms 防抖
-  late final searchFuture = RxFuture.search((cancelToken) => search(), dependencies: [keyword]); // 也可以在构造函数传入 dependencies: [keyword]
+  late final searchFuture = RxFuture.search(
+    (cancelToken) => search(),
+    dependencies: [keyword],
+  ); // 也可以在构造函数传入 dependencies: [keyword]
 
   Future<List<UserModel>> search() async {
     final kw = keyword.value.trim();
@@ -21,7 +25,11 @@ class SearchController {
     // 模拟网络请求延迟
     await Future.delayed(const Duration(milliseconds: 500));
 
-    final mock = [UserModel(id: 1, name: "张三", age: 20), UserModel(id: 2, name: "李四", age: 25), UserModel(id: 3, name: "张小五", age: 18)];
+    final mock = [
+      UserModel(id: 1, name: "张三", age: 20),
+      UserModel(id: 2, name: "李四", age: 25),
+      UserModel(id: 3, name: "张小五", age: 18),
+    ];
 
     final res = mock.where((e) => e.name.contains(kw)).toList();
     searchList.value = res;
@@ -98,7 +106,10 @@ class _SearchViewState extends State<SearchView> {
               // 3. 空状态处理
               if (results.isEmpty) {
                 return Center(
-                  child: Text(c.keyword.value.isEmpty ? "开始输入以搜索" : "未找到相关结果", style: const TextStyle(color: Colors.grey)),
+                  child: Text(
+                    c.keyword.value.isEmpty ? "开始输入以搜索" : "未找到相关结果",
+                    style: const TextStyle(color: Colors.grey),
+                  ),
                 );
               }
 
@@ -107,7 +118,11 @@ class _SearchViewState extends State<SearchView> {
                 itemCount: results.length,
                 itemBuilder: (ctx, idx) {
                   final user = results[idx];
-                  return ListTile(leading: const Icon(Icons.person), title: Text(user.name), subtitle: Text("年龄: ${user.age}"));
+                  return ListTile(
+                    leading: const Icon(Icons.person),
+                    title: Text(user.name),
+                    subtitle: Text("年龄: ${user.age}"),
+                  );
                 },
               );
             }),
@@ -129,6 +144,9 @@ class SearchPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return RxProvider<SearchController>(dependency: SearchController(), child: const SearchView());
+    return RxProvider<SearchController>(
+      dependency: SearchController(),
+      child: const SearchView(),
+    );
   }
 }

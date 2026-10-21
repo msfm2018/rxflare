@@ -1,5 +1,6 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:rxflare/rxflare.dart';
+
 // 1. RxAutoDispose（适用于中小型页面 / 单个文件）
 // 特点：简单直接，在 StatefulWidget 中通过 mixin 自动管理资源。
 // 适用场景：
@@ -35,7 +36,12 @@ class _CounterPageState extends State<AutoDisposePage> with RxAutoDispose {
     // 2. EventToken - 链式调用
     chatToken = EventToken().autoDispose(this);
 
-    RxEventBus.on<String>(module: "chat", eventID: 1001, token: chatToken, callback: (id, uuid, data) async => print("收到: $data"));
+    RxEventBus.on<String>(
+      module: "chat",
+      eventID: 1001,
+      token: chatToken,
+      callback: (id, uuid, data) async => print("收到: $data"),
+    );
 
     // 3. listen() - 链式调用（最舒服的写法）
     count.listen((v) => print("数据更新: $v")).autoDispose(this);
@@ -49,8 +55,14 @@ class _CounterPageState extends State<AutoDisposePage> with RxAutoDispose {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             /// 标题
-            const Text('生命周期管理：RxAutoDispose 与 RxProvider ', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-            const Text('1. RxAutoDispose', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+            const Text(
+              '生命周期管理：RxAutoDispose 与 RxProvider ',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+            const Text(
+              '1. RxAutoDispose',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
 
             const SizedBox(height: 12),
 
@@ -74,15 +86,24 @@ class _CounterPageState extends State<AutoDisposePage> with RxAutoDispose {
 
             const SizedBox(height: 32),
 
-            Rx(() => Text('计数: ${count.value}', style: const TextStyle(fontSize: 48))),
+            Rx(
+              () => Text(
+                '计数: ${count.value}',
+                style: const TextStyle(fontSize: 48),
+              ),
+            ),
             Rx(() {
-              if (dataFuture.isLoading) return const CircularProgressIndicator();
+              if (dataFuture.isLoading)
+                return const CircularProgressIndicator();
               return Text(dataFuture.data ?? '');
             }),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(onPressed: () => count.value++, child: const Icon(Icons.add)),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => count.value++,
+        child: const Icon(Icons.add),
+      ),
     );
   }
 }

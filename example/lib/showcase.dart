@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:rxflare/rxflare.dart';
 
 class AppController {
@@ -94,7 +94,10 @@ class Showcase extends StatelessWidget {
             Rx(() {
               debugPrint("🔥 Counter Widget Rebuild");
 
-              return Text("Counter: ${c.counter.value}", style: const TextStyle(fontSize: 32));
+              return Text(
+                "Counter: ${c.counter.value}",
+                style: const TextStyle(fontSize: 32),
+              );
             }),
 
             const SizedBox(height: 20),
@@ -103,7 +106,10 @@ class Showcase extends StatelessWidget {
             Rx(() {
               debugPrint("🔥 Username Widget Rebuild");
 
-              return Text("Username: ${c.username.value}", style: const TextStyle(fontSize: 24));
+              return Text(
+                "Username: ${c.username.value}",
+                style: const TextStyle(fontSize: 24),
+              );
             }),
 
             const SizedBox(height: 20),
@@ -112,7 +118,10 @@ class Showcase extends StatelessWidget {
             Rx(() {
               debugPrint("🔥 User.name Widget Rebuild");
 
-              return Text("Name: ${c.user["name"]}", style: const TextStyle(fontSize: 24));
+              return Text(
+                "Name: ${c.user["name"]}",
+                style: const TextStyle(fontSize: 24),
+              );
             }),
 
             const SizedBox(height: 20),
@@ -121,7 +130,10 @@ class Showcase extends StatelessWidget {
             Rx(() {
               debugPrint("🔥 User.age Widget Rebuild");
 
-              return Text("Age: ${c.user["age"]}", style: const TextStyle(fontSize: 24));
+              return Text(
+                "Age: ${c.user["age"]}",
+                style: const TextStyle(fontSize: 24),
+              );
             }),
 
             const SizedBox(height: 20),
@@ -130,7 +142,10 @@ class Showcase extends StatelessWidget {
             Rx(() {
               debugPrint("🔥 Score Widget Rebuild");
 
-              return Text("Score: ${c.stats["score"]}", style: const TextStyle(fontSize: 24));
+              return Text(
+                "Score: ${c.stats["score"]}",
+                style: const TextStyle(fontSize: 24),
+              );
             }),
 
             const SizedBox(height: 30),
@@ -139,7 +154,10 @@ class Showcase extends StatelessWidget {
 
             const SizedBox(height: 20),
 
-            const Text("RxList Demo", style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
+            const Text(
+              "RxList Demo",
+              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+            ),
 
             const SizedBox(height: 20),
 
@@ -147,7 +165,10 @@ class Showcase extends StatelessWidget {
             Rx(() {
               debugPrint("🔥 Todo Length Rebuild");
 
-              return Text("Todo Count: ${c.todos.length}", style: const TextStyle(fontSize: 22));
+              return Text(
+                "Todo Count: ${c.todos.length}",
+                style: const TextStyle(fontSize: 22),
+              );
             }),
 
             const SizedBox(height: 20),
@@ -160,7 +181,10 @@ class Showcase extends StatelessWidget {
                 return const Text("Empty");
               }
 
-              return Text("First Todo: ${c.todos[0]}", style: const TextStyle(fontSize: 22));
+              return Text(
+                "First Todo: ${c.todos[0]}",
+                style: const TextStyle(fontSize: 22),
+              );
             }),
 
             const SizedBox(height: 20),
@@ -174,7 +198,10 @@ class Showcase extends StatelessWidget {
                 children: List.generate(c.todos.length, (index) {
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: Text("${index + 1}. ${c.todos[index]}", style: const TextStyle(fontSize: 18)),
+                    child: Text(
+                      "${index + 1}. ${c.todos[index]}",
+                      style: const TextStyle(fontSize: 18),
+                    ),
                   );
                 }),
               );
@@ -186,17 +213,25 @@ class Showcase extends StatelessWidget {
             Rx(() {
               debugPrint("🔥 Loading Widget Rebuild");
 
-              return c.loading.value ? const CircularProgressIndicator() : const Text("Idle", style: TextStyle(fontSize: 22));
+              return c.loading.value
+                  ? const CircularProgressIndicator()
+                  : const Text("Idle", style: TextStyle(fontSize: 22));
             }),
             const SizedBox(height: 30),
 
-            const Text("RxSet Demo", style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
+            const Text(
+              "RxSet Demo",
+              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+            ),
 
             const SizedBox(height: 20),
             Rx(() {
               debugPrint("🔥 Tags Length Rebuild");
 
-              return Text("Tags Count: ${c.tags.length}", style: const TextStyle(fontSize: 22));
+              return Text(
+                "Tags Count: ${c.tags.length}",
+                style: const TextStyle(fontSize: 22),
+              );
             }),
             Rx(() {
               debugPrint("🔥 Tags List Rebuild");
@@ -210,8 +245,12 @@ class Showcase extends StatelessWidget {
                     onTap: () => c.toggleTag(tag),
                     child: Chip(
                       label: Text(tag),
-                      backgroundColor: selected ? Colors.blue : Colors.grey[300],
-                      labelStyle: TextStyle(color: selected ? Colors.white : Colors.black),
+                      backgroundColor: selected
+                          ? Colors.blue
+                          : Colors.grey[300],
+                      labelStyle: TextStyle(
+                        color: selected ? Colors.white : Colors.black,
+                      ),
                     ),
                   );
                 }).toList(),
@@ -225,37 +264,73 @@ class Showcase extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            FloatingActionButton(heroTag: "1", onPressed: c.increment, child: const Icon(Icons.add)),
+            FloatingActionButton(
+              heroTag: "1",
+              onPressed: c.increment,
+              child: const Icon(Icons.add),
+            ),
 
             const SizedBox(height: 12),
 
-            FloatingActionButton(heroTag: "2", onPressed: c.changeName, child: const Icon(Icons.person)),
+            FloatingActionButton(
+              heroTag: "2",
+              onPressed: c.changeName,
+              child: const Icon(Icons.person),
+            ),
 
             const SizedBox(height: 12),
 
-            FloatingActionButton(heroTag: "3", onPressed: c.addAge, child: const Icon(Icons.cake)),
+            FloatingActionButton(
+              heroTag: "3",
+              onPressed: c.addAge,
+              child: const Icon(Icons.cake),
+            ),
 
             const SizedBox(height: 12),
 
-            FloatingActionButton(heroTag: "4", onPressed: c.addScore, child: const Icon(Icons.sports_esports)),
+            FloatingActionButton(
+              heroTag: "4",
+              onPressed: c.addScore,
+              child: const Icon(Icons.sports_esports),
+            ),
 
             const SizedBox(height: 12),
 
-            FloatingActionButton(heroTag: "5", onPressed: c.addTodo, child: const Icon(Icons.playlist_add)),
+            FloatingActionButton(
+              heroTag: "5",
+              onPressed: c.addTodo,
+              child: const Icon(Icons.playlist_add),
+            ),
 
             const SizedBox(height: 12),
 
-            FloatingActionButton(heroTag: "6", onPressed: c.updateTodo, child: const Icon(Icons.edit)),
+            FloatingActionButton(
+              heroTag: "6",
+              onPressed: c.updateTodo,
+              child: const Icon(Icons.edit),
+            ),
 
             const SizedBox(height: 12),
 
-            FloatingActionButton(heroTag: "7", onPressed: c.removeTodo, child: const Icon(Icons.delete)),
+            FloatingActionButton(
+              heroTag: "7",
+              onPressed: c.removeTodo,
+              child: const Icon(Icons.delete),
+            ),
 
             const SizedBox(height: 12),
 
-            FloatingActionButton(heroTag: "8", onPressed: c.fakeRequest, child: const Icon(Icons.cloud_download)),
+            FloatingActionButton(
+              heroTag: "8",
+              onPressed: c.fakeRequest,
+              child: const Icon(Icons.cloud_download),
+            ),
 
-            FloatingActionButton(heroTag: "9", onPressed: c.addTag, child: const Icon(Icons.tag)),
+            FloatingActionButton(
+              heroTag: "9",
+              onPressed: c.addTag,
+              child: const Icon(Icons.tag),
+            ),
           ],
         ),
       ),

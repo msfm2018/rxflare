@@ -1,5 +1,6 @@
 import 'dart:async';
-import 'package:flutter/material.dart';
+
+import 'package:material_ui/material_ui.dart';
 
 import '../core/rx_state.dart';
 
@@ -193,10 +194,7 @@ class RxFuture<T> extends RxState<AsyncSnapshot<T>> {
   // execute
   // =======================================================
 
-  void _execute({
-    bool polling = false,
-    bool retrying = false,
-  }) {
+  void _execute({bool polling = false, bool retrying = false}) {
     if (_disposed) return;
 
     _isPolling = polling;
@@ -206,10 +204,7 @@ class RxFuture<T> extends RxState<AsyncSnapshot<T>> {
     _debounceTimer?.cancel();
 
     if (debounce != null) {
-      _debounceTimer = Timer(
-        debounce!,
-        _startRequest,
-      );
+      _debounceTimer = Timer(debounce!, _startRequest);
     } else {
       _startRequest();
     }
@@ -228,10 +223,7 @@ class RxFuture<T> extends RxState<AsyncSnapshot<T>> {
     }
 
     if (throttle != null) {
-      _throttleTimer = Timer(
-        throttle!,
-        () => _throttleTimer = null,
-      );
+      _throttleTimer = Timer(throttle!, () => _throttleTimer = null);
     }
 
     // concurrent limit
@@ -287,9 +279,7 @@ class RxFuture<T> extends RxState<AsyncSnapshot<T>> {
   // retry
   // =======================================================
 
-  Future<T> _runWithRetry(
-    CancelToken token,
-  ) async {
+  Future<T> _runWithRetry(CancelToken token) async {
     int attempt = 0;
 
     while (true) {
@@ -306,9 +296,7 @@ class RxFuture<T> extends RxState<AsyncSnapshot<T>> {
           rethrow;
         }
 
-        await Future.delayed(
-          retryDelay * attempt,
-        );
+        await Future.delayed(retryDelay * attempt);
       }
     }
   }
@@ -319,10 +307,7 @@ class RxFuture<T> extends RxState<AsyncSnapshot<T>> {
 
   void _setLoadingState() {
     if (keepPreviousData && hasData) {
-      value = AsyncSnapshot.withData(
-        ConnectionState.waiting,
-        data as T,
-      );
+      value = AsyncSnapshot.withData(ConnectionState.waiting, data as T);
     } else {
       value = const AsyncSnapshot.waiting();
     }
@@ -342,16 +327,10 @@ class RxFuture<T> extends RxState<AsyncSnapshot<T>> {
       _cacheTime = DateTime.now();
     }
 
-    value = AsyncSnapshot.withData(
-      ConnectionState.done,
-      result,
-    );
+    value = AsyncSnapshot.withData(ConnectionState.done, result);
   }
 
-  void _onError(
-    Object error,
-    StackTrace stack,
-  ) {
+  void _onError(Object error, StackTrace stack) {
     _lastSoftError = error;
 
     _isRefreshing = false;
@@ -364,16 +343,9 @@ class RxFuture<T> extends RxState<AsyncSnapshot<T>> {
 
     // soft error
     if (hasData) {
-      value = AsyncSnapshot.withData(
-        ConnectionState.done,
-        data as T,
-      );
+      value = AsyncSnapshot.withData(ConnectionState.done, data as T);
     } else {
-      value = AsyncSnapshot.withError(
-        ConnectionState.done,
-        error,
-        stack,
-      );
+      value = AsyncSnapshot.withError(ConnectionState.done, error, stack);
     }
   }
 
@@ -398,10 +370,7 @@ class RxFuture<T> extends RxState<AsyncSnapshot<T>> {
 
     _isPolling = false;
 
-    value = AsyncSnapshot.withData(
-      ConnectionState.done,
-      _cache as T,
-    );
+    value = AsyncSnapshot.withData(ConnectionState.done, _cache as T);
 
     // stale-while-revalidate
     if (_isCacheStale()) {
@@ -427,16 +396,13 @@ class RxFuture<T> extends RxState<AsyncSnapshot<T>> {
   void _startPolling() {
     _pollTimer?.cancel();
 
-    _pollTimer = Timer.periodic(
-      pollInterval!,
-      (_) {
-        if (isRequesting) return;
+    _pollTimer = Timer.periodic(pollInterval!, (_) {
+      if (isRequesting) return;
 
-        _isPolling = true;
+      _isPolling = true;
 
-        refresh(force: true);
-      },
-    );
+      refresh(force: true);
+    });
   }
 
   // =======================================================
@@ -444,9 +410,7 @@ class RxFuture<T> extends RxState<AsyncSnapshot<T>> {
   // =======================================================
 
   @override
-  void refresh({
-    bool force = false,
-  }) {
+  void refresh({bool force = false}) {
     if (isRequesting && !force) {
       return;
     }
@@ -495,10 +459,7 @@ class RxFuture<T> extends RxState<AsyncSnapshot<T>> {
     _cancelToken = null;
   }
 
-  bool _isRequestValid(
-    int requestId,
-    CancelToken token,
-  ) {
+  bool _isRequestValid(int requestId, CancelToken token) {
     if (_disposed) return false;
 
     if (token.isCanceled) return false;
@@ -530,7 +491,8 @@ class RxFuture<T> extends RxState<AsyncSnapshot<T>> {
 
   bool get isRequesting => _cancelToken != null;
 
-  bool get isStale => hasData && value.connectionState == ConnectionState.waiting;
+  bool get isStale =>
+      hasData && value.connectionState == ConnectionState.waiting;
 
   bool get hasSoftError => _lastSoftError != null;
 
@@ -542,9 +504,7 @@ class RxFuture<T> extends RxState<AsyncSnapshot<T>> {
   // listener helper
   // =======================================================
 
-  VoidCallback listenState(
-    VoidCallback listener,
-  ) {
+  VoidCallback listenState(VoidCallback listener) {
     return listen((_) {
       listener();
     });

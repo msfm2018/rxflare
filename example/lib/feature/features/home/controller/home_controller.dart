@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:rxflare/rxflare.dart';
 import '../models/user_model.dart';
 
@@ -65,7 +65,10 @@ class _HomeViewState extends State<HomeView> {
         // 2. 错误处理
         if (c.userFuture.hasError) {
           return Center(
-            child: ElevatedButton(onPressed: () => c.userFuture.retry(), child: Text("加载失败，点击重试: ${c.userFuture.error}")),
+            child: ElevatedButton(
+              onPressed: () => c.userFuture.retry(),
+              child: Text("加载失败，点击重试: ${c.userFuture.error}"),
+            ),
           );
         }
         // 3. 数据展示
@@ -85,7 +88,10 @@ class _HomeViewState extends State<HomeView> {
                 subtitle: Text("年龄: ${user.age}"),
                 tileColor: selected ? Colors.orange[100] : null,
                 onTap: () => c.selectUser(idx),
-                trailing: IconButton(icon: const Icon(Icons.add_circle), onPressed: () => c.updateUserAge(idx, user.age + 1)),
+                trailing: IconButton(
+                  icon: const Icon(Icons.add_circle),
+                  onPressed: () => c.updateUserAge(idx, user.age + 1),
+                ),
               );
             });
           },

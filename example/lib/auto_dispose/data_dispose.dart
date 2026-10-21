@@ -1,5 +1,6 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:rxflare/rxflare.dart';
+
 // 2. RxProvider + Controller（中大型项目推荐架构）
 // 特点：采用 Controller 模式，业务逻辑与 UI 分离，RxProvider 自动管理 Controller 的生命周期。
 // 适用场景：
@@ -84,7 +85,10 @@ class _UserViewState extends State<UserView> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 /// 标题
-                const Text('2. RxProvider + Controller', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                const Text(
+                  '2. RxProvider + Controller',
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                ),
 
                 const SizedBox(height: 12),
 
@@ -117,13 +121,23 @@ RxProvider 是 RxFlare 官方推荐的页面级依赖注入与生命周期管理
 
                 const SizedBox(height: 32),
 
-                Center(child: Rx(() => Text('计数: ${controller.count.value}', style: const TextStyle(fontSize: 48)))),
+                Center(
+                  child: Rx(
+                    () => Text(
+                      '计数: ${controller.count.value}',
+                      style: const TextStyle(fontSize: 48),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton(onPressed: controller.increment, child: const Icon(Icons.add)),
+      floatingActionButton: FloatingActionButton(
+        onPressed: controller.increment,
+        child: const Icon(Icons.add),
+      ),
     );
   }
 }

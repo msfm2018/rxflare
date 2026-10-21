@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:rxflare/rxflare.dart';
 import 'package:lpinyin/lpinyin.dart';
 
@@ -12,26 +12,102 @@ import 'entry.dart';
 
 class ChatService {
   final allContacts = [
-    Contact(id: "u1", name: "王小静", avatar: "W", color: Colors.pink, type: "contacts", isStar: true),
-    Contact(id: "u2", name: "张三", avatar: "Z", color: Colors.blue, type: "contacts"),
-    Contact(id: "g1", name: "拳之森林会员群", avatar: "F", color: Colors.orange, type: "groupChats"),
-    Contact(id: "s1", name: "文件传输助手", avatar: "文", color: Colors.green, type: "service"),
+    Contact(
+      id: "u1",
+      name: "王小静",
+      avatar: "W",
+      color: Colors.pink,
+      type: "contacts",
+      isStar: true,
+    ),
+    Contact(
+      id: "u2",
+      name: "张三",
+      avatar: "Z",
+      color: Colors.blue,
+      type: "contacts",
+    ),
+    Contact(
+      id: "g1",
+      name: "拳之森林会员群",
+      avatar: "F",
+      color: Colors.orange,
+      type: "groupChats",
+    ),
+    Contact(
+      id: "s1",
+      name: "文件传输助手",
+      avatar: "文",
+      color: Colors.green,
+      type: "service",
+    ),
   ].obs;
 
   final messagesMap = {
-    "s1": [Message(text: "[文件传输助手] 已连接，你可以发送文件到电脑", senderId: "s1", isMe: false, time: DateTime.now().millisecondsSinceEpoch - 86400000)].obs,
+    "s1": [
+      Message(
+        text: "[文件传输助手] 已连接，你可以发送文件到电脑",
+        senderId: "s1",
+        isMe: false,
+        time: DateTime.now().millisecondsSinceEpoch - 86400000,
+      ),
+    ].obs,
     "u1": [
-      Message(text: "你好呀！", senderId: "u1", isMe: false, time: DateTime.now().millisecondsSinceEpoch - 3600000),
-      Message(text: "最近在忙什么呢？", senderId: "u1", isMe: false, time: DateTime.now().millisecondsSinceEpoch - 3500000),
+      Message(
+        text: "你好呀！",
+        senderId: "u1",
+        isMe: false,
+        time: DateTime.now().millisecondsSinceEpoch - 3600000,
+      ),
+      Message(
+        text: "最近在忙什么呢？",
+        senderId: "u1",
+        isMe: false,
+        time: DateTime.now().millisecondsSinceEpoch - 3500000,
+      ),
     ].obs,
     "u2": <Message>[].obs,
-    "g1": [Message(text: "群公告：禁止发广告", senderId: "system", isMe: false, time: DateTime.now().millisecondsSinceEpoch - 10000)].obs,
+    "g1": [
+      Message(
+        text: "群公告：禁止发广告",
+        senderId: "system",
+        isMe: false,
+        time: DateTime.now().millisecondsSinceEpoch - 10000,
+      ),
+    ].obs,
   };
 
   final chatList = [
-    ChatItem(id: "s1", type: "service", name: "文件传输助手", msg: "等待接收文件...", unread: 0, color: Colors.green, lastTime: DateTime.now().millisecondsSinceEpoch, isPinned: false),
-    ChatItem(id: "g1", type: "groupChats", name: "拳之森林会员群", msg: "教练：下午有课", unread: 10, color: Colors.teal, lastTime: DateTime.now().millisecondsSinceEpoch - 2000, isPinned: false),
-    ChatItem(id: "u1", type: "contact", name: "王小静", msg: "您好！", unread: 0, color: Colors.pinkAccent, lastTime: DateTime.now().millisecondsSinceEpoch - 3000, isPinned: false),
+    ChatItem(
+      id: "s1",
+      type: "service",
+      name: "文件传输助手",
+      msg: "等待接收文件...",
+      unread: 0,
+      color: Colors.green,
+      lastTime: DateTime.now().millisecondsSinceEpoch,
+      isPinned: false,
+    ),
+    ChatItem(
+      id: "g1",
+      type: "groupChats",
+      name: "拳之森林会员群",
+      msg: "教练：下午有课",
+      unread: 10,
+      color: Colors.teal,
+      lastTime: DateTime.now().millisecondsSinceEpoch - 2000,
+      isPinned: false,
+    ),
+    ChatItem(
+      id: "u1",
+      type: "contact",
+      name: "王小静",
+      msg: "您好！",
+      unread: 0,
+      color: Colors.pinkAccent,
+      lastTime: DateTime.now().millisecondsSinceEpoch - 3000,
+      isPinned: false,
+    ),
   ].obs;
 
   final groupMembersMap = {
@@ -39,12 +115,48 @@ class ChatService {
   };
 
   final contactCategories = [
-    ContactCategory(id: "new_friends", icon: Icons.person_add, name: "新的朋友", count: 0, color: Colors.orange),
-    ContactCategory(id: "groupChats", icon: Icons.group, name: "群聊", count: 1, color: Colors.green),
-    ContactCategory(id: "publicAccounts", icon: Icons.campaign, name: "公众号", count: 13, color: Colors.blue),
-    ContactCategory(id: "service_accounts", icon: Icons.business_center, name: "服务号", count: 19, color: Colors.blueAccent),
-    ContactCategory(id: "enterprise_wechat", icon: Icons.corporate_fare, name: "企业微信联系人", count: 5, color: Colors.orangeAccent),
-    ContactCategory(id: "contacts", icon: Icons.person, name: "联系人", count: 118, color: Colors.grey),
+    ContactCategory(
+      id: "new_friends",
+      icon: Icons.person_add,
+      name: "新的朋友",
+      count: 0,
+      color: Colors.orange,
+    ),
+    ContactCategory(
+      id: "groupChats",
+      icon: Icons.group,
+      name: "群聊",
+      count: 1,
+      color: Colors.green,
+    ),
+    ContactCategory(
+      id: "publicAccounts",
+      icon: Icons.campaign,
+      name: "公众号",
+      count: 13,
+      color: Colors.blue,
+    ),
+    ContactCategory(
+      id: "service_accounts",
+      icon: Icons.business_center,
+      name: "服务号",
+      count: 19,
+      color: Colors.blueAccent,
+    ),
+    ContactCategory(
+      id: "enterprise_wechat",
+      icon: Icons.corporate_fare,
+      name: "企业微信联系人",
+      count: 5,
+      color: Colors.orangeAccent,
+    ),
+    ContactCategory(
+      id: "contacts",
+      icon: Icons.person,
+      name: "联系人",
+      count: 118,
+      color: Colors.grey,
+    ),
   ].obs;
 
   final selectedId = "s1".obs;
@@ -99,7 +211,11 @@ class ChatService {
     List<Map<String, dynamic>> displayList = [];
 
     if (stars.isNotEmpty) {
-      displayList.add({"type": "header", "label": "星标朋友", "icon": Icons.star_border});
+      displayList.add({
+        "type": "header",
+        "label": "星标朋友",
+        "icon": Icons.star_border,
+      });
       //  将 Contact 对象直接放入 Map
       displayList.addAll(stars.map((e) => {"type": "contact", "data": e}));
     }
@@ -241,7 +357,9 @@ class ChatService {
     if (idx == -1) return;
 
     final moment = momentsList.value[idx];
-    List<Map<String, String>> comments = List<Map<String, String>>.from(moment["comments"]);
+    List<Map<String, String>> comments = List<Map<String, String>>.from(
+      moment["comments"],
+    );
 
     comments.add({"from": fromUser, "content": text});
 
@@ -275,7 +393,13 @@ class ChatService {
 
     // 3. 实例化一个新的 Contact
     //  修复：删掉 memberIds 参数，因为它在 Contact 类里不存在
-    final newGroup = Contact(id: groupId, name: "${baseContact.name}、${newSelectedIds.length + 1}人的群聊", avatar: "群", color: Colors.blueGrey, type: "groupChats");
+    final newGroup = Contact(
+      id: groupId,
+      name: "${baseContact.name}、${newSelectedIds.length + 1}人的群聊",
+      avatar: "群",
+      color: Colors.blueGrey,
+      type: "groupChats",
+    );
 
     // 4.  关键步骤：既然类里没字段，就必须存入你的 Map 中
     groupMembersMap[groupId] = RxValue(allMembers);
@@ -294,20 +418,39 @@ class ChatService {
     // 2. 生成群 ID
     final groupId = "g_${DateTime.now().millisecondsSinceEpoch}";
 
-    final baseContact = allContacts.value.firstWhere((e) => e.id == baseId, orElse: () => allContacts.value.first);
+    final baseContact = allContacts.value.firstWhere(
+      (e) => e.id == baseId,
+      orElse: () => allContacts.value.first,
+    );
 
     // 3. 实例化 Contact 对象
     //  修复：删掉 memberIds: members 参数，因为类里没定义
-    final group = Contact(id: groupId, name: "${baseContact.name}、${newIds.length + 1}人的群聊", avatar: "群", color: Colors.teal, type: "groupChats");
+    final group = Contact(
+      id: groupId,
+      name: "${baseContact.name}、${newIds.length + 1}人的群聊",
+      avatar: "群",
+      color: Colors.teal,
+      type: "groupChats",
+    );
 
     // 4.  核心：成员信息存入独立的 Map，实现解耦
     groupMembersMap[groupId] = RxValue(members);
 
     // 5. 初始化群消息
-    String invitedNames = allContacts.value.where((c) => newIds.contains(c.id)).map((c) => c.name).join("、");
+    String invitedNames = allContacts.value
+        .where((c) => newIds.contains(c.id))
+        .map((c) => c.name)
+        .join("、");
 
     //  修复：变量名统一使用 groupId，并补齐 senderId
-    messagesMap[groupId] = RxValue<List<Message>>([Message(text: "你邀请了 $invitedNames 加入了群聊", senderId: "system", isMe: false, time: DateTime.now().millisecondsSinceEpoch)]);
+    messagesMap[groupId] = RxValue<List<Message>>([
+      Message(
+        text: "你邀请了 $invitedNames 加入了群聊",
+        senderId: "system",
+        isMe: false,
+        time: DateTime.now().millisecondsSinceEpoch,
+      ),
+    ]);
 
     // 6. 更新联系人列表并跳转
     allContacts.value = [...allContacts.value, group];

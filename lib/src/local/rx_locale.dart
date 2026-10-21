@@ -1,5 +1,6 @@
 import 'dart:convert';
-import 'package:flutter/material.dart';
+
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:rxflare/src/core/rx_core.dart';
 
@@ -203,7 +204,8 @@ class RxLocale {
     Locale('ar'),
   ];
 
-  static List<Locale> get supportedLocales => List.unmodifiable(_supportedLocales);
+  static List<Locale> get supportedLocales =>
+      List.unmodifiable(_supportedLocales);
 
   /// RTL右到左语言判断
   static bool get isRTL {
@@ -239,7 +241,9 @@ class RxLocale {
 
     _followSystem = followSystem;
 
-    final locale = initialLocale != null ? _resolveLocale(initialLocale) : _getSystemLocale();
+    final locale = initialLocale != null
+        ? _resolveLocale(initialLocale)
+        : _getSystemLocale();
     current = locale.obs;
 
     WidgetsBinding.instance.addObserver(_observer);
@@ -249,42 +253,45 @@ class RxLocale {
     }
   }
 
-//   flutter:
-//   assets:
-//     - assets/i18n/en.json
-//     - assets/i18n/zh_cn.json
-//     - assets/i18n/zh_tw.json
-//     - assets/i18n/ja.json
+  //   flutter:
+  //   assets:
+  //     - assets/i18n/en.json
+  //     - assets/i18n/zh_cn.json
+  //     - assets/i18n/zh_tw.json
+  //     - assets/i18n/ja.json
 
-// 示例 assets/i18n/zh_cn.json
-//     {
-//   "hello": "你好 {name}",
-//   "welcome": "欢迎使用RxLocale"
-// }
-// void main() async {
-//   WidgetsFlutterBinding.ensureInitialized();
+  // 示例 assets/i18n/zh_cn.json
+  //     {
+  //   "hello": "你好 {name}",
+  //   "welcome": "欢迎使用RxLocale"
+  // }
+  // void main() async {
+  //   WidgetsFlutterBinding.ensureInitialized();
 
-//   // 1.初始化
-//   RxLocale.init(followSystem: true);
+  //   // 1.初始化
+  //   RxLocale.init(followSystem: true);
 
-//   // 2.加载json bundle（可以await）
-//   await RxLocale.loadJsonBundles([
-//     "assets/i18n/en.json",
-//     "assets/i18n/zh_cn.json",
-//     "assets/i18n/zh_tw.json",
-//     "assets/i18n/ja.json",
-//   ]);
+  //   // 2.加载json bundle（可以await）
+  //   await RxLocale.loadJsonBundles([
+  //     "assets/i18n/en.json",
+  //     "assets/i18n/zh_cn.json",
+  //     "assets/i18n/zh_tw.json",
+  //     "assets/i18n/ja.json",
+  //   ]);
 
-//   // 持久化钩子示例，业务接shared_preferences
-//   RxLocale.onSaveLocale = (loc) async {
-//     final s = RxLocale.localeToString(loc);
-//     // await prefs.setString("app_locale", s);
-//   };
+  //   // 持久化钩子示例，业务接shared_preferences
+  //   RxLocale.onSaveLocale = (loc) async {
+  //     final s = RxLocale.localeToString(loc);
+  //     // await prefs.setString("app_locale", s);
+  //   };
 
-//   runApp(const MyApp());
-// }
+  //   runApp(const MyApp());
+  // }
   /// 加载单个json翻译资源
-  static Future<void> loadJsonBundle(String assetPath, {bool merge = true}) async {
+  static Future<void> loadJsonBundle(
+    String assetPath, {
+    bool merge = true,
+  }) async {
     try {
       final data = await rootBundle.loadString(assetPath);
       final dynamic jsonObj = json.decode(data);
@@ -296,7 +303,9 @@ class RxLocale {
       // final langKey = fileName.split('.').first;
 
       final fileName = assetPath.split('/').last;
-      final langKey = fileName.contains('.') ? fileName.substring(0, fileName.lastIndexOf('.')) : fileName;
+      final langKey = fileName.contains('.')
+          ? fileName.substring(0, fileName.lastIndexOf('.'))
+          : fileName;
 
       final normKey = _normalizeLangKey(langKey);
 
@@ -305,7 +314,7 @@ class RxLocale {
 
       jsonObj.forEach((k, v) {
         if (v is! String) return;
-        final s = v as String;
+        final s = v;
         if (s.contains(',plural,')) {
           pluralMap[k] = s;
         } else {
@@ -328,7 +337,10 @@ class RxLocale {
   }
 
   /// 批量加载json
-  static Future<void> loadJsonBundles(List<String> assetPaths, {bool merge = true}) async {
+  static Future<void> loadJsonBundles(
+    List<String> assetPaths, {
+    bool merge = true,
+  }) async {
     for (final path in assetPaths) {
       await loadJsonBundle(path, merge: merge);
     }
@@ -369,7 +381,8 @@ class RxLocale {
 
   static Locale _resolveLocale(Locale system) {
     for (final locale in _supportedLocales) {
-      if (locale.languageCode == system.languageCode && locale.countryCode == system.countryCode) {
+      if (locale.languageCode == system.languageCode &&
+          locale.countryCode == system.countryCode) {
         return locale;
       }
     }
@@ -378,7 +391,9 @@ class RxLocale {
         return locale;
       }
     }
-    return _supportedLocales.isNotEmpty ? _supportedLocales.first : const Locale('en');
+    return _supportedLocales.isNotEmpty
+        ? _supportedLocales.first
+        : const Locale('en');
   }
 
   static void _syncWithSystem(Locale systemLocale) {
@@ -389,14 +404,18 @@ class RxLocale {
   }
 
   /// 普通翻译
-  static String tr(
-    String key, {
-    Map<String, String>? params,
-  }) {
-    final rawLangKey = locale.countryCode != null && locale.countryCode!.isNotEmpty ? '${locale.languageCode}_${locale.countryCode}' : locale.languageCode;
+  static String tr(String key, {Map<String, String>? params}) {
+    final rawLangKey =
+        locale.countryCode != null && locale.countryCode!.isNotEmpty
+        ? '${locale.languageCode}_${locale.countryCode}'
+        : locale.languageCode;
     final langKey = _normalizeLangKey(rawLangKey); // 归一化为小写
 
-    String text = _translations[langKey]?[key] ?? _translations[locale.languageCode.toLowerCase()]?[key] ?? _translations['en']?[key] ?? key;
+    String text =
+        _translations[langKey]?[key] ??
+        _translations[locale.languageCode.toLowerCase()]?[key] ??
+        _translations['en']?[key] ??
+        key;
 
     if (params != null) {
       for (final entry in params.entries) {
@@ -407,24 +426,23 @@ class RxLocale {
   }
 
   /// 复数翻译
-  static String trPlural(
-    String key,
-    num count, {
-    Map<String, String>? params,
-  }) {
+  static String trPlural(String key, num count, {Map<String, String>? params}) {
     final locale = current.value;
-    final rawLangKey = locale.countryCode != null && locale.countryCode!.isNotEmpty ? '${locale.languageCode}_${locale.countryCode}' : locale.languageCode;
+    final rawLangKey =
+        locale.countryCode != null && locale.countryCode!.isNotEmpty
+        ? '${locale.languageCode}_${locale.countryCode}'
+        : locale.languageCode;
     final langKey = _normalizeLangKey(rawLangKey);
     final langOnly = _normalizeLangKey(locale.languageCode);
 
-    String? template = _pluralTemplates[langKey]?[key] ?? _pluralTemplates[langOnly]?[key] ?? _pluralTemplates['en']?[key];
+    String? template =
+        _pluralTemplates[langKey]?[key] ??
+        _pluralTemplates[langOnly]?[key] ??
+        _pluralTemplates['en']?[key];
 
     // 1. 如果复数模板不存在，降级尝试普通翻译，注入count参数
     if (template == null) {
-      final fallbackParams = <String, String>{
-        'count': '$count',
-        ...?params,
-      };
+      final fallbackParams = <String, String>{'count': '$count', ...?params};
       return tr(key, params: fallbackParams);
     }
 
@@ -513,7 +531,9 @@ class RxLocale {
 extension RxLocaleExt on String {
   String get tr => RxLocale.tr(this);
 
-  String trParams(Map<String, String> params) => RxLocale.tr(this, params: params);
+  String trParams(Map<String, String> params) =>
+      RxLocale.tr(this, params: params);
 
-  String trPlural(num count, {Map<String, String>? params}) => RxLocale.trPlural(this, count, params: params);
+  String trPlural(num count, {Map<String, String>? params}) =>
+      RxLocale.trPlural(this, count, params: params);
 }

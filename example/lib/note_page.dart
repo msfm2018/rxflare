@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:layerx/layerx.dart';
 import 'package:rxflare/rxflare.dart'; // 引入 rxflare 使用 rxr 路由
 
@@ -15,10 +15,7 @@ class _EnterprisePortalPageState extends State<EnterprisePortalPage> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F6F9), // 现代化企业灰蓝背景
       appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.white,
         title: Row(
           children: [
             Container(
@@ -30,7 +27,7 @@ class _EnterprisePortalPageState extends State<EnterprisePortalPage> {
               child: Icon(Icons.business_center, color: theme.primaryColor),
             ),
             const SizedBox(width: 12),
-             Text(
+            Text(
               'enterprise_portal_title'.tr,
               style: TextStyle(
                 color: Color(0xFF1E293B),
@@ -42,7 +39,10 @@ class _EnterprisePortalPageState extends State<EnterprisePortalPage> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.notifications_none_rounded, color: Color(0xFF64748B)),
+            icon: const Icon(
+              Icons.notifications_none_rounded,
+              color: Color(0xFF64748B),
+            ),
             onPressed: () => LayerX.toast('enterprise_toast_no_notif'.tr),
           ),
           const SizedBox(width: 8),
@@ -76,18 +76,21 @@ class _EnterprisePortalPageState extends State<EnterprisePortalPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child:  Text(
+                    child: Text(
                       'enterprise_hero_tag'.tr,
                       style: TextStyle(color: Colors.white, fontSize: 12),
                     ),
                   ),
                   const SizedBox(height: 16),
-                   Text(
+                  Text(
                     'enterprise_hero_title'.tr,
                     style: TextStyle(
                       color: Colors.white,
@@ -114,7 +117,10 @@ class _EnterprisePortalPageState extends State<EnterprisePortalPage> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.white,
                           foregroundColor: const Color(0xFF1E3A8A),
-                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 14,
+                          ),
                           elevation: 0,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -125,29 +131,40 @@ class _EnterprisePortalPageState extends State<EnterprisePortalPage> {
                           rxr.offAll('/HomePage');
                         },
                         icon: const Icon(Icons.rocket_launch_rounded, size: 18),
-                        label:  Text(
+                        label: Text(
                           'enterprise_btn_home'.tr,
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                          ),
                         ),
                       ),
                       // 次要按钮：弹窗测试
                       OutlinedButton.icon(
                         style: OutlinedButton.styleFrom(
                           foregroundColor: Colors.white,
-                          side: const BorderSide(color: Colors.white54, width: 1.5),
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                          side: const BorderSide(
+                            color: Colors.white54,
+                            width: 1.5,
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 14,
+                          ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
                         onPressed: () async {
-                          final confirm = await LayerX.confirm('enterprise_confirm_status'.tr);
+                          final confirm = await LayerX.confirm(
+                            'enterprise_confirm_status'.tr,
+                          );
                           if (confirm == true) {
                             LayerX.toast('enterprise_toast_status_ok'.tr);
                           }
                         },
                         icon: const Icon(Icons.info_outline_rounded, size: 18),
-                        label:  Text('enterprise_btn_check_status'.tr),
+                        label: Text('enterprise_btn_check_status'.tr),
                       ),
                     ],
                   ),
@@ -235,10 +252,7 @@ class _EnterprisePortalPageState extends State<EnterprisePortalPage> {
             const SizedBox(height: 4),
             Text(
               subtitle,
-              style: const TextStyle(
-                fontSize: 12,
-                color: Color(0xFF64748B),
-              ),
+              style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
             ),
           ],
         ),
