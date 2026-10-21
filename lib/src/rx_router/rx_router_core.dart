@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:rxflare/src/core/rx_core.dart';
 
 import '../core/rx_state.dart';
@@ -59,7 +59,11 @@ class RxRouter {
 
       final effectivePath = def.path ?? key;
 
-      _routes[key] = RxRoute(builder: def.builder, path: effectivePath, guard: def.guard);
+      _routes[key] = RxRoute(
+        builder: def.builder,
+        path: effectivePath,
+        guard: def.guard,
+      );
     }
   }
 
@@ -73,13 +77,21 @@ class RxRouter {
   }
 
   /// Returns the top page of the current active stack.
-  RxPage? get current => _activePages.value.isNotEmpty ? _activePages.value.last : null;
+  RxPage? get current =>
+      _activePages.value.isNotEmpty ? _activePages.value.last : null;
 
   /// Ensures the router is initialized with the initial route.
   void ensureInitialized() {
     if (memPages.value.isNotEmpty) return;
 
-    memPages.value = [RxPage(name: initialRoute, pageId: RxUtils.generateId(), params: {}, query: {})];
+    memPages.value = [
+      RxPage(
+        name: initialRoute,
+        pageId: RxUtils.generateId(),
+        params: {},
+        query: {},
+      ),
+    ];
   }
 
   // =====================
@@ -148,7 +160,12 @@ class RxRouter {
       _setArgs(pageId, arguments);
     }
 
-    final memPage = RxPage(name: match.name, pageId: pageId, params: match.params, query: uri.queryParameters);
+    final memPage = RxPage(
+      name: match.name,
+      pageId: pageId,
+      params: match.params,
+      query: uri.queryParameters,
+    );
 
     // Core logic:
     // Copy the current stack, remove the top page,
@@ -188,7 +205,12 @@ class RxRouter {
       _setArgs(pageId, arguments);
     }
 
-    final memPage = RxPage(name: match.name, pageId: pageId, params: match.params, query: uri.queryParameters);
+    final memPage = RxPage(
+      name: match.name,
+      pageId: pageId,
+      params: match.params,
+      query: uri.queryParameters,
+    );
 
     // Clean up arguments for all existing pages
     // before resetting the stack.
@@ -310,7 +332,8 @@ class RxRouteConfig {
 }
 
 /// RouterDelegate implementation that connects [RxRouter] state to Flutter's Navigator.
-class RxRouterDelegate extends RouterDelegate<Object> with ChangeNotifier, PopNavigatorRouterDelegateMixin<Object> {
+class RxRouterDelegate extends RouterDelegate<Object>
+    with ChangeNotifier, PopNavigatorRouterDelegateMixin<Object> {
   @override
   final navigatorKey = GlobalKey<NavigatorState>();
 
@@ -355,7 +378,9 @@ class RxRouterDelegate extends RouterDelegate<Object> with ChangeNotifier, PopNa
         return MaterialPage(
           key: ValueKey(e.pageId),
           child: _KeepAliveWrapper(
-            child: config?.builder() ?? const Scaffold(body: Center(child: Text("404"))),
+            child:
+                config?.builder() ??
+                const Scaffold(body: Center(child: Text("404"))),
           ),
         );
       }).toList(),
@@ -399,7 +424,9 @@ class RxRouterDelegate extends RouterDelegate<Object> with ChangeNotifier, PopNa
 
 class RxRouteParser extends RouteInformationParser<Object> {
   @override
-  Future<Object> parseRouteInformation(RouteInformation routeInformation) async {
+  Future<Object> parseRouteInformation(
+    RouteInformation routeInformation,
+  ) async {
     return routeInformation.uri.toString();
   }
 
@@ -418,7 +445,8 @@ class _KeepAliveWrapper extends StatefulWidget {
   State<_KeepAliveWrapper> createState() => _KeepAliveWrapperState();
 }
 
-class _KeepAliveWrapperState extends State<_KeepAliveWrapper> with AutomaticKeepAliveClientMixin {
+class _KeepAliveWrapperState extends State<_KeepAliveWrapper>
+    with AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true;
 

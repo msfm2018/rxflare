@@ -1,4 +1,7 @@
 # Changelog
+## [1.7.1] - 2026-10-21
+### Fixed
+- Fixed example
 ## [1.7.0] - 2026-10-09
 ### Added
 ```dart

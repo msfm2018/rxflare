@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
+
 import 'rx_router.dart';
 
 /// A convenient wrapper around [MaterialApp.router] for the RxFlare routing system.
@@ -24,7 +25,8 @@ class RxMaterialApp extends StatelessWidget {
   final TransitionBuilder? builder;
   final String? title;
   final GenerateAppTitle? onGenerateTitle;
-  final NotificationListenerCallback<NavigationNotification>? onNavigationNotification;
+  final NotificationListenerCallback<NavigationNotification>?
+  onNavigationNotification;
   final Color? color;
   final ThemeData? theme;
   final ThemeData? darkTheme;

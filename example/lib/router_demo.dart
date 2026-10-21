@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:rxflare/rxflare.dart';
 
 class MainTabWrapper extends StatefulWidget {
@@ -12,7 +12,9 @@ class _MainTabWrapperState extends State<MainTabWrapper> {
   @override
   void initState() {
     super.initState();
-    rxr.initTabIfNeeded(0, [RxPage(name: "/RouterHomePage", pageId: "tab0_root")]);
+    rxr.initTabIfNeeded(0, [
+      RxPage(name: "/RouterHomePage", pageId: "tab0_root"),
+    ]);
 
     rxr.initTabIfNeeded(1, [RxPage(name: "/HomeScreen", pageId: "tab1_root")]);
   }
@@ -25,8 +27,12 @@ class _MainTabWrapperState extends State<MainTabWrapper> {
         body: IndexedStack(
           index: rxr.activeTabIndex.value,
           children: [
-            Router(routerDelegate: RxRouterDelegate(customStack: rxr.tabPages[0])),
-            Router(routerDelegate: RxRouterDelegate(customStack: rxr.tabPages[1])),
+            Router(
+              routerDelegate: RxRouterDelegate(customStack: rxr.tabPages[0]),
+            ),
+            Router(
+              routerDelegate: RxRouterDelegate(customStack: rxr.tabPages[1]),
+            ),
           ],
         ),
         bottomNavigationBar: BottomNavigationBar(
@@ -55,7 +61,10 @@ class RouterHomePage extends StatelessWidget {
             ElevatedButton(
               onPressed: () async {
                 //  现在可以正常跳转了
-                final result = await rxr.to("/detail?id=123&type=vip", arguments: {"name": "ZhangSan"});
+                final result = await rxr.to(
+                  "/detail?id=123&type=vip",
+                  arguments: {"name": "ZhangSan"},
+                );
                 debugPrint("return: $result");
               },
               child: const Text("detail"),
@@ -180,11 +189,18 @@ class ProfilePage extends StatelessWidget {
             const SizedBox(height: 30),
             const CircleAvatar(radius: 50, child: Icon(Icons.person, size: 50)),
             const SizedBox(height: 16),
-            const Text("Flutter 开发者", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const Text(
+              "Flutter 开发者",
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
             const Divider(height: 40),
 
             // 展示当前路由信息
-            ListTile(leading: const Icon(Icons.info_outline), title: const Text("当前 PageID"), subtitle: Text(currentId ?? "未知")),
+            ListTile(
+              leading: const Icon(Icons.info_outline),
+              title: const Text("当前 PageID"),
+              subtitle: Text(currentId ?? "未知"),
+            ),
 
             ListTile(
               leading: const Icon(Icons.account_balance_wallet_outlined),
@@ -197,7 +213,10 @@ class ProfilePage extends StatelessWidget {
 
             ListTile(
               leading: const Icon(Icons.exit_to_app, color: Colors.red),
-              title: const Text("模拟注销 (返回根栈)", style: TextStyle(color: Colors.red)),
+              title: const Text(
+                "模拟注销 (返回根栈)",
+                style: TextStyle(color: Colors.red),
+              ),
               onTap: () {
                 // 这里的注销逻辑可以根据你的业务需求实现
                 // 例如清空 tabPages 并切回第 0 个 Tab
@@ -217,7 +236,10 @@ class ProfilePage extends StatelessWidget {
         title: const Text("提示"),
         content: const Text("确定要注销并返回登录吗？"),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text("取消")),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("取消"),
+          ),
           TextButton(
             onPressed: () {
               Navigator.pop(context);

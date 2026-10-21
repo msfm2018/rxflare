@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:rxflare/rxflare.dart';
 import '../controllers/cart_controller.dart';
 
@@ -12,7 +12,7 @@ class CartScreen extends StatelessWidget {
 
       body: RxBuilder(
         builder: (context) {
-          final items = cartController.cartItems;   // 自动追踪 RxList
+          final items = cartController.cartItems; // 自动追踪 RxList
 
           if (items.isEmpty) {
             return const Center(
@@ -46,7 +46,8 @@ class CartScreen extends StatelessWidget {
               // 总价（独立监听 totalPrice，粒度更细）
               RxBuilder(
                 builder: (context) {
-                  final total = cartController.totalPrice.value;   // 或 .value 根据你的实现
+                  final total =
+                      cartController.totalPrice.value; // 或 .value 根据你的实现
                   return Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Text(
@@ -81,7 +82,10 @@ class CartScreen extends StatelessWidget {
                             TextButton(
                               onPressed: () {
                                 cartController.clearCart();
-                                Navigator.popUntil(context, (route) => route.isFirst);
+                                Navigator.popUntil(
+                                  context,
+                                  (route) => route.isFirst,
+                                );
                               },
                               child: const Text('确定'),
                             ),
@@ -89,10 +93,7 @@ class CartScreen extends StatelessWidget {
                         ),
                       );
                     },
-                    child: const Text(
-                      '确认下单',
-                      style: TextStyle(fontSize: 18),
-                    ),
+                    child: const Text('确认下单', style: TextStyle(fontSize: 18)),
                   ),
                 ),
               ),

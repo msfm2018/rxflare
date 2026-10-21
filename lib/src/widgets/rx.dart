@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
+
 import 'dart:async';
 
 import '../core/base_.dart';
@@ -196,7 +197,6 @@ class _RxState extends State<Rx> {
   }
 }
 
-
 /// [Obx] 是 [Rx] 的响应式包装组件。
 ///
 /// 会自动监听在 [builder] 中访问过的所有 [RxState] / `.obs` 变量，
@@ -206,9 +206,6 @@ class Obx extends Rx {
   const Obx(super.builder, {super.key});
 
   /// 创建一个 **手动指定依赖** 的响应式组件（高级用法）。
-  const Obx.custom({
-    required super.builder,
-    required super.deps,
-    super.key,
-  }) : super.custom();
+  const Obx.custom({required super.builder, required super.deps, super.key})
+    : super.custom();
 }

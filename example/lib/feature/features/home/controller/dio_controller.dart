@@ -1,7 +1,7 @@
 // Dio + CancelToken 标准对接（生产级）
 
 import 'package:dio/dio.dart' as dio;
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:rxflare/rxflare.dart';
 
 final dioClient = dio.Dio();
@@ -18,7 +18,14 @@ class UserModel {
   final String website;
   final String company;
 
-  UserModel({required this.id, required this.name, required this.email, required this.phone, required this.website, required this.company});
+  UserModel({
+    required this.id,
+    required this.name,
+    required this.email,
+    required this.phone,
+    required this.website,
+    required this.company,
+  });
 
   factory UserModel.fromMap(Map<String, dynamic> map) {
     return UserModel(
@@ -39,7 +46,11 @@ class UserModel {
 class DioController {
   final users = <UserModel>[].obs;
 
-  late final usersFuture = RxFuture<List<UserModel>>((cancelToken) => fetchUsers(cancelToken), maxRetries: 2, retryDelay: const Duration(seconds: 1));
+  late final usersFuture = RxFuture<List<UserModel>>(
+    (cancelToken) => fetchUsers(cancelToken),
+    maxRetries: 2,
+    retryDelay: const Duration(seconds: 1),
+  );
 
   Future<List<UserModel>> fetchUsers(CancelToken? rxToken) async {
     final dioCancel = dio.CancelToken();
@@ -49,7 +60,10 @@ class DioController {
       dioCancel.cancel("request canceled");
     };
 
-    final res = await dioClient.get("https://jsonplaceholder.typicode.com/users", cancelToken: dioCancel);
+    final res = await dioClient.get(
+      "https://jsonplaceholder.typicode.com/users",
+      cancelToken: dioCancel,
+    );
 
     final list = (res.data as List).map((e) => UserModel.fromMap(e)).toList();
 
@@ -73,7 +87,10 @@ class DioPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return RxProvider<DioController>(dependency: DioController(), child: const DioView());
+    return RxProvider<DioController>(
+      dependency: DioController(),
+      child: const DioView(),
+    );
   }
 }
 
@@ -108,7 +125,11 @@ class _DioViewState extends State<DioView> {
             if (c.usersFuture.isRefreshing) {
               return const Padding(
                 padding: EdgeInsets.only(right: 16),
-                child: SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)),
+                child: SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
               );
             }
 
@@ -181,7 +202,9 @@ class _UserCard extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
         color: Colors.white,
-        boxShadow: [BoxShadow(blurRadius: 12, color: Colors.black.withValues(alpha: .05))],
+        boxShadow: [
+          BoxShadow(blurRadius: 12, color: Colors.black.withValues(alpha: .05)),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -194,8 +217,17 @@ class _UserCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(user.name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                    Text(user.company, style: TextStyle(color: Colors.grey.shade600)),
+                    Text(
+                      user.name,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      user.company,
+                      style: TextStyle(color: Colors.grey.shade600),
+                    ),
                   ],
                 ),
               ),

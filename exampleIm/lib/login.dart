@@ -1,5 +1,6 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:rxflare/rxflare.dart';
+
 import 'login_controller.dart';
 
 class LoginPage extends StatelessWidget {
@@ -28,7 +29,11 @@ class LoginPage extends StatelessWidget {
                 obscureText: true,
               ),
               const SizedBox(height: 30),
-              Rx(() => c.isLoading.value ? const CircularProgressIndicator() : _buildLoginButton(c)),
+              Rx(
+                () => c.isLoading.value
+                    ? const CircularProgressIndicator()
+                    : _buildLoginButton(c),
+              ),
             ],
           ),
         ),
@@ -41,7 +46,10 @@ class LoginPage extends StatelessWidget {
       width: double.infinity,
       height: 45,
       child: ElevatedButton(
-        style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.green,
+          foregroundColor: Colors.white,
+        ),
         onPressed: c.login,
         child: const Text("登 录"),
       ),

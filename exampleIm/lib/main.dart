@@ -1,5 +1,6 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:rxflare/rxflare.dart';
+
 import 'login_auth.dart';
 
 import 'chat_main_page.dart';
@@ -9,7 +10,7 @@ import 'login_controller.dart';
 import 'persistence_service.dart';
 
 void main() {
-// 1. 初始化你的页面表
+  // 1. 初始化你的页面表
 
   // rxr.to(0);
   RxDebug.isEnabled = false;
@@ -32,7 +33,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       home: //RxRouterView()
-          Rx(() {
+      Rx(() {
         final auth = RxDI.find<AuthService>();
         if (auth.isLogin.value) {
           return const WeChatMainPage();
@@ -46,7 +47,10 @@ class MyApp extends StatelessWidget {
 
 // 需要内存释放的 都放到 RxProvider 中
 Widget getLoginPage() {
-  return RxProvider<LoginController>(dependency: LoginController(), child: const LoginPage());
+  return RxProvider<LoginController>(
+    dependency: LoginController(),
+    child: const LoginPage(),
+  );
 }
 
 // class ChatService {

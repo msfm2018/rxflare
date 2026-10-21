@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:rxflare/rxflare.dart';
 
 import 'chat_service.dart';
@@ -17,7 +17,8 @@ class _PublishMomentPageState extends State<PublishMomentPage> {
 
   void _handlePost() {
     if (_textController.text.trim().isEmpty && _selectedImages.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("说点什么吧...")));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text("说点什么吧...")));
       return;
     }
 
@@ -32,7 +33,9 @@ class _PublishMomentPageState extends State<PublishMomentPage> {
   void _pickImage() {
     setState(() {
       // 随机取一张占位图模拟选择
-      _selectedImages.add("https://picsum.photos/200/200?random=${_selectedImages.length}");
+      _selectedImages.add(
+        "https://picsum.photos/200/200?random=${_selectedImages.length}",
+      );
     });
   }
 
@@ -45,7 +48,10 @@ class _PublishMomentPageState extends State<PublishMomentPage> {
         elevation: 0,
         leading: TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text("取消", style: TextStyle(color: Colors.black, fontSize: 16)),
+          child: const Text(
+            "取消",
+            style: TextStyle(color: Colors.black, fontSize: 16),
+          ),
         ),
         actions: [
           Padding(
@@ -55,7 +61,9 @@ class _PublishMomentPageState extends State<PublishMomentPage> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF07C160),
                 elevation: 0,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                ),
               ),
               child: const Text("发表", style: TextStyle(color: Colors.white)),
             ),
@@ -70,7 +78,10 @@ class _PublishMomentPageState extends State<PublishMomentPage> {
             TextField(
               controller: _textController,
               maxLines: 5,
-              decoration: const InputDecoration(hintText: "这一刻的想法...", border: InputBorder.none),
+              decoration: const InputDecoration(
+                hintText: "这一刻的想法...",
+                border: InputBorder.none,
+              ),
             ),
             const SizedBox(height: 20),
             // 图片预览区 (九宫格布局)
@@ -94,7 +105,10 @@ class _PublishMomentPageState extends State<PublishMomentPage> {
                 width: 80,
                 height: 80,
                 decoration: BoxDecoration(
-                  image: DecorationImage(image: NetworkImage(url), fit: BoxFit.cover),
+                  image: DecorationImage(
+                    image: NetworkImage(url),
+                    fit: BoxFit.cover,
+                  ),
                   borderRadius: BorderRadius.circular(4),
                 ),
               ),
@@ -105,7 +119,11 @@ class _PublishMomentPageState extends State<PublishMomentPage> {
                   onTap: () => setState(() => _selectedImages.remove(url)),
                   child: Container(
                     color: Colors.black54,
-                    child: const Icon(Icons.close, size: 16, color: Colors.white),
+                    child: const Icon(
+                      Icons.close,
+                      size: 16,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),

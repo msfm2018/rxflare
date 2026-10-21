@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:rxflare/rxflare.dart';
 import '../models/menu_item.dart';
 import '../controllers/cart_controller.dart';
@@ -22,10 +22,38 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // 模拟菜单数据
   final menuItems = RxState<List<MenuItem>>([
-    MenuItem(id: '1', name: '宫保鸡丁', category: '热菜', price: 38.0, imageUrl: '', description: '经典川菜'),
-    MenuItem(id: '2', name: '麻婆豆腐', category: '热菜', price: 28.0, imageUrl: '', description: '麻辣鲜香'),
-    MenuItem(id: '3', name: '拍黄瓜', category: '凉菜', price: 12.0, imageUrl: '', description: '清脆解腻'),
-    MenuItem(id: '4', name: '可乐', category: '饮料', price: 8.0, imageUrl: '', description: '冰爽'),
+    MenuItem(
+      id: '1',
+      name: '宫保鸡丁',
+      category: '热菜',
+      price: 38.0,
+      imageUrl: '',
+      description: '经典川菜',
+    ),
+    MenuItem(
+      id: '2',
+      name: '麻婆豆腐',
+      category: '热菜',
+      price: 28.0,
+      imageUrl: '',
+      description: '麻辣鲜香',
+    ),
+    MenuItem(
+      id: '3',
+      name: '拍黄瓜',
+      category: '凉菜',
+      price: 12.0,
+      imageUrl: '',
+      description: '清脆解腻',
+    ),
+    MenuItem(
+      id: '4',
+      name: '可乐',
+      category: '饮料',
+      price: 8.0,
+      imageUrl: '',
+      description: '冰爽',
+    ),
   ]);
 
   @override
@@ -35,7 +63,11 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (_) {
         return Scaffold(
           appBar: AppBar(
-            title: Text(bottomNavIndex.value == 0 ? '点菜助手' : (bottomNavIndex.value == 1 ? '我的订单' : '个人中心')),
+            title: Text(
+              bottomNavIndex.value == 0
+                  ? '点菜助手'
+                  : (bottomNavIndex.value == 1 ? '我的订单' : '个人中心'),
+            ),
             actions: [if (bottomNavIndex.value == 0) _buildCartBadge(context)],
           ),
 
@@ -82,15 +114,27 @@ class _HomeScreenState extends State<HomeScreen> {
                 selectedCategoryIndex.value = index;
               },
               child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 10),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 20,
+                  horizontal: 10,
+                ),
                 decoration: BoxDecoration(
                   // 颜色切换逻辑
                   color: isSelected ? Colors.white : Colors.transparent,
-                  border: isSelected ? const Border(left: BorderSide(color: Colors.orange, width: 4)) : null,
+                  border: isSelected
+                      ? const Border(
+                          left: BorderSide(color: Colors.orange, width: 4),
+                        )
+                      : null,
                 ),
                 child: Text(
                   categories[index],
-                  style: TextStyle(fontWeight: isSelected ? FontWeight.bold : FontWeight.normal, color: isSelected ? Colors.orange : Colors.black87),
+                  style: TextStyle(
+                    fontWeight: isSelected
+                        ? FontWeight.bold
+                        : FontWeight.normal,
+                    color: isSelected ? Colors.orange : Colors.black87,
+                  ),
                   textAlign: TextAlign.center,
                 ),
               ),
@@ -106,7 +150,9 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (_) {
         // 1. 获取当前分类下的菜品
         final currentCategory = categories[selectedCategoryIndex.value];
-        final items = menuItems.value.where((i) => i.category == currentCategory).toList();
+        final items = menuItems.value
+            .where((i) => i.category == currentCategory)
+            .toList();
 
         if (items.isEmpty) {
           return const Center(child: Text("该分类下暂无菜品"));
@@ -136,17 +182,32 @@ class _HomeScreenState extends State<HomeScreen> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                       //  选中时增加边框颜色
-                      side: BorderSide(color: isSelected ? Colors.orange : Colors.transparent, width: 1),
+                      side: BorderSide(
+                        color: isSelected ? Colors.orange : Colors.transparent,
+                        width: 1,
+                      ),
                     ),
                     margin: const EdgeInsets.only(bottom: 10),
                     child: ListTile(
                       title: Text(
                         item.name,
-                        style: TextStyle(fontWeight: isSelected ? FontWeight.bold : FontWeight.normal, color: isSelected ? Colors.orange[900] : Colors.black87),
+                        style: TextStyle(
+                          fontWeight: isSelected
+                              ? FontWeight.bold
+                              : FontWeight.normal,
+                          color: isSelected
+                              ? Colors.orange[900]
+                              : Colors.black87,
+                        ),
                       ),
                       subtitle: Text('${item.price} 元'),
                       trailing: IconButton(
-                        icon: Icon(Icons.add_circle, color: isSelected ? Colors.orange[700] : Colors.orange),
+                        icon: Icon(
+                          Icons.add_circle,
+                          color: isSelected
+                              ? Colors.orange[700]
+                              : Colors.orange,
+                        ),
                         onPressed: () => cartController.addToCart(item),
                       ),
                     ),
@@ -160,7 +221,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-// 🧠 3. 修改底部导航：增加响应式监听和点击处理
+  // 🧠 3. 修改底部导航：增加响应式监听和点击处理
   Widget _buildBottomNavigationBar() {
     return RxBuilder(
       builder: (_) {
@@ -174,8 +235,14 @@ class _HomeScreenState extends State<HomeScreen> {
             bottomNavIndex.value = index;
           },
           items: const [
-            BottomNavigationBarItem(icon: Icon(Icons.restaurant_menu), label: '点菜'),
-            BottomNavigationBarItem(icon: Icon(Icons.receipt_long), label: '订单'),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.restaurant_menu),
+              label: '点菜',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.receipt_long),
+              label: '订单',
+            ),
             BottomNavigationBarItem(icon: Icon(Icons.person), label: '我的'),
           ],
         );
@@ -189,7 +256,10 @@ class _HomeScreenState extends State<HomeScreen> {
       children: [
         IconButton(
           icon: const Icon(Icons.shopping_cart),
-          onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CartScreen())),
+          onPressed: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const CartScreen()),
+          ),
         ),
         Positioned(
           right: 8,
@@ -200,7 +270,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 : CircleAvatar(
                     radius: 8,
                     backgroundColor: Colors.red,
-                    child: Text('${cartController.cartItems.length}', style: const TextStyle(fontSize: 10, color: Colors.white)),
+                    child: Text(
+                      '${cartController.cartItems.length}',
+                      style: const TextStyle(fontSize: 10, color: Colors.white),
+                    ),
                   ),
           ),
         ),

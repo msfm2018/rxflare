@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:rxflare/rxflare.dart';
 
@@ -54,7 +54,9 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+      ),
       builder: (context) => SizedBox(
         height: MediaQuery.of(context).size.height * 0.8, // 占 80% 高度
         child: Column(
@@ -71,7 +73,10 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
                   prefixIcon: const Icon(Icons.search),
                   fillColor: Colors.grey[100],
                   filled: true,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide.none,
+                  ),
                 ),
               ),
             ),
@@ -80,7 +85,11 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
             Expanded(
               child: Rx(() {
                 // 过滤掉当前已经在聊天里的人（你自己和对方）
-                final availableContacts = chat.allContacts.value.where((c) => c.type == "contacts" && c.id != currentChat.id).toList();
+                final availableContacts = chat.allContacts.value
+                    .where(
+                      (c) => c.type == "contacts" && c.id != currentChat.id,
+                    )
+                    .toList();
 
                 return ListView.builder(
                   itemCount: availableContacts.length,
@@ -91,7 +100,14 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
                       return ListTile(
                         leading: _buildAvatar(contact),
                         title: Text(contact.name),
-                        trailing: Icon(isChecked ? Icons.check_circle : Icons.radio_button_unchecked, color: isChecked ? const Color(0xFF07C160) : Colors.grey),
+                        trailing: Icon(
+                          isChecked
+                              ? Icons.check_circle
+                              : Icons.radio_button_unchecked,
+                          color: isChecked
+                              ? const Color(0xFF07C160)
+                              : Colors.grey,
+                        ),
                         onTap: () {
                           if (isChecked) {
                             selectedIds.remove(contact.id);
@@ -119,11 +135,18 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
         onTap: _simulateAddNewContact, //  点击这里测试动态添加
         child: Container(
           height: 40,
-          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(4)),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(4),
+          ),
           child: const Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.person_add_alt_1_outlined, size: 18, color: Colors.black87),
+              Icon(
+                Icons.person_add_alt_1_outlined,
+                size: 18,
+                color: Colors.black87,
+              ),
               SizedBox(width: 8),
               Text("测试：添加好友", style: TextStyle(fontSize: 13)), // 修改文字方便识别
             ],
@@ -134,13 +157,20 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
   }
 
   // 弹窗头部
-  Widget _buildSheetHeader(BuildContext context, RxState<List<String>> selectedIds, ChatItem currentChat) {
+  Widget _buildSheetHeader(
+    BuildContext context,
+    RxState<List<String>> selectedIds,
+    ChatItem currentChat,
+  ) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text("取消")),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("取消"),
+          ),
           const Text("选择联系人", style: TextStyle(fontWeight: FontWeight.bold)),
           Rx(
             () => ElevatedButton(
@@ -151,7 +181,10 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
                       final chatService = RxDI.find<ChatService>();
 
                       //  关键：传入 selectedIds.value (List<String>)
-                      chatService.createGroupFromChat(currentChat.id, selectedIds.value);
+                      chatService.createGroupFromChat(
+                        currentChat.id,
+                        selectedIds.value,
+                      );
 
                       Navigator.pop(context);
                     },
@@ -167,11 +200,21 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
   void _simulateLiSiIncoming() {
     // 模拟李四在 1 秒后发来第一条消息
     Future.delayed(const Duration(milliseconds: 500), () {
-      _addNewChatMember(id: "5", name: "李四", firstMsg: "嘿！我是李四，有人在吗？", color: Colors.orange);
+      _addNewChatMember(
+        id: "5",
+        name: "李四",
+        firstMsg: "嘿！我是李四，有人在吗？",
+        color: Colors.orange,
+      );
     });
   }
 
-  void _addNewChatMember({required String id, required String name, required String firstMsg, required Color color}) {
+  void _addNewChatMember({
+    required String id,
+    required String name,
+    required String firstMsg,
+    required Color color,
+  }) {
     if (chat.messagesMap.containsKey(id)) return;
 
     //  修复：传入必填的 senderId
@@ -194,7 +237,16 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
     chat.messagesMap[id] = newRxValue;
     RxDI.find<PersistenceService>().watch(id, newRxValue);
 
-    final newItem = ChatItem(id: id, type: "contact", name: name, msg: firstMsg, unread: 1, color: color, lastTime: DateTime.now().millisecondsSinceEpoch, isPinned: false);
+    final newItem = ChatItem(
+      id: id,
+      type: "contact",
+      name: name,
+      msg: firstMsg,
+      unread: 1,
+      color: color,
+      lastTime: DateTime.now().millisecondsSinceEpoch,
+      isPinned: false,
+    );
 
     chat.chatList.value = [...chat.chatList.value, newItem];
     RxDebug.log(" 成功为 $name (ID: $id) 建立独立监听通道");
@@ -217,7 +269,9 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
 
       //  修复点 2：使用 copyWith 更新对象，而不是 Map 的解构
       if (msgIdx < currentMsgs.length) {
-        currentMsgs[msgIdx] = currentMsgs[msgIdx].copyWith(progress: i > 1.0 ? 1.0 : i);
+        currentMsgs[msgIdx] = currentMsgs[msgIdx].copyWith(
+          progress: i > 1.0 ? 1.0 : i,
+        );
       }
 
       //  修复点 3：重新赋值触发 rxflare 更新
@@ -250,7 +304,12 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
     _scrollToBottom();
   }
 
-  void _addMessage(String id, String text, {bool isMe = true, double? progress}) {
+  void _addMessage(
+    String id,
+    String text, {
+    bool isMe = true,
+    double? progress,
+  }) {
     final msgs = chat.messagesMap[id];
     if (msgs == null) return;
 
@@ -277,7 +336,9 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
       RxDebug.log("正在更新 ${current.name} 的时间戳为: $newTime");
 
       // 计算未读数：如果不是当前选中的对话，未读数+1
-      int newUnread = (id != chat.selectedId.value && !isMe) ? current.unread + 1 : 0;
+      int newUnread = (id != chat.selectedId.value && !isMe)
+          ? current.unread + 1
+          : 0;
 
       // 更新字段
       chat.chatList.updateField(
@@ -310,7 +371,11 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
   void _scrollToBottom() {
     Future.delayed(const Duration(milliseconds: 50), () {
       if (_scrollController.hasClients) {
-        _scrollController.animateTo(_scrollController.position.maxScrollExtent, duration: const Duration(milliseconds: 200), curve: Curves.easeOut);
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOut,
+        );
       }
     });
   }
@@ -323,7 +388,10 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
           height: 48,
           child: Padding(
             padding: EdgeInsets.all(12),
-            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.redAccent),
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: Colors.redAccent,
+            ),
           ),
         );
       }
@@ -390,7 +458,10 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
         backgroundColor: const Color(0xFF07C160),
         child: const Icon(Icons.camera_alt, color: Colors.white),
         onPressed: () {
-          Navigator.push(context, MaterialPageRoute(builder: (c) => const PublishMomentPage()));
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (c) => const PublishMomentPage()),
+          );
         },
       ),
       body: CustomScrollView(
@@ -407,7 +478,10 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
                     height: 280,
                     width: double.infinity,
                     decoration: const BoxDecoration(
-                      image: DecorationImage(image: NetworkImage("https://picsum.photos/800/500"), fit: BoxFit.cover),
+                      image: DecorationImage(
+                        image: NetworkImage("https://picsum.photos/800/500"),
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   ),
                   // 头像
@@ -419,7 +493,12 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
                       children: [
                         const Text(
                           "我",
-                          style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold, shadows: [Shadow(blurRadius: 5)]),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            shadows: [Shadow(blurRadius: 5)],
+                          ),
                         ),
                         const SizedBox(width: 15),
                         Container(
@@ -427,7 +506,10 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
                           height: 70,
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(8),
-                            image: const DecorationImage(image: NetworkImage("https://picsum.photos/100"), fit: BoxFit.cover),
+                            image: const DecorationImage(
+                              image: NetworkImage("https://picsum.photos/100"),
+                              fit: BoxFit.cover,
+                            ),
                           ),
                         ),
                       ],
@@ -440,7 +522,12 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
           // 2. 动态列表
           Rx(() {
             final list = chat.momentsList.value;
-            return SliverList(delegate: SliverChildBuilderDelegate((context, index) => _buildMomentItem(list[index]), childCount: list.length));
+            return SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (context, index) => _buildMomentItem(list[index]),
+                childCount: list.length,
+              ),
+            );
           }),
           const SliverToBoxAdapter(child: SizedBox(height: 50)),
         ],
@@ -471,7 +558,8 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
                   PageRouteBuilder(
                     opaque: false,
                     barrierColor: Colors.black,
-                    pageBuilder: (_, __, ___) => ImagePreviewPage(url: url, heroTag: tag),
+                    pageBuilder: (_, __, ___) =>
+                        ImagePreviewPage(url: url, heroTag: tag),
                   ),
                 );
               },
@@ -483,7 +571,10 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
                   decoration: BoxDecoration(
                     color: Colors.grey[200],
                     borderRadius: BorderRadius.circular(4),
-                    image: DecorationImage(image: NetworkImage(url), fit: BoxFit.cover),
+                    image: DecorationImage(
+                      image: NetworkImage(url),
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
               ),
@@ -502,7 +593,12 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // 左侧头像
-          buildNetworkAvatar(item["avatarColor"] == Colors.pink ? "https://picsum.photos/101" : "https://picsum.photos/102", radius: 22),
+          buildNetworkAvatar(
+            item["avatarColor"] == Colors.pink
+                ? "https://picsum.photos/101"
+                : "https://picsum.photos/102",
+            radius: 22,
+          ),
           const SizedBox(width: 12),
           // 右侧内容
           Expanded(
@@ -511,16 +607,29 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
               children: [
                 Text(
                   item["userName"],
-                  style: const TextStyle(color: Color(0xFF576B95), fontWeight: FontWeight.bold, fontSize: 16),
+                  style: const TextStyle(
+                    color: Color(0xFF576B95),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
                 ),
                 const SizedBox(height: 5),
-                Text(item["content"], style: const TextStyle(fontSize: 15, height: 1.4)),
-                _buildMomentImagesHero(item["images"] as List, item["id"].toString()), // 九宫格图片
+                Text(
+                  item["content"],
+                  style: const TextStyle(fontSize: 15, height: 1.4),
+                ),
+                _buildMomentImagesHero(
+                  item["images"] as List,
+                  item["id"].toString(),
+                ), // 九宫格图片
                 const SizedBox(height: 12),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(formatTime(item["publishTime"]), style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                    Text(
+                      formatTime(item["publishTime"]),
+                      style: const TextStyle(color: Colors.grey, fontSize: 12),
+                    ),
                     _buildMomentActionBtn(item), // 点赞按钮
                   ],
                 ),
@@ -543,7 +652,10 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
       // 自定义按钮外观
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(color: const Color(0xFFF7F7F7), borderRadius: BorderRadius.circular(4)),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF7F7F7),
+          borderRadius: BorderRadius.circular(4),
+        ),
         child: const Icon(Icons.more_horiz, size: 20, color: Color(0xFF576B95)),
       ),
       // 核心修正：显式声明返回类型
@@ -561,9 +673,16 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(isLiked ? Icons.favorite : Icons.favorite_border, color: Colors.white, size: 16),
+                Icon(
+                  isLiked ? Icons.favorite : Icons.favorite_border,
+                  color: Colors.white,
+                  size: 16,
+                ),
                 const SizedBox(width: 8),
-                Text(isLiked ? "取消" : "点赞", style: const TextStyle(color: Colors.white, fontSize: 14)),
+                Text(
+                  isLiked ? "取消" : "点赞",
+                  style: const TextStyle(color: Colors.white, fontSize: 14),
+                ),
               ],
             ),
           ),
@@ -573,7 +692,10 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
             height: 35,
             onTap: () {
               // 稍后异步弹出评论框
-              Future.delayed(Duration.zero, () => _showCommentDialog(item["id"]));
+              Future.delayed(
+                Duration.zero,
+                () => _showCommentDialog(item["id"]),
+              );
             },
             child: const Row(
               mainAxisSize: MainAxisSize.min,
@@ -602,7 +724,10 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
           decoration: const InputDecoration(hintText: "评论内容"),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text("取消")),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("取消"),
+          ),
           ElevatedButton(
             onPressed: () {
               if (controller.text.isNotEmpty) {
@@ -625,7 +750,10 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
     return Container(
       margin: const EdgeInsets.only(top: 10),
       width: double.infinity,
-      decoration: BoxDecoration(color: const Color(0xFFF3F3F5), borderRadius: BorderRadius.circular(4)),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF3F3F5),
+        borderRadius: BorderRadius.circular(4),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -634,18 +762,27 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
               padding: const EdgeInsets.all(8),
               child: Row(
                 children: [
-                  const Icon(Icons.favorite_border, size: 14, color: Color(0xFF576B95)),
+                  const Icon(
+                    Icons.favorite_border,
+                    size: 14,
+                    color: Color(0xFF576B95),
+                  ),
                   const SizedBox(width: 5),
                   Expanded(
                     child: Text(
                       item["likes"].join(", "),
-                      style: const TextStyle(color: Color(0xFF576B95), fontWeight: FontWeight.bold, fontSize: 13),
+                      style: const TextStyle(
+                        color: Color(0xFF576B95),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
-          if (hasLikes && hasComments) const Divider(height: 1, indent: 8, endIndent: 8),
+          if (hasLikes && hasComments)
+            const Divider(height: 1, indent: 8, endIndent: 8),
           if (hasComments)
             Padding(
               padding: const EdgeInsets.all(8),
@@ -657,11 +794,17 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
                         padding: const EdgeInsets.only(bottom: 4),
                         child: RichText(
                           text: TextSpan(
-                            style: const TextStyle(fontSize: 14, color: Colors.black87),
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.black87,
+                            ),
                             children: [
                               TextSpan(
                                 text: "${c['from']}: ",
-                                style: const TextStyle(color: Color(0xFF576B95), fontWeight: FontWeight.bold),
+                                style: const TextStyle(
+                                  color: Color(0xFF576B95),
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                               TextSpan(text: c['content']),
                             ],
@@ -687,7 +830,10 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
           padding: const EdgeInsets.all(10),
           child: Container(
             height: 30,
-            decoration: BoxDecoration(color: const Color(0xFFDBD9D8), borderRadius: BorderRadius.circular(4)),
+            decoration: BoxDecoration(
+              color: const Color(0xFFDBD9D8),
+              borderRadius: BorderRadius.circular(4),
+            ),
             child: TextField(
               controller: _searchController,
               onChanged: (val) => searchText.value = val,
@@ -707,7 +853,9 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
         Expanded(
           child: Rx(() {
             // 生成 filteredList，每次 Rx 更新都会重新计算
-            final filteredList = chat.chatList.value.where((item) => item.name.contains(searchText.value)).toList();
+            final filteredList = chat.chatList.value
+                .where((item) => item.name.contains(searchText.value))
+                .toList();
 
             if (filteredList.isEmpty) {
               return const Center(
@@ -721,7 +869,9 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
                 final id = filteredList[index].id;
 
                 return Rx(() {
-                  final currentItem = chat.chatList.value.firstWhere((e) => e.id == id);
+                  final currentItem = chat.chatList.value.firstWhere(
+                    (e) => e.id == id,
+                  );
                   final isSelected = chat.selectedId.value == id;
 
                   return GestureDetector(
@@ -729,9 +879,14 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
                       chat.selectedId.value = id;
 
                       if (currentItem.unread > 0) {
-                        int originalIdx = chat.chatList.value.indexWhere((e) => e.id == id);
+                        int originalIdx = chat.chatList.value.indexWhere(
+                          (e) => e.id == id,
+                        );
 
-                        chat.chatList.updateField(originalIdx, currentItem.copyWith(unread: 0));
+                        chat.chatList.updateField(
+                          originalIdx,
+                          currentItem.copyWith(unread: 0),
+                        );
                       }
 
                       _scrollToBottom();
@@ -741,14 +896,18 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
                     },
                     child: Container(
                       padding: const EdgeInsets.all(12),
-                      color: isSelected ? const Color(0xFFCBC9C8) : Colors.transparent,
+                      color: isSelected
+                          ? const Color(0xFFCBC9C8)
+                          : Colors.transparent,
                       child: Row(
                         children: [
                           _buildAvatar(
                             Contact(
                               id: currentItem.id,
                               name: currentItem.name,
-                              avatar: currentItem.name.isNotEmpty ? currentItem.name[0] : "?",
+                              avatar: currentItem.name.isNotEmpty
+                                  ? currentItem.name[0]
+                                  : "?",
                               color: currentItem.color,
                               type: currentItem.type,
                             ),
@@ -764,24 +923,55 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
                                       child: Row(
                                         children: [
                                           Expanded(
-                                            child: Text(currentItem.name, style: const TextStyle(fontSize: 14), overflow: TextOverflow.ellipsis),
+                                            child: Text(
+                                              currentItem.name,
+                                              style: const TextStyle(
+                                                fontSize: 14,
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
                                           ),
                                           if (currentItem.unread > 0)
                                             Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                              decoration: BoxDecoration(color: Colors.red, borderRadius: BorderRadius.circular(10)),
-                                              child: Text(currentItem.unread > 99 ? "99+" : "${currentItem.unread}", style: const TextStyle(color: Colors.white, fontSize: 10)),
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 6,
+                                                    vertical: 2,
+                                                  ),
+                                              decoration: BoxDecoration(
+                                                color: Colors.red,
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                              ),
+                                              child: Text(
+                                                currentItem.unread > 99
+                                                    ? "99+"
+                                                    : "${currentItem.unread}",
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 10,
+                                                ),
+                                              ),
                                             ),
                                         ],
                                       ),
                                     ),
-                                    Text(formatTime(currentItem.lastTime), style: const TextStyle(fontSize: 10, color: Colors.grey)),
+                                    Text(
+                                      formatTime(currentItem.lastTime),
+                                      style: const TextStyle(
+                                        fontSize: 10,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
                                   ],
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
                                   currentItem.msg,
-                                  style: const TextStyle(color: Colors.grey, fontSize: 12),
+                                  style: const TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 12,
+                                  ),
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ],
@@ -873,7 +1063,10 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
       // 2. 尝试从列表中寻找当前选中的 item (使用 firstWhereOrNull 的逻辑)
       // 这样如果找不到，currentItem 会是 null，而不会崩溃
       final chatItems = chat.chatList.value;
-      final currentItem = chatItems.cast<ChatItem?>().firstWhere((e) => e?.id == selectedId, orElse: () => null);
+      final currentItem = chatItems.cast<ChatItem?>().firstWhere(
+        (e) => e?.id == selectedId,
+        orElse: () => null,
+      );
 
       // 3. 如果会话被删除了（找不到对应 item），显示占位符
       if (currentItem == null) return _buildEmptyState();
@@ -891,15 +1084,27 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
             child: Row(
               children: [
                 // 聊天标题
-                Text(currentItem.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                Text(
+                  currentItem.name,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
 
                 const Spacer(),
 
                 // 📞（可选）
-                IconButton(icon: const Icon(Icons.call, size: 20), onPressed: () {}),
+                IconButton(
+                  icon: const Icon(Icons.call, size: 20),
+                  onPressed: () {},
+                ),
 
                 // 📹（可选）
-                IconButton(icon: const Icon(Icons.videocam, size: 20), onPressed: () {}),
+                IconButton(
+                  icon: const Icon(Icons.videocam, size: 20),
+                  onPressed: () {},
+                ),
 
                 // ❗核心：群聊入口（加号）
                 IconButton(
@@ -916,8 +1121,14 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
             child: Container(
               color: const Color(0xFFF3F3F3),
               child: Rx(() {
-                final List<Message> msgs = chat.messagesMap[selectedId]?.value ?? [];
-                return ListView.builder(controller: _scrollController, padding: const EdgeInsets.all(20), itemCount: msgs.length, itemBuilder: (context, i) => _buildMsgBubble(msgs[i]));
+                final List<Message> msgs =
+                    chat.messagesMap[selectedId]?.value ?? [];
+                return ListView.builder(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.all(20),
+                  itemCount: msgs.length,
+                  itemBuilder: (context, i) => _buildMsgBubble(msgs[i]),
+                );
               }),
             ),
           ),
@@ -932,7 +1143,13 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
   Widget _buildEmptyState() {
     return Container(
       color: const Color(0xFFF3F3F3),
-      child: const Center(child: Icon(Icons.chat_bubble_outline, size: 80, color: Color(0xFFE0E0E0))),
+      child: const Center(
+        child: Icon(
+          Icons.chat_bubble_outline,
+          size: 80,
+          color: Color(0xFFE0E0E0),
+        ),
+      ),
     );
   }
 
@@ -942,18 +1159,31 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
     return Container(
       width: 40,
       height: 40,
-      decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(6)),
+      decoration: BoxDecoration(
+        color: Colors.grey[300],
+        borderRadius: BorderRadius.circular(6),
+      ),
       child: GridView.builder(
         padding: const EdgeInsets.all(2),
         physics: const NeverScrollableScrollPhysics(),
         itemCount: display.length,
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: display.length <= 4 ? 2 : 3, crossAxisSpacing: 2, mainAxisSpacing: 2),
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: display.length <= 4 ? 2 : 3,
+          crossAxisSpacing: 2,
+          mainAxisSpacing: 2,
+        ),
         itemBuilder: (_, i) {
           final c = display[i];
           return Container(
-            decoration: BoxDecoration(color: c.color, borderRadius: BorderRadius.circular(3)),
+            decoration: BoxDecoration(
+              color: c.color,
+              borderRadius: BorderRadius.circular(3),
+            ),
             alignment: Alignment.center,
-            child: Text(c.avatar, style: const TextStyle(fontSize: 10, color: Colors.white)),
+            child: Text(
+              c.avatar,
+              style: const TextStyle(fontSize: 10, color: Colors.white),
+            ),
           );
         },
       ),
@@ -969,41 +1199,81 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
       child: Row(
-        mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment: isMe
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (!isMe) ...[_buildStaticAvatar(chat.selectedId.value), const SizedBox(width: 8)],
+          if (!isMe) ...[
+            _buildStaticAvatar(chat.selectedId.value),
+            const SizedBox(width: 8),
+          ],
           Flexible(
             child: Stack(
               clipBehavior: Clip.none,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
                   decoration: BoxDecoration(
                     color: isMe ? const Color(0xFF95EC69) : Colors.white,
-                    borderRadius: BorderRadius.circular(6).copyWith(bottomLeft: isMe ? null : Radius.zero, bottomRight: isMe ? Radius.zero : null),
+                    borderRadius: BorderRadius.circular(6).copyWith(
+                      bottomLeft: isMe ? null : Radius.zero,
+                      bottomRight: isMe ? Radius.zero : null,
+                    ),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(text, style: const TextStyle(fontSize: 15, height: 1.4)),
+                      Text(
+                        text,
+                        style: const TextStyle(fontSize: 15, height: 1.4),
+                      ),
                       // 进度条逻辑同样改为对象访问
                       if (progress != null) ...[
                         const SizedBox(height: 8),
                         if (progress < 1.0) ...[
-                          LinearProgressIndicator(value: progress, backgroundColor: Colors.black12, valueColor: const AlwaysStoppedAnimation(Colors.blue), minHeight: 2),
+                          LinearProgressIndicator(
+                            value: progress,
+                            backgroundColor: Colors.black12,
+                            valueColor: const AlwaysStoppedAnimation(
+                              Colors.blue,
+                            ),
+                            minHeight: 2,
+                          ),
                           const SizedBox(height: 4),
-                          Text("${(progress * 100).toInt()}%", style: const TextStyle(fontSize: 10, color: Colors.blue)),
+                          Text(
+                            "${(progress * 100).toInt()}%",
+                            style: const TextStyle(
+                              fontSize: 10,
+                              color: Colors.blue,
+                            ),
+                          ),
                         ] else ...[
-                          const Text("已传输 ✓", style: TextStyle(fontSize: 10, color: Colors.grey)),
+                          const Text(
+                            "已传输 ✓",
+                            style: TextStyle(fontSize: 10, color: Colors.grey),
+                          ),
                         ],
                       ],
                     ],
                   ),
                 ),
                 // 气泡小尖角
-                isMe ? Positioned(top: 12, right: -4, child: _buildTriangle(const Color(0xFF95EC69))) : Positioned(top: 12, left: -4, child: _buildTriangle(Colors.white)),
+                isMe
+                    ? Positioned(
+                        top: 12,
+                        right: -4,
+                        child: _buildTriangle(const Color(0xFF95EC69)),
+                      )
+                    : Positioned(
+                        top: 12,
+                        left: -4,
+                        child: _buildTriangle(Colors.white),
+                      ),
               ],
             ),
           ),
@@ -1028,20 +1298,33 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
       child: Container(
         width: 10,
         height: 10,
-        decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(1)),
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(1),
+        ),
       ),
     );
   }
 
   // 辅助方法：获取当前聊天的头像
   Widget _buildStaticAvatar(String id) {
-    final item = chat.chatList.value.firstWhere((e) => e.id == id, orElse: () => chat.chatList.value.first);
+    final item = chat.chatList.value.firstWhere(
+      (e) => e.id == id,
+      orElse: () => chat.chatList.value.first,
+    );
 
     return Container(
       width: 36,
       height: 36,
-      decoration: BoxDecoration(color: item.color, borderRadius: BorderRadius.circular(4)),
-      child: id == "1" ? const Icon(Icons.folder, color: Colors.white, size: 20) : (id == "2" ? const Icon(Icons.campaign, color: Colors.white, size: 20) : null),
+      decoration: BoxDecoration(
+        color: item.color,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: id == "1"
+          ? const Icon(Icons.folder, color: Colors.white, size: 20)
+          : (id == "2"
+                ? const Icon(Icons.campaign, color: Colors.white, size: 20)
+                : null),
     );
   }
 
@@ -1057,7 +1340,11 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
             children: [
               CompositedTransformTarget(
                 link: _emojiLayerLink,
-                child: _buildToolIcon(Icons.sentiment_satisfied_alt_outlined, "表情", onTap: _toggleEmojiPicker),
+                child: _buildToolIcon(
+                  Icons.sentiment_satisfied_alt_outlined,
+                  "表情",
+                  onTap: _toggleEmojiPicker,
+                ),
               ),
               _buildToolIcon(Icons.grid_view_outlined, "扩展"),
               _buildToolIcon(Icons.folder_open_outlined, "文件"),
@@ -1070,7 +1357,9 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
             child: KeyboardListener(
               focusNode: FocusNode(),
               onKeyEvent: (KeyEvent event) {
-                if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.enter && !HardwareKeyboard.instance.isControlPressed) {
+                if (event is KeyDownEvent &&
+                    event.logicalKey == LogicalKeyboardKey.enter &&
+                    !HardwareKeyboard.instance.isControlPressed) {
                   _sendMessage();
                 }
               },
@@ -1079,7 +1368,12 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
                 maxLines: null,
                 style: const TextStyle(fontSize: 14),
                 textInputAction: TextInputAction.newline,
-                decoration: const InputDecoration(border: InputBorder.none, hintText: "输入消息...", isDense: true, contentPadding: EdgeInsets.symmetric(vertical: 5)),
+                decoration: const InputDecoration(
+                  border: InputBorder.none,
+                  hintText: "输入消息...",
+                  isDense: true,
+                  contentPadding: EdgeInsets.symmetric(vertical: 5),
+                ),
                 onSubmitted: (_) => _sendMessage(),
               ),
             ),
@@ -1098,7 +1392,9 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
                   foregroundColor: const Color(0xFF07C160), // 绿色文字
                   elevation: 0,
                   padding: EdgeInsets.zero,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(4),
+                  ),
                 ),
                 onPressed: _sendMessage,
                 child: const Text("发送(S)", style: TextStyle(fontSize: 12)),
@@ -1146,7 +1442,8 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
   }
 
   Widget _buildSideBar() {
-    final String userAvatarUrl = "https://pics2.baidu.com/feed/4610b912c8fcc3ce9cd9bd6ad8583687d43f207e.jpeg";
+    final String userAvatarUrl =
+        "https://pics2.baidu.com/feed/4610b912c8fcc3ce9cd9bd6ad8583687d43f207e.jpeg";
     return Container(
       width: 79,
       color: const Color(0xFF2E2E2E),
@@ -1170,7 +1467,11 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
           // 2. 中间：核心功能区 (1: 聊天, 2: 通讯录, 3: 收藏, 4: 朋友圈)
           _buildNavIcon(Icons.chat_bubble_outline, Icons.chat_bubble, 1),
           _buildNavIcon(Icons.person_outline, Icons.person, 2),
-          _buildNavIcon(Icons.collections_bookmark_outlined, Icons.collections_bookmark, 3),
+          _buildNavIcon(
+            Icons.collections_bookmark_outlined,
+            Icons.collections_bookmark,
+            3,
+          ),
           _buildNavIcon(Icons.explore_outlined, Icons.explore, 4),
 
           // --- 新增：点击这个模拟李四发消息 ---
@@ -1210,7 +1511,9 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
           }
 
           return Dialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
             child: Container(
               width: 300,
               padding: const EdgeInsets.all(20),
@@ -1222,7 +1525,10 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
 
                   Text(
                     user.name, // 🔥 动态
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
 
                   const SizedBox(height: 6),
@@ -1248,7 +1554,11 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
                   ),
 
                   // ⚙️ 设置
-                  ListTile(leading: const Icon(Icons.settings), title: const Text("设置"), onTap: () {}),
+                  ListTile(
+                    leading: const Icon(Icons.settings),
+                    title: const Text("设置"),
+                    onTap: () {},
+                  ),
                 ],
               ),
             ),
@@ -1285,7 +1595,9 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
           width: 280,
           decoration: const BoxDecoration(
             color: Color(0xFFE6E5E5),
-            border: Border(right: BorderSide(color: Color(0xFFDEDEDE), width: 0.5)),
+            border: Border(
+              right: BorderSide(color: Color(0xFFDEDEDE), width: 0.5),
+            ),
           ),
           child: Column(
             children: [
@@ -1316,7 +1628,10 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       child: Container(
         height: 30,
-        decoration: BoxDecoration(color: const Color(0xFFDBD9D8), borderRadius: BorderRadius.circular(4)),
+        decoration: BoxDecoration(
+          color: const Color(0xFFDBD9D8),
+          borderRadius: BorderRadius.circular(4),
+        ),
         child: TextField(
           controller: _contactSearchController,
           //  核心：当文字改变时，更新响应式变量
@@ -1357,7 +1672,10 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
 
         if (filteredContacts.isEmpty) {
           return const Center(
-            child: Text("未找到联系人", style: TextStyle(color: Colors.grey, fontSize: 13)),
+            child: Text(
+              "未找到联系人",
+              style: TextStyle(color: Colors.grey, fontSize: 13),
+            ),
           );
         }
 
@@ -1386,7 +1704,8 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
                   item,
                   onTap: () {
                     //  这里取反改变状态
-                    chat.isContactsExpanded.value = !chat.isContactsExpanded.value;
+                    chat.isContactsExpanded.value =
+                        !chat.isContactsExpanded.value;
                     chat.selectedContactId.value = "contacts";
                   },
                   isExpanded: isExpanded, //  使用 Rx 内部读取到的值
@@ -1410,7 +1729,12 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
 
   // 分类列表项
   // 修改参数，增加 isSelected
-  Widget _buildCategoryItem(ContactCategory item, {VoidCallback? onTap, bool isExpanded = false, bool isSelected = false}) {
+  Widget _buildCategoryItem(
+    ContactCategory item, {
+    VoidCallback? onTap,
+    bool isExpanded = false,
+    bool isSelected = false,
+  }) {
     return InkWell(
       onTap: onTap,
       child: Container(
@@ -1420,18 +1744,34 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
         child: Row(
           children: [
             // 只有联系人分类显示旋转箭头
-            if (item.id == "contacts") Icon(isExpanded ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_right, size: 18, color: Colors.grey) else const SizedBox(width: 18), // 占位对齐
+            if (item.id == "contacts")
+              Icon(
+                isExpanded
+                    ? Icons.keyboard_arrow_down
+                    : Icons.keyboard_arrow_right,
+                size: 18,
+                color: Colors.grey,
+              )
+            else
+              const SizedBox(width: 18), // 占位对齐
 
             const SizedBox(width: 5),
             Container(
               padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(color: item.color, borderRadius: BorderRadius.circular(4)),
+              decoration: BoxDecoration(
+                color: item.color,
+                borderRadius: BorderRadius.circular(4),
+              ),
               child: Icon(item.icon, size: 20, color: Colors.white),
             ),
             const SizedBox(width: 12),
             Text(item.name, style: const TextStyle(fontSize: 14)),
             const Spacer(),
-            if (item.count > 0) Text("${item.count}", style: const TextStyle(color: Colors.grey, fontSize: 12)),
+            if (item.count > 0)
+              Text(
+                "${item.count}",
+                style: const TextStyle(color: Colors.grey, fontSize: 12),
+              ),
           ],
         ),
       ),
@@ -1443,7 +1783,9 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
 
     return Rx(() {
       //  修复：直接过滤并转为 List<Contact>，不要转成 Map
-      final contacts = chat.allContacts.value.where((e) => e.type == "contacts").toList(); // 👈 删掉 .cast<Map<String, dynamic>>()
+      final contacts = chat.allContacts.value
+          .where((e) => e.type == "contacts")
+          .toList(); // 👈 删掉 .cast<Map<String, dynamic>>()
 
       final groupedList = chat.getGroupedContacts(contacts);
 
@@ -1476,12 +1818,17 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
     final chat = RxDI.find<ChatService>();
 
     // 找到“新的朋友”的索引
-    int idx = chat.contactCategories.value.indexWhere((e) => e.id == "new_friends");
+    int idx = chat.contactCategories.value.indexWhere(
+      (e) => e.id == "new_friends",
+    );
 
     if (idx != -1) {
       // 使用 rxflare 的 updateField 局部更新数据
       var currentItem = chat.contactCategories.value[idx];
-      chat.contactCategories.updateField(idx, currentItem.copyWith(count: currentItem.count + 1));
+      chat.contactCategories.updateField(
+        idx,
+        currentItem.copyWith(count: currentItem.count + 1),
+      );
 
       RxDebug.log("🔔 收到新的好友申请！");
     }
@@ -1537,7 +1884,13 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
             },
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 12),
-              child: Icon(isSelected ? selectedIcon : normalIcon, color: isSelected ? const Color(0xFF07C160) : const Color(0xFF919191), size: 28),
+              child: Icon(
+                isSelected ? selectedIcon : normalIcon,
+                color: isSelected
+                    ? const Color(0xFF07C160)
+                    : const Color(0xFF919191),
+                size: 28,
+              ),
             ),
           ),
         ),
@@ -1552,8 +1905,19 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
       final selectedId = chat.selectedContactId.value;
 
       // 默认欢迎页 (未选择分类时)
-      if (selectedId.isEmpty || selectedId == "contacts" || selectedId == "groupChats" || selectedId == "new_friends") {
-        return Center(child: Opacity(opacity: 0.1, child: Image.network("https://res.wx.qq.com/a/wx_fed/assets/res/OTE0YTAw.png", width: 200)));
+      if (selectedId.isEmpty ||
+          selectedId == "contacts" ||
+          selectedId == "groupChats" ||
+          selectedId == "new_friends") {
+        return Center(
+          child: Opacity(
+            opacity: 0.1,
+            child: Image.network(
+              "https://res.wx.qq.com/a/wx_fed/assets/res/OTE0YTAw.png",
+              width: 200,
+            ),
+          ),
+        );
       }
 
       // //  当点击左侧“联系人”项时
@@ -1562,7 +1926,9 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
       // }
 
       //  3. 如果点击的是具体的联系人（从 allContacts 中找到该用户）
-      final Contact? contact = chat.allContacts.value.cast<Contact?>().firstWhere((e) => e?.id == selectedId, orElse: () => null);
+      final Contact? contact = chat.allContacts.value
+          .cast<Contact?>()
+          .firstWhere((e) => e?.id == selectedId, orElse: () => null);
 
       //  2. 判断逻辑
       if (contact != null) {
@@ -1571,7 +1937,9 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
           // 修复：使用 contact.id 获取该群的成员 ID 列表
           final ids = chat.groupMembersMap[contact.id]?.value ?? [];
 
-          final members = chat.allContacts.value.where((c) => ids.contains(c.id)).toList();
+          final members = chat.allContacts.value
+              .where((c) => ids.contains(c.id))
+              .toList();
 
           // 返回你定义的群头像组件
           return Center(child: buildGroupAvatar(members));
@@ -1606,13 +1974,26 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
                       Row(
                         children: [
                           //  改为对象访问：contact.name
-                          Text(contact.name, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                          Text(
+                            contact.name,
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                           const SizedBox(width: 8),
-                          const Icon(Icons.person, color: Colors.blue, size: 20),
+                          const Icon(
+                            Icons.person,
+                            color: Colors.blue,
+                            size: 20,
+                          ),
                         ],
                       ),
                       const SizedBox(height: 10),
-                      const Text("这个家伙很懒，什么都没有留下", style: TextStyle(color: Colors.grey, fontSize: 14)),
+                      const Text(
+                        "这个家伙很懒，什么都没有留下",
+                        style: TextStyle(color: Colors.grey, fontSize: 14),
+                      ),
                     ],
                   ),
                 ),
@@ -1626,7 +2007,10 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
                   ),
                   child: Center(
                     //  既然是 Contact 类，你可以直接取名字的首字母
-                    child: Text(contact.name[0], style: const TextStyle(color: Colors.white, fontSize: 24)),
+                    child: Text(
+                      contact.name[0],
+                      style: const TextStyle(color: Colors.white, fontSize: 24),
+                    ),
                   ),
                 ),
               ],
@@ -1656,10 +2040,15 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF07C160),
               padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(4),
+              ),
               elevation: 0,
             ),
-            child: const Text("发消息", style: TextStyle(color: Colors.white, fontSize: 16)),
+            child: const Text(
+              "发消息",
+              style: TextStyle(color: Colors.white, fontSize: 16),
+            ),
           ),
         ],
       ),
@@ -1674,9 +2063,15 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
         children: [
           SizedBox(
             width: 80,
-            child: Text(label, style: const TextStyle(color: Colors.grey, fontSize: 14)),
+            child: Text(
+              label,
+              style: const TextStyle(color: Colors.grey, fontSize: 14),
+            ),
           ),
-          Text(value, style: const TextStyle(fontSize: 14, color: Colors.black87)),
+          Text(
+            value,
+            style: const TextStyle(fontSize: 14, color: Colors.black87),
+          ),
         ],
       ),
     );
@@ -1691,8 +2086,10 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
 
       return GestureDetector(
         //  这里会调用你之前改好的 _showContextMenu(Offset, Contact)
-        onSecondaryTapDown: (details) => _showContextMenu(details.globalPosition, item),
-        onLongPressStart: (details) => _showContextMenu(details.globalPosition, item),
+        onSecondaryTapDown: (details) =>
+            _showContextMenu(details.globalPosition, item),
+        onLongPressStart: (details) =>
+            _showContextMenu(details.globalPosition, item),
         onTap: () => chat.selectedContactId.value = item.id,
 
         child: Container(
@@ -1704,9 +2101,12 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
               //  记得同步修改 _buildAvatar 的接收类型
               _buildAvatar(item),
               const SizedBox(width: 12),
-              Expanded(child: Text(item.name, style: const TextStyle(fontSize: 14))),
+              Expanded(
+                child: Text(item.name, style: const TextStyle(fontSize: 14)),
+              ),
               // 如果是星标朋友，显示一个小星星
-              if (isStar) const Icon(Icons.star, size: 14, color: Colors.orange),
+              if (isStar)
+                const Icon(Icons.star, size: 14, color: Colors.orange),
             ],
           ),
         ),
@@ -1742,7 +2142,10 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
               child: Container(
                 width: 140,
                 padding: const EdgeInsets.symmetric(vertical: 6),
-                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(6)),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(6),
+                ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -1825,7 +2228,10 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
               child: Container(
                 width: 120,
                 padding: const EdgeInsets.symmetric(vertical: 6),
-                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(6)),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(6),
+                ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -1901,7 +2307,11 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
                   // 关键修复：判断光标是否有效 (>= 0)
                   if (selection.start >= 0) {
                     // 在光标所在位置插入
-                    newText = text.replaceRange(selection.start, selection.end, emoji);
+                    newText = text.replaceRange(
+                      selection.start,
+                      selection.end,
+                      emoji,
+                    );
                     newCursorPosition = selection.start + emoji.length;
                   } else {
                     // 如果没有焦点，直接加在末尾
@@ -1912,7 +2322,9 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
                   _inputController.text = newText;
 
                   // 保持光标位置，并强制输入框获取焦点
-                  _inputController.selection = TextSelection.collapsed(offset: newCursorPosition);
+                  _inputController.selection = TextSelection.collapsed(
+                    offset: newCursorPosition,
+                  );
 
                   _toggleEmojiPicker(); // 选完关闭
                   FocusScope.of(context).requestFocus(FocusNode());

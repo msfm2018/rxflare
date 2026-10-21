@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:rxflare/rxflare.dart';
 
 // ==================== 错误安全的 Computed ====================
@@ -87,9 +87,14 @@ class _ErrorBoundaryDemoState extends State<ErrorBoundaryDemo> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                ElevatedButton(onPressed: () => number.value++, child: const Text('+ 被除数')),
+                ElevatedButton(
+                  onPressed: () => number.value++,
+                  child: const Text('+ 被除数'),
+                ),
                 const SizedBox(width: 20),
-                Rx(() => Text('${number.value}', style: TextStyle(fontSize: 24))),
+                Rx(
+                  () => Text('${number.value}', style: TextStyle(fontSize: 24)),
+                ),
               ],
             ),
 
@@ -98,12 +103,21 @@ class _ErrorBoundaryDemoState extends State<ErrorBoundaryDemo> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                ElevatedButton(onPressed: () => divisor.value--, child: const Text('- 除数')),
+                ElevatedButton(
+                  onPressed: () => divisor.value--,
+                  child: const Text('- 除数'),
+                ),
                 const SizedBox(width: 20),
                 // Text('${divisor.value}', style: const TextStyle(fontSize: 24)),
-                Rx(() => Text('${divisor.value}', style: TextStyle(fontSize: 24))),
+                Rx(
+                  () =>
+                      Text('${divisor.value}', style: TextStyle(fontSize: 24)),
+                ),
                 const SizedBox(width: 20),
-                ElevatedButton(onPressed: () => divisor.value++, child: const Text('+ 除数')),
+                ElevatedButton(
+                  onPressed: () => divisor.value++,
+                  child: const Text('+ 除数'),
+                ),
               ],
             ),
 
@@ -119,19 +133,38 @@ class _ErrorBoundaryDemoState extends State<ErrorBoundaryDemo> {
                     padding: const EdgeInsets.all(16),
                     child: Column(
                       children: [
-                        const Icon(Icons.error_outline, color: Colors.red, size: 48),
+                        const Icon(
+                          Icons.error_outline,
+                          color: Colors.red,
+                          size: 48,
+                        ),
                         const SizedBox(height: 8),
-                        Text('计算出错', style: TextStyle(color: Colors.red.shade700, fontSize: 18)),
+                        Text(
+                          '计算出错',
+                          style: TextStyle(
+                            color: Colors.red.shade700,
+                            fontSize: 18,
+                          ),
+                        ),
                         Text(err, style: const TextStyle(fontSize: 16)),
                         const SizedBox(height: 8),
-                        const Text('但程序未崩溃，继续可正常操作', style: TextStyle(fontSize: 14)),
+                        const Text(
+                          '但程序未崩溃，继续可正常操作',
+                          style: TextStyle(fontSize: 14),
+                        ),
                       ],
                     ),
                   ),
                 );
               }
 
-              return Text('计算结果: ${safeResult.value}', style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold));
+              return Text(
+                '计算结果: ${safeResult.value}',
+                style: const TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                ),
+              );
             }),
           ],
         ),

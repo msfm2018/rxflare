@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'rx.dart';
 
@@ -23,10 +23,7 @@ class RxBuilder extends StatelessWidget {
   /// The builder function that returns the widget to be rebuilt reactively.
   final WidgetBuilder builder;
 
-  const RxBuilder({
-    super.key,
-    required this.builder,
-  });
+  const RxBuilder({super.key, required this.builder});
 
   @override
   Widget build(BuildContext context) {
