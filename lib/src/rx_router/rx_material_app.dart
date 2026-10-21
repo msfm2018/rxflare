@@ -1,5 +1,4 @@
-import 'package:material_ui/material_ui.dart';
-
+import 'package:flutter/material.dart';
 import 'rx_router.dart';
 
 /// A convenient wrapper around [MaterialApp.router] for the RxFlare routing system.
