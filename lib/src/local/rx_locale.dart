@@ -1,6 +1,7 @@
 import 'dart:convert';
 
-import 'package:material_ui/material_ui.dart';
+
+import 'package:flutter/widgets.dart';
 import 'package:flutter/services.dart';
 import 'package:rxflare/src/core/rx_core.dart';
 
@@ -407,12 +408,11 @@ class RxLocale {
   static String tr(String key, {Map<String, String>? params}) {
     final rawLangKey =
         locale.countryCode != null && locale.countryCode!.isNotEmpty
-        ? '${locale.languageCode}_${locale.countryCode}'
-        : locale.languageCode;
+            ? '${locale.languageCode}_${locale.countryCode}'
+            : locale.languageCode;
     final langKey = _normalizeLangKey(rawLangKey); // 归一化为小写
 
-    String text =
-        _translations[langKey]?[key] ??
+    String text = _translations[langKey]?[key] ??
         _translations[locale.languageCode.toLowerCase()]?[key] ??
         _translations['en']?[key] ??
         key;
@@ -430,13 +430,12 @@ class RxLocale {
     final locale = current.value;
     final rawLangKey =
         locale.countryCode != null && locale.countryCode!.isNotEmpty
-        ? '${locale.languageCode}_${locale.countryCode}'
-        : locale.languageCode;
+            ? '${locale.languageCode}_${locale.countryCode}'
+            : locale.languageCode;
     final langKey = _normalizeLangKey(rawLangKey);
     final langOnly = _normalizeLangKey(locale.languageCode);
 
-    String? template =
-        _pluralTemplates[langKey]?[key] ??
+    String? template = _pluralTemplates[langKey]?[key] ??
         _pluralTemplates[langOnly]?[key] ??
         _pluralTemplates['en']?[key];
 

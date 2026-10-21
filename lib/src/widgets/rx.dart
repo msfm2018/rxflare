@@ -1,5 +1,5 @@
-import 'package:material_ui/material_ui.dart';
 
+import 'package:flutter/widgets.dart';
 import 'dart:async';
 
 import '../core/base_.dart';
@@ -207,5 +207,5 @@ class Obx extends Rx {
 
   /// 创建一个 **手动指定依赖** 的响应式组件（高级用法）。
   const Obx.custom({required super.builder, required super.deps, super.key})
-    : super.custom();
+      : super.custom();
 }

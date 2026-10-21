@@ -1,5 +1,5 @@
-import 'package:material_ui/material_ui.dart';
 
+import 'package:flutter/widgets.dart';
 import 'rx_di.dart';
 
 /// Widget-scoped dependency provider.

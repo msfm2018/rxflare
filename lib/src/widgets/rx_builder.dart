@@ -1,5 +1,4 @@
-import 'package:material_ui/material_ui.dart';
-
+import 'package:flutter/widgets.dart';
 import 'rx.dart';
 
 /// A convenience widget that wraps [Rx] for simple builder patterns.
