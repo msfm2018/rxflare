@@ -1,4 +1,4 @@
-import 'package:material_ui/material_ui.dart';
+import 'package:flutter/widgets.dart';
 import 'package:rxflare/src/core/rx_core.dart';
 
 import '../core/rx_state.dart';
