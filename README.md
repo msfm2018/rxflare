@@ -1,4 +1,4 @@
-# rxflare 交流 qq群 246233219
+# rxflare
 
 A lightweight reactive state management library for Flutter, built for high-performance UI updates with automatic dependency tracking and field-level precision.
 
