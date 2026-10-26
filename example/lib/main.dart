@@ -1,16 +1,12 @@
 import 'package:material_ui/material_ui.dart';
-import 'package:layerx/layerx.dart';
 import 'package:rxflare/rxflare.dart';
 
 import 'app_routes.dart';
 import 'translations.dart';
 
-// final isDarkMode = false.obs;
-
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   RxLocale.init(translations: translations);
-  // RxDebug.isEnabled = true;
   runApp(const RxFlareDemoApp());
 }
 
@@ -23,24 +19,12 @@ class RxFlareDemoApp extends StatelessWidget {
       top: true,
       bottom: false,
       child: RxBuilder(
-        builder: (context) => RxMaterialApp(
+        builder: (context) => RxWidgetsApp(
           title: 'demo',
           routes: AppRoutes.routes,
-          // you can safely omit initialRoute — it will automatically use "/".
-          // initialRoute: "/home",
-          //use LayerX dialog
-          builder: LayerX.init(
-            builder: (context, child) {
-              return MediaQuery(
-                data: MediaQuery.of(context).copyWith(
-                  textScaler: MediaQuery.of(
-                    context,
-                  ).textScaler.clamp(minScaleFactor: 0.8, maxScaleFactor: 1.6),
-                ),
-                child: child!,
-              );
-            },
-          ),
+          localizationsDelegates: GlobalMaterialLocalizations.delegates,
+
+          // supportedLocales: const [Locale('en', 'US'), Locale('zh', 'CN')],
         ),
       ),
     );

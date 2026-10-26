@@ -1,4 +1,15 @@
 # Changelog
+
+
+## [1.8.0] - 2026-10-26
+
+### Added
+- Added `RxWidgetsApp`, a style-agnostic wrapper around `WidgetsApp.router` for the RxFlare routing system
+
+### Removed
+- Removed `rx_material_app.dart` (`RxMaterialApp`); apps should use `RxWidgetsApp` and provide Material theming/localization at the application level
+
+
 ## [1.7.3] - 2026-10-21
 ### Fixed
 - Fixed example
@@ -123,7 +134,7 @@ extension RxBoolExtension on RxState<bool> {
 
 ### Added
 
-* Added `RxMaterialApp` — a convenient wrapper for `MaterialApp.router`
+* Added `RxWidgetsApp` — a convenient wrapper for `MaterialApp.router`
   * Automatically registers routes (`rxr.register`)
   * Automatically calls `ensureInitialized()`
   * No need to manually configure `routerDelegate` and `routeInformationParser`
@@ -150,7 +161,7 @@ extension RxBoolExtension on RxState<bool> {
 ### Example
 
 ```dart
-return Rx(() => RxMaterialApp(
+return Rx(() => RxWidgetsApp(
   routes: AppRoutes.routes,
   initialRoute: "/",
   theme: ThemeData(...),

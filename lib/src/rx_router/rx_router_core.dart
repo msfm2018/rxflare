@@ -1,4 +1,4 @@
-import 'package:material_ui/material_ui.dart';
+import 'package:flutter/widgets.dart';
 import 'package:rxflare/src/core/rx_core.dart';
 
 import '../core/rx_state.dart';
@@ -369,18 +369,22 @@ class RxRouterDelegate extends RouterDelegate<Object>
   @override
   Widget build(BuildContext context) {
     final router = RxRouter.I;
-    //Use the specified stack, or use global logic if not.
     final stack = customStack?.value ?? router._activePages.value;
+
     return Navigator(
       key: navigatorKey,
       pages: stack.map((e) {
         final config = router._routes[e.name];
-        return MaterialPage(
+        return RxPageRoute(
           key: ValueKey(e.pageId),
           child: _KeepAliveWrapper(
-            child:
-                config?.builder() ??
-                const Scaffold(body: Center(child: Text("404"))),
+            child: config?.builder() ??
+                const Center(
+                  child: Text(
+                    '404',
+                    style: TextStyle(fontSize: 24),
+                  ),
+                ),
           ),
         );
       }).toList(),
@@ -454,5 +458,33 @@ class _KeepAliveWrapperState extends State<_KeepAliveWrapper>
   Widget build(BuildContext context) {
     super.build(context);
     return widget.child;
+  }
+}
+
+/// A style-agnostic page that does not depend on Material or Cupertino.
+class RxPageRoute extends Page {
+  final Widget child;
+
+  const RxPageRoute({
+    required this.child,
+    super.key,
+    super.name,
+    super.arguments,
+    super.restorationId,
+  });
+
+  @override
+  Route createRoute(BuildContext context) {
+    return PageRouteBuilder(
+      settings: this,
+      pageBuilder: (context, animation, secondaryAnimation) => child,
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        // 简单的淡入淡出，完全中性，不带任何平台风格
+        return FadeTransition(
+          opacity: animation,
+          child: child,
+        );
+      },
+    );
   }
 }

@@ -12,7 +12,7 @@
 /// ### Recommended Usage:
 ///
 /// ```dart
-/// RxMaterialApp(
+/// RxWidgetsApp(
 ///   routes: AppRoutes.routes,
 ///   initialRoute: "/",
 /// )
@@ -21,4 +21,4 @@
 export 'rx_router_core.dart'; // Core router logic (RxRouter, rxr, etc.)
 export 'rx_route_args.dart'; // Arguments and parameter management
 export 'rx_stack.dart'; // Internal dependency stack (used by routing)
-export 'rx_material_app.dart';    // Convenient MaterialApp.router wrapper
+export 'rx_widgets_app.dart'; // Convenient MaterialApp.router wrapper

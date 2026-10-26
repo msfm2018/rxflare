@@ -1,6 +1,5 @@
 import 'package:material_ui/material_ui.dart';
-import 'package:layerx/layerx.dart';
-import 'package:rxflare/rxflare.dart'; // 引入 rxflare 使用 rxr 路由
+import 'package:rxflare/rxflare.dart';
 
 class EnterprisePortalPage extends StatefulWidget {
   const EnterprisePortalPage({super.key});
@@ -43,7 +42,7 @@ class _EnterprisePortalPageState extends State<EnterprisePortalPage> {
               Icons.notifications_none_rounded,
               color: Color(0xFF64748B),
             ),
-            onPressed: () => LayerX.toast('enterprise_toast_no_notif'.tr),
+            onPressed: () => Text('enterprise_toast_no_notif'.tr),
           ),
           const SizedBox(width: 8),
         ],
@@ -156,12 +155,12 @@ class _EnterprisePortalPageState extends State<EnterprisePortalPage> {
                           ),
                         ),
                         onPressed: () async {
-                          final confirm = await LayerX.confirm(
-                            'enterprise_confirm_status'.tr,
-                          );
-                          if (confirm == true) {
-                            LayerX.toast('enterprise_toast_status_ok'.tr);
-                          }
+                          // final confirm = await LayerX.confirm(
+                          //   'enterprise_confirm_status'.tr,
+                          // );
+                          // if (confirm == true) {
+                          //   // LayerX.toast('enterprise_toast_status_ok'.tr);
+                          // }
                         },
                         icon: const Icon(Icons.info_outline_rounded, size: 18),
                         label: Text('enterprise_btn_check_status'.tr),
