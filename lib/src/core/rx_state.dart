@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 
 import '../rx_router/rx_router.dart';
 import '../utils/rx_debug.dart';
+import 'base_.dart';
 
 int _rxStateCounter = 0;
 
@@ -11,9 +12,10 @@ int _rxStateCounter = 0;
 /// - Automatic dependency tracking
 /// - Fine-grained updates for Map and List fields
 /// - Efficient change propagation with minimal updates
-class RxState<T> {
+class RxState<T> implements Disposable {
   /// Unique identifier for debugging or tracking updates in [listenWithId].
   final dynamic id;
+  bool _disposed = false;
 
   /// A human-readable name, mainly used for logging and debugging output.
   final String? name;
@@ -25,9 +27,14 @@ class RxState<T> {
   /// Creates a reactive state.
   /// [id] is optional and defaults to a new [Object].
   /// [name] is optional and defaults to "RxState#`<index>`".
-  RxState(this._value, {dynamic id, String? name}) : id = id ?? Object(), name = name ?? "RxState#$_rxStateCounter" {
+  RxState(this._value, {dynamic id, String? name})
+      : id = id ?? Object(),
+        name = name ?? "RxState#$_rxStateCounter" {
     _rxStateCounter++;
   }
+
+  @protected
+  bool get isDisposed => _disposed;
 
   bool deepEquals(dynamic a, dynamic b) {
     if (a is Map && b is Map) return mapEquals(a, b);
@@ -37,9 +44,13 @@ class RxState<T> {
 
   /// Gets the current value and automatically triggers dependency tracking in [RxStack].
   T get value {
+    if (_disposed) {
+      RxDebug.log("Warning: Accessing disposed RxState(${name ?? id})");
+    }
     RxStack.register(this);
     return _value;
   }
+
 
   /// Internal setter that updates the value and notifies all global listeners.
   /// Returns true if the value actually changed.
@@ -67,6 +78,10 @@ class RxState<T> {
   /// Sets a new value. If the new value is different from the current one
   /// according to [deepEquals], it triggers global listeners.
   set value(T newValue) {
+    if (_disposed) {
+      RxDebug.log("Warning: Setting value on disposed RxState(${name ?? id})");
+      return;
+    }
     _setValue(newValue);
   }
 
@@ -74,6 +89,7 @@ class RxState<T> {
   /// It updates the value and triggers global listeners if the value changes.
   @protected
   void internalUpdate(T newValue) {
+    if (_disposed) return;
     _setValue(newValue);
   }
 
@@ -84,6 +100,7 @@ class RxState<T> {
   /// Calling this method registers a field-level dependency, so only changes
   /// to that specific field will trigger updates.
   dynamic getItem(dynamic field) {
+    if (_disposed) return null;
     RxStack.register(this);
     RxStack.registerField(this, field);
 
@@ -105,6 +122,7 @@ class RxState<T> {
   /// (with a precision loss warning when applicable).
   @protected
   void update(dynamic newValue) {
+    if (_disposed) return;
     final current = _value;
 
     // 1. Exact type match
@@ -121,7 +139,8 @@ class RxState<T> {
         converted = newValue.toDouble();
       } else if (current is int) {
         if (newValue is double) {
-          RxDebug.log(" RxState(${name ?? id}): double → int precision may be lost: $newValue");
+          RxDebug.log(
+              " RxState(${name ?? id}): double → int precision may be lost: $newValue");
         }
         converted = newValue.toInt();
       }
@@ -142,6 +161,7 @@ class RxState<T> {
   /// [field]: Map key or List index.
   /// [newValue]: New value to assign.
   void updateField<K extends Object>(K field, Object? newValue) {
+    if (_disposed) return;
     final current = _value;
     if (current == null) {
       RxDebug.log("RxState(${name ?? id}) is null, cannot update field $field");
@@ -198,6 +218,7 @@ class RxState<T> {
   /// Supports any key type such as int, String, or Object.
   /// These listeners are triggered only when the specified field changes.
   void addFieldListener(dynamic field, void Function(dynamic) listener) {
+    if (_disposed) return;
     // _fieldListeners.putIfAbsent(field, () => []).add(listener);
     final list = _fieldListeners.putIfAbsent(field, () => []);
     if (!list.contains(listener)) {
@@ -227,7 +248,6 @@ class RxState<T> {
   @protected
   void notifyField(dynamic field) {
     final ls = _fieldListeners[field]?.toList();
-
     if (ls != null && ls.isNotEmpty) {
       dynamic fieldValue;
 
@@ -250,6 +270,7 @@ class RxState<T> {
   ///
   /// The listener will be triggered whenever the entire state changes.
   void addListener(void Function(dynamic) listener) {
+    if (_disposed) return;
     if (!_listeners.contains(listener)) {
       _listeners.add(listener);
     }
@@ -260,6 +281,7 @@ class RxState<T> {
   /// Useful for distinguishing the origin of updates in complex systems.
   @protected
   void addListenerWithId(void Function(dynamic) listener) {
+    if (_disposed) return;
     if (!_listenersWithId.contains(listener)) {
       _listenersWithId.add(listener);
     }
@@ -278,12 +300,16 @@ class RxState<T> {
   ///   onError: (error) => debugPrint(error.toString()),
   /// );
   /// ```
-  Future<void> runAsyncWithStatus({required Future<T> Function() asyncAction, void Function(bool loading)? onLoading, void Function(Object error)? onError}) async {
+  Future<void> runAsyncWithStatus(
+      {required Future<T> Function() asyncAction,
+      void Function(bool loading)? onLoading,
+      void Function(Object error)? onError}) async {
+    if (_disposed) return;
     onLoading?.call(true);
 
     try {
       final result = await asyncAction();
-      update(result);
+       if (!_disposed) update(result);
     } catch (e, stack) {
       RxDebug.log("RxState(${name ?? id}) runAsync error: $e\n$stack");
 
@@ -333,7 +359,8 @@ class RxState<T> {
             lastError = e;
 
             if (attempt > retryCount) {
-              RxDebug.log("❌ [${name ?? id}] failed after ${retryCount + 1} attempts: $e");
+              RxDebug.log(
+                  "❌ [${name ?? id}] failed after ${retryCount + 1} attempts: $e");
               rethrow;
             }
 
@@ -365,11 +392,11 @@ class RxState<T> {
     // If immediate execution is needed, uncomment:
     // onUpdate(_value);
 
-    bool disposed = false;
+    bool cancelled  = false;
     return () {
-      if (!disposed) {
+      if (!cancelled ) {
         _listeners.remove(wrapper);
-        disposed = true;
+        cancelled  = true;
       }
     };
   }
@@ -406,11 +433,11 @@ class RxState<T> {
     // Immediately emit current state once
     onData(_value, id);
 
-    bool disposed = false;
+    bool cancelled  = false;
     return () {
-      if (!disposed) {
+      if (!cancelled ) {
         _listenersWithId.remove(wrapper);
-        disposed = true;
+        cancelled  = true;
       }
     };
   }
@@ -418,14 +445,12 @@ class RxState<T> {
   /// Conditional listener.
   ///
   /// Only emits when the provided test function returns true.
-  void Function() listenWhere(bool Function(dynamic item) test, void Function(dynamic item) onData) {
+  void Function() listenWhere(
+      bool Function(dynamic item) test, void Function(dynamic item) onData) {
     void wrapper(dynamic _) {
       if (_value is Map) {
-        if (test(_value)) {
-          onData(_value);
-        } else {
-          onData(null);
-        }
+        onData(test(_value) ? _value : null);
+      
       } else {
         onData(_value);
       }
@@ -436,11 +461,11 @@ class RxState<T> {
     // Initial trigger
     wrapper(_value);
 
-    bool disposed = false;
+    bool cancelled  = false;
     return () {
-      if (!disposed) {
+      if (!cancelled ) {
         _listeners.remove(wrapper);
-        disposed = true;
+        cancelled  = true;
       }
     };
   }
@@ -448,7 +473,8 @@ class RxState<T> {
   /// Listens to a specific key in a Map or index in a List.
   ///
   /// Only triggers when the targeted field changes.
-  void Function() listenByKey(dynamic key, void Function(dynamic value) onData) {
+  void Function() listenByKey(
+      dynamic key, void Function(dynamic value) onData) {
     void wrapper(dynamic value) => onData(value);
 
     addFieldListener(key, wrapper);
@@ -494,14 +520,21 @@ class RxState<T> {
   }
 
   /// Disposes the state and clears all listeners.
+  @override
   void dispose() {
+    if (_disposed) return;
+
     _listeners.clear();
+    _listenersWithId.clear();
     _fieldListeners.clear();
+
+    _disposed = true;
     RxDebug.log(" RxState(${name ?? id}) has been disposed and cleared");
   }
 
   /// Manually triggers a refresh.
   void refresh() {
+    if (_disposed) return;
     _notifyListeners(id);
   }
 }

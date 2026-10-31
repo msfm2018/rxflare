@@ -19,7 +19,7 @@ class AutoDisposePage extends StatefulWidget {
 }
 
 class _CounterPageState extends State<AutoDisposePage> with RxAutoDispose {
-  final count = 0.obs;
+  late final count = 0.obs.autoDispose(this);           // ✅ 必须加
   late final RxFuture<String> dataFuture;
   late final EventToken chatToken;
 
@@ -27,14 +27,15 @@ class _CounterPageState extends State<AutoDisposePage> with RxAutoDispose {
   void initState() {
     super.initState();
 
-    // 1. RxFuture - 链式调用
+    // 1. RxFuture
     dataFuture = RxFuture((cancelToken) async {
       await Future.delayed(const Duration(seconds: 2));
       return "数据加载完成";
     }).autoDispose(this);
 
-    // 2. EventToken - 链式调用
-    chatToken = EventToken().autoDispose(this);
+    // 2. EventToken
+    chatToken = autoDisposeToken();   // 推荐用 mixin 提供的方法
+    // 或者：chatToken = EventToken().autoDispose(this);
 
     RxEventBus.on<String>(
       module: "chat",
@@ -43,7 +44,7 @@ class _CounterPageState extends State<AutoDisposePage> with RxAutoDispose {
       callback: (id, uuid, data) async => print("收到: $data"),
     );
 
-    // 3. listen() - 链式调用（最舒服的写法）
+    // 3. listen
     count.listen((v) => print("数据更新: $v")).autoDispose(this);
   }
 

@@ -38,6 +38,7 @@ dependencies:
     path: ../
   dio: ^5.9.2
   material_ui: ^1.8.0
+  layerx: ^1.2.0
 
 flutter_localizations:
     sdk: flutter

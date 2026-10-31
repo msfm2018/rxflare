@@ -23,6 +23,8 @@ class User {
 }
 
 /// ====================== Controller ======================
+
+
 class UserController implements Disposable {
   final count = 0.obs;
   late final RxFuture<User> userFuture;
@@ -36,9 +38,9 @@ class UserController implements Disposable {
 
   void increment() => count.value++;
 
-  // 会被自动调用
   @override
   void dispose() {
+    // 顺序：先取消异步，再清状态
     userFuture.dispose();
     count.dispose();
     print("UserController 已释放");

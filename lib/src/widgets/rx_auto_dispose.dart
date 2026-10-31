@@ -2,49 +2,17 @@ import 'package:flutter/widgets.dart';
 
 import '../async/rx_future.dart';
 import '../core/base_.dart';
+import '../core/rx_state.dart';
 import '../utils/rx_event_bus.dart';
 
-/// ====================== RxFuture Disposable Extension ======================
+/// ====================== 内部包装器 ======================
 
-/// Extension to make [RxFuture] support automatic disposal.
-extension RxFutureDisposable<T> on RxFuture<T> {
-  Disposable get disposable => _RxFutureDisposable(this);
-}
-
-/// ====================== Auto Dispose Chain Extensions ======================
-
-/// Provides convenient `.autoDispose()` chain methods for common RxFlare objects.
-extension AutoDisposeRxFuture<T> on RxFuture<T> {
-  RxFuture<T> autoDispose(RxAutoDispose mixin) {
-    mixin.autoDispose(disposable); // 这里使用 .disposable
-    return this;
-  }
-}
-
-/// Allows listener cancel callbacks to be automatically disposed.
-extension AutoDisposeListener on VoidCallback {
-  VoidCallback autoDispose(RxAutoDispose mixin) {
-    mixin.autoDisposeListener(this);
-    return this;
-  }
-}
-
-/// Allows [EventToken] to be automatically cleaned up.
-extension AutoDisposeEventToken on EventToken {
-  EventToken autoDispose(RxAutoDispose mixin) {
-    mixin.autoDispose(_EventTokenDisposable(this));
-    return this;
-  }
-}
-
-/// ====================== Internal Disposable Wrappers ======================
-
-class _RxFutureDisposable<T> implements Disposable {
-  final RxFuture<T> future;
-  _RxFutureDisposable(this.future);
+class _CallbackDisposable implements Disposable {
+  final VoidCallback callback;
+  _CallbackDisposable(this.callback);
 
   @override
-  void dispose() => future.dispose();
+  void dispose() => callback();
 }
 
 class _EventTokenDisposable implements Disposable {
@@ -55,60 +23,93 @@ class _EventTokenDisposable implements Disposable {
   void dispose() => RxEventBus.offByToken(token);
 }
 
-class _VoidCallbackDisposable implements Disposable {
-  final VoidCallback callback;
-  _VoidCallbackDisposable(this.callback);
+/// ====================== 扩展方法 ======================
 
-  @override
-  void dispose() => callback();
+extension AutoDisposeRxState<T> on RxState<T> {
+  /// 把当前 RxState 注册到 State 的自动销毁列表
+  RxState<T> autoDispose(RxAutoDispose host) {
+    host.register(this);
+    return this;
+  }
 }
 
-/// ====================== RxAutoDispose Mixin ======================
+extension AutoDisposeRxFuture<T> on RxFuture<T> {
+  /// 前提：RxFuture 必须实现 Disposable
+  RxFuture<T> autoDispose(RxAutoDispose host) {
+    host.register(this);
+    return this;
+  }
+}
 
-/// A mixin that helps automatically dispose RxFlare resources (listeners, futures, tokens, etc.)
-/// when a [State] object is disposed.
+extension AutoDisposeListener on VoidCallback {
+  VoidCallback autoDispose(RxAutoDispose host) {
+    host.register(_CallbackDisposable(this));
+    return this;
+  }
+}
+
+extension AutoDisposeEventToken on EventToken {
+  EventToken autoDispose(RxAutoDispose host) {
+    host.register(_EventTokenDisposable(this));
+    return this;
+  }
+}
+
+/// 让 State 具备自动销毁 Rx 资源的能力。
 ///
-/// **Usage:**
+/// 使用示例：
 /// ```dart
-/// class _MyPageState extends State<MyPage> with RxAutoDispose {
-///   final count = 0.obs;
-///   late final RxFuture<User> userFuture;
+/// class _HomePageState extends State<HomePage> with RxAutoDispose {
+///   late final count = 0.obs.autoDispose(this);
+///   late final userFuture = RxFuture(...).autoDispose(this);
 ///
 ///   @override
 ///   void initState() {
 ///     super.initState();
-///
-///     userFuture = RxFuture(() async { ... }).autoDispose(this);
 ///     count.listen((v) => print(v)).autoDispose(this);
 ///   }
 /// }
 /// ```
 mixin RxAutoDispose<T extends StatefulWidget> on State<T> {
   final List<Disposable> _disposables = [];
+  bool _disposed = false;
 
-  /// Register a [Disposable] to be disposed when the State is disposed.
-  void autoDispose(Disposable disposable) {
-    _disposables.add(disposable);
+  /// 注册一个需要自动销毁的对象
+  void register(Disposable disposable) {
+    if (_disposed) {
+      disposable.dispose();
+      return;
+    }
+    if (!_disposables.contains(disposable)) {
+      _disposables.add(disposable);
+    }
   }
 
-  /// Create and auto-dispose an [EventToken].
+  /// 创建一个会自动取消的 EventToken
   EventToken autoDisposeToken() {
     final token = EventToken();
-    autoDispose(_EventTokenDisposable(token));
+    register(_EventTokenDisposable(token));
     return token;
-  }
-
-  /// Register a listener cancel callback to be called on dispose.
-  void autoDisposeListener(VoidCallback cancelCallback) {
-    autoDispose(_VoidCallbackDisposable(cancelCallback));
   }
 
   @override
   void dispose() {
-    for (final disposable in _disposables.reversed) {
-      disposable.dispose();
+    if (_disposed) {
+      super.dispose();
+      return;
+    }
+    _disposed = true;
+
+    // 倒序销毁更安全
+    for (final d in _disposables.reversed) {
+      try {
+        d.dispose();
+      } catch (e, s) {
+        debugPrint('RxAutoDispose error: $e\n$s');
+      }
     }
     _disposables.clear();
+
     super.dispose();
   }
 }

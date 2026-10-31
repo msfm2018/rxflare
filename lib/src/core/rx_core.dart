@@ -162,5 +162,6 @@ extension RxMapDynamicExtension on Map<String, dynamic> {
 /// ```
 extension RxListMapExtension on List<Map<String, dynamic>> {
   /// Converts a `List<Map<String, dynamic>>` into an `RxList`.
-  RxList<Map<String, dynamic>> get obsListMap => RxList<Map<String, dynamic>>(this);
+  RxList<Map<String, dynamic>> get obsListMap =>
+      RxList<Map<String, dynamic>>(this);
 }

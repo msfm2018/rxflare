@@ -64,7 +64,8 @@ class RxComputed<T> extends RxState<T> {
   // =========================
 
   void _updateValueAndDeps() {
-    if (_computing) return;
+    if (_computing || isDisposed) return;
+
     _computing = true;
 
     try {
@@ -132,6 +133,8 @@ class RxComputed<T> extends RxState<T> {
 
   /// Recomputes the value when dependencies change.
   void _refresh([dynamic _]) {
+    if (isDisposed) return;
+
     _updateValueAndDeps();
   }
 
@@ -152,7 +155,7 @@ class RxComputed<T> extends RxState<T> {
   /// Disposes all dependency listeners.
   @override
   void dispose() {
-    // 清理状态依赖
+    if (isDisposed) return;
     for (final dep in _deps) {
       dep.removeListener(_refresh);
     }

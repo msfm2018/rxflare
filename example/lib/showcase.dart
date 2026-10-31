@@ -1,7 +1,8 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:rxflare/rxflare.dart';
 
-class AppController {
+// class AppController {
+class AppController implements Disposable {
   final counter = 0.obs;
 
   final loading = false.obs;
@@ -73,11 +74,27 @@ class AppController {
       tags.add(tag);
     }
   }
+
+  @override
+  void dispose() {
+    counter.dispose();
+    loading.dispose();
+    username.dispose();
+    user.dispose();
+    stats.dispose();
+    todos.dispose();
+    tags.dispose();
+  }
 }
 
-class Showcase extends StatelessWidget {
-  Showcase({super.key});
+class Showcase extends StatefulWidget {
+  const Showcase({super.key});
 
+  @override
+  State<Showcase> createState() => _ShowcaseState();
+}
+
+class _ShowcaseState extends State<Showcase> with RxAutoDispose {
   final c = AppController();
 
   @override
@@ -335,5 +352,11 @@ class Showcase extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    register(c); // 页面销毁时自动调用 c.dispose()
   }
 }

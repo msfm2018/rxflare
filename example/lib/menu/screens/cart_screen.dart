@@ -1,3 +1,4 @@
+import 'package:layerx/layerx.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:rxflare/rxflare.dart';
 import '../controllers/cart_controller.dart';
@@ -73,25 +74,13 @@ class CartScreen extends StatelessWidget {
                       backgroundColor: Colors.green,
                     ),
                     onPressed: () {
-                      showDialog(
+                      LayerX.toast(
+                        '下单成功 🎉 预计30分钟送达！',
+                        duration: const Duration(seconds: 2),
                         context: context,
-                        builder: (_) => AlertDialog(
-                          title: const Text('下单成功 🎉'),
-                          content: const Text('感谢您的点餐，预计30分钟送达！'),
-                          actions: [
-                            TextButton(
-                              onPressed: () {
-                                cartController.clearCart();
-                                Navigator.popUntil(
-                                  context,
-                                  (route) => route.isFirst,
-                                );
-                              },
-                              child: const Text('确定'),
-                            ),
-                          ],
-                        ),
                       );
+                      cartController.clearCart();
+                      Navigator.pop(context);
                     },
                     child: const Text('确认下单', style: TextStyle(fontSize: 18)),
                   ),

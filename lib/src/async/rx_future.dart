@@ -122,8 +122,6 @@ class RxFuture<T> extends RxState<AsyncSnapshot<T>> {
 
   int _runningRequests = 0;
 
-  bool _disposed = false;
-
   bool _forceRefresh = false;
 
   CancelToken? _cancelToken;
@@ -195,7 +193,7 @@ class RxFuture<T> extends RxState<AsyncSnapshot<T>> {
   // =======================================================
 
   void _execute({bool polling = false, bool retrying = false}) {
-    if (_disposed) return;
+    if (isDisposed) return;
 
     _isPolling = polling;
 
@@ -215,7 +213,7 @@ class RxFuture<T> extends RxState<AsyncSnapshot<T>> {
   // =======================================================
 
   Future<void> _startRequest() async {
-    if (_disposed) return;
+    if (isDisposed) return;
 
     // throttle
     if (throttle != null && _throttleTimer != null) {
@@ -460,7 +458,7 @@ class RxFuture<T> extends RxState<AsyncSnapshot<T>> {
   }
 
   bool _isRequestValid(int requestId, CancelToken token) {
-    if (_disposed) return false;
+    if (isDisposed) return false;
 
     if (token.isCanceled) return false;
 
@@ -516,21 +514,22 @@ class RxFuture<T> extends RxState<AsyncSnapshot<T>> {
 
   @override
   void dispose() {
-    _disposed = true;
+    if (isDisposed) return;
 
     _cancelCurrentRequest();
 
     _debounceTimer?.cancel();
-
     _throttleTimer?.cancel();
-
     _pollTimer?.cancel();
 
     for (final disposer in _depDisposers) {
       disposer();
     }
-
     _depDisposers.clear();
+
+    _cache = null;
+    _cacheTime = null;
+    _lastSoftError = null;
 
     super.dispose();
   }
