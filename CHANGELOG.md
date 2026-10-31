@@ -1,5 +1,7 @@
 # Changelog
-
+## [1.8.1] - 2026-10-31
+### Fixed
+- 修复 `RxFuture` 与 `RxState` 重复维护 `_disposed` 状态的问题
 
 ## [1.8.0] - 2026-10-26
 
