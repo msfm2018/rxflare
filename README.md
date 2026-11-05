@@ -177,8 +177,8 @@ exampleIm/                showcase app
 
 The repository includes example projects and showcase demos:
 
-- `example/` — a minimal Flutter sample
-- `exampleIm/` — a more complete interactive showcase
+- `example/` — a minimal Flutter sample 
+- `exampleIm/` — a more complete interactive showcase   https://github.com/msfm2018/groupIm
 
 ## Documentation
 
