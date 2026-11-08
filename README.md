@@ -30,7 +30,74 @@ It gives you:
 - routing support with `rxr`
 - async state helpers like `RxFuture`
 - event bus for decoupled communication
+## Performance
 
+rxflare is designed for high-frequency state updates with minimal overhead.
+Below are independent micro-benchmarks comparing common Flutter state solutions
+on the same machine (Windows, release mode).
+
+### 1. Pure write (no listeners)
+
+1,000,000 writes of a simple `int` counter.
+
+| Library              | Avg (µs / write) | Notes        |
+|----------------------|------------------|--------------|
+| **RxFlare (RxState)**| **0.0030**       | Fastest      |
+| ChangeNotifier       | 0.0048           |              |
+| ValueNotifier        | 0.0055           |              |
+| Bloc Cubit           | 0.0073           |              |
+| GetX (RxInt)         | 0.0082           |              |
+| Signals              | 0.0111           |              |
+| MobX                 | 0.0993           |              |
+| Riverpod (Notifier)  | 0.7664           |              |
+
+### 2. Write with listeners
+
+1,000,000 writes, with 0 / 1 / 10 active listeners.
+
+| Library          | 0 listeners | 1 listener | 10 listeners |
+|------------------|-------------|------------|--------------|
+| **RxFlare**      | **0.0024**  | **0.0063** | 0.0291       |
+| ChangeNotifier   | 0.0051      | 0.0068     | **0.0268**   |
+| ValueNotifier    | 0.0064      | 0.0090     | 0.0279       |
+| GetX             | 0.0099      | 0.0158     | 0.0819       |
+| Bloc Cubit       | 0.0075      | 0.0423     | 0.4138       |
+| Signals          | 0.0132      | 0.0570     | 0.2943       |
+| MobX             | 0.1067      | 0.1989     | 0.6801       |
+| Riverpod         | 0.8277      | 0.8283     | 1.0515       |
+
+*Unit: µs / write (lower is better)*
+
+### 3. Real UI rebuild (batched updates)
+
+20,000 state updates that trigger actual Widget rebuilds.
+No per-frame wait (avoids being locked to 16.7 ms vsync).
+
+| Library              | 1 Widget (µs) | 10 Widgets (µs) |
+|----------------------|---------------|-----------------|
+| Signals (Watch)      | **1.771**     | 2.452           |
+| ValueNotifier        | 2.411         | 2.493           |
+| MobX (Observer)      | 2.469         | **2.446**       |
+| ChangeNotifier       | 2.488         | 2.497           |
+| GetX (Obx)           | 2.490         | 2.499           |
+| **RxFlare (Rx)**     | 2.598         | 2.512           |
+| Bloc Cubit           | 2.502         | 4.204           |
+| Riverpod             | 3.321         | 3.384           |
+
+### Summary
+
+| Scenario                        | Top performers                          |
+|---------------------------------|-----------------------------------------|
+| Pure write                      | **RxFlare**, ChangeNotifier, ValueNotifier |
+| Write + listeners               | **RxFlare**, ChangeNotifier, ValueNotifier |
+| Real UI rebuild                 | Signals, ValueNotifier, MobX, **RxFlare**  |
+
+### Notes
+
+These are micro-benchmarks focused on update and notification overhead.
+Real application performance also depends on widget tree depth, build cost, and usage patterns.
+
+Benchmark source is available in the repository / examples.
 ## Core features
 
 ### Reactive state
