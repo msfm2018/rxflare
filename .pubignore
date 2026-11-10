@@ -49,6 +49,8 @@ example/ios/Flutter/Flutter.podspec.lock
 example/ios/Flutter/Generated.xcconfig
 example/.flutter-plugins
 example/.flutter-plugins-dependencies
+exampleIm/macos/Flutter/GeneratedPluginRegistrant.swift
+
 doc/
 # =============================
 # 忽略一般临时文件

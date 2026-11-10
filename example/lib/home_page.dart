@@ -12,6 +12,7 @@ import 'feature/features/home/controller/page_controller.dart';
 import 'feature/features/home/controller/poll_controller.dart';
 import 'feature/features/home/controller/search_controller.dart';
 
+import 'paged_list_demo.dart';
 import 'router_demo.dart';
 import 'showcase.dart';
 
@@ -31,7 +32,7 @@ class _HomePageState extends State<HomePage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 16, vsync: this);
+    _tabController = TabController(length: 17, vsync: this);
   }
 
   @override
@@ -213,6 +214,7 @@ class _HomePageState extends State<HomePage>
                           Tab(text: 'tab_lifecycle_complex'.tr),
                           Tab(text: 'tab_showcase'.tr),
                           Tab(text: 'tab_error_boundary'.tr),
+                          Tab(text: 'Loading of 10 Million Big Data'),
                         ],
                       ),
                     ),
@@ -238,6 +240,7 @@ class _HomePageState extends State<HomePage>
                   DataDispose(),
                   Showcase(),
                   ErrorBoundaryDemo(),
+                  PagedListDemo(),
                 ],
               ),
             );

@@ -1,4 +1,30 @@
 # Changelog
+## [1.8.2] - 2026-11-10
+
+### Added
+- Added `RxPagedList<T>` for large, backend-paginated datasets:
+  - Lazy page loading with configurable `pageSize`, `prefetch` and
+    `maxConcurrent`.
+  - LRU page cache (`maxCachedPages`); pages currently observed by an `Rx`
+    are never evicted.
+  - Index-level reactivity: reading `list[i]` inside `Rx` rebuilds only that
+    row when its page loads or `updateAt()` is called.
+  - Loading / error states via `statusAt()` and `errorAt()`, with manual
+    `retryPage()`.
+  - Duplicate request prevention and generation-based protection against
+    stale responses after `invalidate()`.
+  - Both known-total and infinite-scroll modes.
+- Added `updateAt()` for updating a cached item, and `invalidate()` for
+  clearing the cache and reloading.
+
+### Changed
+- `Rx` now refreshes synchronously via `setState` instead of
+  `scheduleMicrotask`. When a refresh is requested during the build/layout
+  phase it is deferred to a post-frame callback.
+  Rebuilds now happen within a single `tester.pump()`; code that relied on the
+  previous microtask timing may need adjusting.
+
+
 ## [1.8.1] - 2026-10-31
 ### Fixed
 - 修复 `RxFuture` 与 `RxState` 重复维护 `_disposed` 状态的问题

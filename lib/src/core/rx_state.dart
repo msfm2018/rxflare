@@ -36,6 +36,10 @@ class RxState<T> implements Disposable {
   @protected
   bool get isDisposed => _disposed;
 
+  /// Reads the current value without registering a reactive dependency.
+  @protected
+  T get rawValue => _value;
+
   bool deepEquals(dynamic a, dynamic b) {
     if (a is Map && b is Map) return mapEquals(a, b);
     if (a is List && b is List) return listEquals(a, b);
@@ -50,7 +54,6 @@ class RxState<T> implements Disposable {
     RxStack.register(this);
     return _value;
   }
-
 
   /// Internal setter that updates the value and notifies all global listeners.
   /// Returns true if the value actually changed.
@@ -73,6 +76,16 @@ class RxState<T> implements Disposable {
       return true;
     }
     return false;
+  }
+
+  @protected
+  bool updateFieldValue(T newValue, dynamic field) {
+    if (_disposed) {
+      RxDebug.log('RxState: update after dispose');
+      return false;
+    }
+
+    return _setFieldValue(newValue, field);
   }
 
   /// Sets a new value. If the new value is different from the current one
@@ -140,7 +153,8 @@ class RxState<T> implements Disposable {
       } else if (current is int) {
         if (newValue is double) {
           RxDebug.log(
-              " RxState(${name ?? id}): double → int precision may be lost: $newValue");
+            " RxState(${name ?? id}): double → int precision may be lost: $newValue",
+          );
         }
         converted = newValue.toInt();
       }
@@ -217,10 +231,22 @@ class RxState<T> implements Disposable {
   ///
   /// Supports any key type such as int, String, or Object.
   /// These listeners are triggered only when the specified field changes.
-  void addFieldListener(dynamic field, void Function(dynamic) listener) {
+  // void addFieldListener(dynamic field, void Function(dynamic) listener) {
+  //   if (_disposed) return;
+  //   // _fieldListeners.putIfAbsent(field, () => []).add(listener);
+  //   final list = _fieldListeners.putIfAbsent(field, () => []);
+  //   if (!list.contains(listener)) {
+  //     list.add(listener);
+  //   }
+  // }
+  void addFieldListener(
+    dynamic field,
+    void Function(dynamic) listener,
+  ) {
     if (_disposed) return;
-    // _fieldListeners.putIfAbsent(field, () => []).add(listener);
+
     final list = _fieldListeners.putIfAbsent(field, () => []);
+
     if (!list.contains(listener)) {
       list.add(listener);
     }
@@ -245,9 +271,11 @@ class RxState<T> implements Disposable {
   ///
   /// It extracts the current field value from either a Map or List
   /// and dispatches it to all registered field listeners.
+
   @protected
   void notifyField(dynamic field) {
     final ls = _fieldListeners[field]?.toList();
+
     if (ls != null && ls.isNotEmpty) {
       dynamic fieldValue;
 
@@ -255,13 +283,14 @@ class RxState<T> implements Disposable {
         fieldValue = (_value as Map)[field];
       } else if (_value is List && field is int) {
         final list = _value as List;
+
         if (field >= 0 && field < list.length) {
           fieldValue = list[field];
         }
       }
 
-      for (final l in ls) {
-        l(fieldValue);
+      for (final listener in ls) {
+        listener(fieldValue);
       }
     }
   }
@@ -300,16 +329,17 @@ class RxState<T> implements Disposable {
   ///   onError: (error) => debugPrint(error.toString()),
   /// );
   /// ```
-  Future<void> runAsyncWithStatus(
-      {required Future<T> Function() asyncAction,
-      void Function(bool loading)? onLoading,
-      void Function(Object error)? onError}) async {
+  Future<void> runAsyncWithStatus({
+    required Future<T> Function() asyncAction,
+    void Function(bool loading)? onLoading,
+    void Function(Object error)? onError,
+  }) async {
     if (_disposed) return;
     onLoading?.call(true);
 
     try {
       final result = await asyncAction();
-       if (!_disposed) update(result);
+      if (!_disposed) update(result);
     } catch (e, stack) {
       RxDebug.log("RxState(${name ?? id}) runAsync error: $e\n$stack");
 
@@ -360,7 +390,8 @@ class RxState<T> implements Disposable {
 
             if (attempt > retryCount) {
               RxDebug.log(
-                  "❌ [${name ?? id}] failed after ${retryCount + 1} attempts: $e");
+                "❌ [${name ?? id}] failed after ${retryCount + 1} attempts: $e",
+              );
               rethrow;
             }
 
@@ -392,11 +423,11 @@ class RxState<T> implements Disposable {
     // If immediate execution is needed, uncomment:
     // onUpdate(_value);
 
-    bool cancelled  = false;
+    bool cancelled = false;
     return () {
-      if (!cancelled ) {
+      if (!cancelled) {
         _listeners.remove(wrapper);
-        cancelled  = true;
+        cancelled = true;
       }
     };
   }
@@ -433,11 +464,11 @@ class RxState<T> implements Disposable {
     // Immediately emit current state once
     onData(_value, id);
 
-    bool cancelled  = false;
+    bool cancelled = false;
     return () {
-      if (!cancelled ) {
+      if (!cancelled) {
         _listenersWithId.remove(wrapper);
-        cancelled  = true;
+        cancelled = true;
       }
     };
   }
@@ -446,11 +477,12 @@ class RxState<T> implements Disposable {
   ///
   /// Only emits when the provided test function returns true.
   void Function() listenWhere(
-      bool Function(dynamic item) test, void Function(dynamic item) onData) {
+    bool Function(dynamic item) test,
+    void Function(dynamic item) onData,
+  ) {
     void wrapper(dynamic _) {
       if (_value is Map) {
         onData(test(_value) ? _value : null);
-      
       } else {
         onData(_value);
       }
@@ -461,11 +493,11 @@ class RxState<T> implements Disposable {
     // Initial trigger
     wrapper(_value);
 
-    bool cancelled  = false;
+    bool cancelled = false;
     return () {
-      if (!cancelled ) {
+      if (!cancelled) {
         _listeners.remove(wrapper);
-        cancelled  = true;
+        cancelled = true;
       }
     };
   }
@@ -474,7 +506,9 @@ class RxState<T> implements Disposable {
   ///
   /// Only triggers when the targeted field changes.
   void Function() listenByKey(
-      dynamic key, void Function(dynamic value) onData) {
+    dynamic key,
+    void Function(dynamic value) onData,
+  ) {
     void wrapper(dynamic value) => onData(value);
 
     addFieldListener(key, wrapper);

@@ -60,6 +60,8 @@ example/linux/
 example/macos/
 example/windows/
 example/build/
+exampleIm/macos/Flutter/GeneratedPluginRegistrant.swift
+
 # 忽略所有 build 产物
 **/build/
 

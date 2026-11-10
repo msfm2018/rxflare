@@ -16,20 +16,11 @@ class RxFlareDemoApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return
-    // SafeArea(
-    //   top: true,
-    //   bottom: true,
-    //   child:
-    // RxBuilder(
-    //   builder: (context) =>
+
     RxWidgetsApp(
       title: 'demo',
       routes: AppRoutes.routes,
       localizationsDelegates: GlobalMaterialLocalizations.delegates,
-
-      // supportedLocales: const [Locale('en', 'US'), Locale('zh', 'CN')],
-      // ),
-      // ),
     );
   }
 }

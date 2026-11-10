@@ -14,6 +14,7 @@ export 'src/utils/rx_event_bus.dart';
 
 export 'src/collections/rx_map.dart';
 export 'src/collections/rx_list.dart';
+export 'src/collections/rx_paged_list.dart';
 export 'src/collections/rx_set.dart';
 
 export 'src/rx_router/rx_router.dart';

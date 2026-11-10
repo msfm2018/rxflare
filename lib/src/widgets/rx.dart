@@ -1,3 +1,4 @@
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 
 import 'dart:async';
@@ -94,21 +95,26 @@ class _RxState extends State<Rx> {
   // ======================
   // Field-level Listeners (Core Feature)
   // ======================
-  void _updateFieldListeners(Map<RxState, Set<dynamic>> newFieldDeps) {
-    // Remove old field listeners
+
+  void _updateFieldListeners(
+    Map<RxState, Set<dynamic>> newFieldDeps,
+  ) {
+    // RxDebug.log('========== UPDATE FIELD LISTENERS ==========');
+
     _fieldDeps.forEach((state, oldFields) {
       final newFields = newFieldDeps[state] ?? {};
 
       for (final field in oldFields.difference(newFields)) {
+        RxDebug.log('REMOVE FIELD: $field');
         state.removeFieldListener(field, refresh);
       }
     });
 
-    // Add new field listeners
     newFieldDeps.forEach((state, newFields) {
       final oldFields = _fieldDeps[state] ?? {};
 
       for (final field in newFields.difference(oldFields)) {
+        RxDebug.log('ADD FIELD: $field');
         state.addFieldListener(field, refresh);
       }
     });
@@ -116,6 +122,8 @@ class _RxState extends State<Rx> {
     _fieldDeps
       ..clear()
       ..addAll(newFieldDeps);
+
+    RxDebug.log('FIELD LISTENER COUNT: $_fieldDeps');
   }
 
   void _updateListeners(RxContext ctx) {
@@ -126,53 +134,100 @@ class _RxState extends State<Rx> {
   /// Triggers a rebuild when dependencies change.
   ///
   /// Uses `scheduleMicrotask` to batch updates efficiently.
-  void refresh([dynamic triggerInfo]) {
-    if (!mounted || _scheduled) return;
-    RxDebug.log("🔥 [Rx Refresh] Triggered by: $triggerInfo");
-    _scheduled = true;
 
-    scheduleMicrotask(() {
-      if (mounted) setState(() {});
-      _scheduled = false;
-    });
+  void refresh([dynamic triggerInfo]) {
+    RxDebug.log('RX REFRESH CALLED: $triggerInfo');
+
+    if (!mounted) return;
+
+    final phase = SchedulerBinding.instance.schedulerPhase;
+
+    if (phase == SchedulerPhase.persistentCallbacks) {
+      // 正在 build/layout/paint 中，不能直接 setState
+      if (_scheduled) return;
+      _scheduled = true;
+      SchedulerBinding.instance.addPostFrameCallback((_) {
+        _scheduled = false;
+        if (mounted) setState(() {});
+      });
+    } else {
+      setState(() {});
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    RxDebug.log("🛠️ Rx Widget rebuilding...");
+    RxDebug.log(" Rx Widget rebuilding...");
 
     if (widget.deps != null) {
-      // Manual dependency mode
       return widget.builder();
     }
 
-    // === Automatic Dependency Tracking ===
     final RxContext ctx = RxContext();
 
-    // Start tracking
+    Widget result;
+
     RxStack.push(ctx);
 
-    final result = widget.builder();
-
-    // Stop tracking
-    RxStack.pop();
+    try {
+      result = widget.builder();
+    } finally {
+      RxStack.pop();
+    }
 
     _updateListeners(ctx);
+
     RxDebug.log(
-      "📦 Rx dependencies tracked: states=${ctx.states.length}, fields=${ctx.fields.length}",
+      "Rx dependencies tracked: "
+      "states=${ctx.states.length}, "
+      "fields=${ctx.fields.length}",
     );
 
     return result;
+  }
+
+  void _clearFieldListeners() {
+    _fieldDeps.forEach((state, fields) {
+      for (final field in fields) {
+        state.removeFieldListener(field, refresh);
+      }
+    });
+
+    _fieldDeps.clear();
   }
 
   @override
   void didUpdateWidget(covariant Rx oldWidget) {
     super.didUpdateWidget(oldWidget);
 
+    // 自动模式切换到手动模式
+    if (widget.deps != null && oldWidget.deps == null) {
+      _clearFieldListeners();
+
+      _updateStateListeners(Set.from(widget.deps!));
+      return;
+    }
+
+    // 手动模式切换到自动模式
+    if (widget.deps == null && oldWidget.deps != null) {
+      _updateStateListeners({});
+      return;
+    }
+
+    // 手动依赖发生变化
     if (widget.deps != null && oldWidget.deps != widget.deps) {
       _updateStateListeners(Set.from(widget.deps!));
     }
   }
+
+  // @override
+  // void didUpdateWidget(covariant Rx oldWidget) {
+  //   super.didUpdateWidget(oldWidget);
+
+  //   if (widget.deps != null && oldWidget.deps != widget.deps) {
+  //     _updateStateListeners(Set.from(widget.deps!));
+  //   }
+  // }
 
   @override
   void dispose() {

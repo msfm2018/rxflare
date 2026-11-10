@@ -22,11 +22,15 @@ class RxList<T> extends RxState<List<T>> {
   /// - The specific index is also registered for fine-grained updates
   ///
   /// Throws [RangeError] if index is out of bounds.
-  T operator [](int index) {
-    RxStack.register(this);
-    RxStack.registerField(this, index);
+  // T operator [](int index) {
+  //   RxStack.register(this);
+  //   RxStack.registerField(this, index);
 
-    return value[index];
+  //   return value[index];
+  // }
+  T operator [](int index) {
+    RxStack.registerField(this, index);
+    return rawValue[index];
   }
 
   /// Updates the element at [index] with [newValue].
@@ -36,20 +40,18 @@ class RxList<T> extends RxState<List<T>> {
   ///
   /// After updating, only listeners subscribed to this index
   /// will be notified via [notifyField].
+
   void operator []=(int index, T newValue) {
-    final oldValue = value[index];
+    final oldValue = rawValue[index];
 
     if (deepEquals(oldValue, newValue)) {
       return;
     }
 
-    final newList = List<T>.of(value);
-
+    final newList = List<T>.of(rawValue);
     newList[index] = newValue;
 
-    value = newList;
-
-    notifyField(index);
+    updateFieldValue(newList, index);
   }
 
   /// Returns a new list containing all elements that satisfy the [test] predicate.
@@ -94,7 +96,8 @@ class RxList<T> extends RxState<List<T>> {
   /// Updates all elements that satisfy [test] using [update].
   ///
   /// Only triggers update if at least one element changes.
-  void updateWhere(bool Function(T element) test, T Function(T element) update) {
+  void updateWhere(
+      bool Function(T element) test, T Function(T element) update) {
     bool changed = false;
     final newList = List<T>.of(value);
 

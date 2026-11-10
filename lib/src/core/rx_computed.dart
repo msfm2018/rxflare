@@ -63,32 +63,26 @@ class RxComputed<T> extends RxState<T> {
   // Core recomputation logic
   // =========================
 
-  void _updateValueAndDeps() {
-    if (_computing || isDisposed) return;
+void _updateValueAndDeps() {
+  if (_computing || isDisposed) return;
 
-    _computing = true;
+  _computing = true;
 
-    try {
-      final ctx = RxContext();
+  final ctx = RxContext();
 
-      // Start dependency collection
-      RxStack.push(ctx);
+  try {
+    RxStack.push(ctx);
 
-      final newValue = compute();
+    final newValue = compute();
 
-      // Stop dependency collection
-      RxStack.pop();
+    _updateDeps(ctx);
 
-      // Update dependency graph
-      _updateDeps(ctx);
-
-      // Update value
-      internalUpdate(newValue);
-    } finally {
-      _computing = false;
-    }
+    internalUpdate(newValue);
+  } finally {
+    RxStack.pop();
+    _computing = false;
   }
-
+}
   // =========================
   // Dependency diffing system
   // =========================

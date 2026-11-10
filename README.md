@@ -30,6 +30,7 @@ It gives you:
 - routing support with `rxr`
 - async state helpers like `RxFuture`
 - event bus for decoupled communication
+- paginated reactive lists for very large datasets with `RxPagedList`
 ## Performance
 
 rxflare is designed for high-frequency state updates with minimal overhead.
@@ -97,7 +98,7 @@ No per-frame wait (avoids being locked to 16.7 ms vsync).
 These are micro-benchmarks focused on update and notification overhead.
 Real application performance also depends on widget tree depth, build cost, and usage patterns.
 
-Benchmark source is available in the repository / examples.
+Benchmark source is available in the repository / bench.
 ## Core features
 
 ### Reactive state
@@ -131,8 +132,70 @@ final quantity = 2.obs;
 
 final total = computed(() => price.value * quantity.value);
 
-Rx(() => Text('总价: ${total.value}'));
+Rx(() => Text('price: ${total.value}'));
 ```
+### Large paginated lists
+
+`RxList` keeps every item in memory, which is not suitable for datasets with
+hundreds of thousands (or millions) of rows. `RxPagedList` loads data page by
+page from your backend or database, caches only recent pages, and rebuilds
+only the rows that actually changed.
+
+```dart
+final users = RxPagedList<User>(
+  pageSize: 50,
+  maxCachedPages: 20,
+  loader: (page, size) async {
+    final r = await api.fetchUsers(page: page, size: size);
+    return PageResult(r.items, totalCount: r.total);
+  },
+);
+
+// The outer Rx depends only on the total count.
+Rx(() => ListView.builder(
+  itemCount: users.length,
+  itemExtent: 64,
+  // Each row has its own Rx and depends only on its own index.
+  itemBuilder: (_, i) => Rx(() {
+    if (users.statusAt(i) == RxPageStatus.error) {
+      return TextButton(
+        onPressed: () => users.retryPage(i ~/ users.pageSize),
+        child: const Text('Retry'),
+      );
+    }
+    final user = users[i];
+    return user == null ? const SkeletonTile() : UserTile(user);
+  }),
+));
+
+// Update one cached item: only that row rebuilds.
+users.updateAt(3, updatedUser);
+
+// Clear the cache and reload (pull-to-refresh, filter changed, ...).
+await users.invalidate();
+```
+
+**Features**
+
+- Lazy page loading with configurable `pageSize`, `prefetch` and `maxConcurrent`.
+- LRU page cache (`maxCachedPages`). Pages currently observed by an `Rx` are never evicted.
+- Index-level reactivity: when a page arrives or `updateAt()` is called, only the rows watching that index rebuild.
+- Loading and error states (`statusAt`, `errorAt`) with manual `retryPage`.
+- Duplicate request prevention, and stale responses are discarded after `invalidate()`.
+- Known-total mode (`PageResult(items, totalCount: n)`) and infinite-scroll mode (omit `totalCount`).
+
+**Notes**
+
+- Read `list[i]` inside each row's own `Rx`, not in the outer one, otherwise
+  every loaded page rebuilds the whole list.
+- Set `maxCachedPages` larger than the number of visible pages plus `prefetch`.
+- `updateAt()` only changes the local cache. Write to your backend yourself.
+- Inserting or removing items shifts all later page boundaries; call
+  `invalidate()` instead of patching locally.
+- Dispose the list when you no longer need it: `users.dispose()`.
+- For very large datasets, avoid creating one `RxState` per row up front.
+  Use `RxPagedList`, or create row state lazily and release it when the row
+  leaves the screen.
 
 ### Dependency injection
 
@@ -222,6 +285,7 @@ rxflare is well-suited for:
 - event-driven UI updates
 - small to medium Flutter apps that want less boilerplate
 - teams that want explicit, flexible reactive state without heavyweight patterns
+- very large lists backed by a database or paginated API
 
 ## Package structure
 
@@ -230,7 +294,7 @@ lib/
   rxflare.dart              public entrypoint
   src/
     async/                 RxFuture and async state helpers
-    collections/           reactive Map/List/Set wrappers
+    collections/           reactive Map/List/Set wrappers and RxPagedList
     core/                  RxState, RxComputed, reactive base types
     di/                    RxDI and RxProvider
     rx_router/             routing support
@@ -246,6 +310,7 @@ The repository includes example projects and showcase demos:
 
 - `example/` — a minimal Flutter sample 
 - `exampleIm/` — a more complete interactive showcase   https://github.com/msfm2018/groupIm
+
 
 ## Documentation
 
