@@ -1,5 +1,22 @@
 # Changelog
 
+## [2.0.0] - 2026-11-11
+
+### Breaking
+- Split into packages: `rxflare_core`, `rxflare_router`, `rxflare_i18n`, umbrella `rxflare`.
+- Removed deprecated aliases `RxObjMgr` and `RxParent`.
+- Moved `RxStack` into `rxflare_core` (dependency tracking, not routing).
+
+### Added
+- `effect(fn)` — reactive side effects with automatic dependency tracking; returns dispose.
+- `watch(sources, callback)` — watch derived values; returns dispose.
+- `batch` / `untracked` (from 1.8.3 line).
+- `MIGRATION.md` and documented refresh timing.
+
+### Migration
+See [MIGRATION.md](MIGRATION.md).
+
+
 ## [1.8.3] - 2026-11-11
 
 ### Added

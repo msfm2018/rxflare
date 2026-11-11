@@ -1,0 +1,30 @@
+name: rxflare
+description: Reactive state management for Flutter with field-level updates, routing, and i18n. Umbrella package over rxflare_core, rxflare_router, and rxflare_i18n.
+version: 2.0.0
+homepage: https://github.com/msfm2018/rxflare
+repository: https://github.com/msfm2018/rxflare
+issue_tracker: https://github.com/msfm2018/rxflare/issues
+
+topics:
+  - state-management
+  - reactive
+  - flutter
+  - widgets
+  - mvvm
+
+environment:
+  sdk: '>=3.0.6 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  rxflare_core: ^2.0.0
+  rxflare_router: ^2.0.0
+  rxflare_i18n: ^2.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:

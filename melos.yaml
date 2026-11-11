@@ -1,0 +1,6 @@
+name: rxflare
+packages:
+  - packages/**
+command:
+  bootstrap:
+    usePubspecOverrides: true

@@ -9,8 +9,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  rxflare:
-    path: ../ 
+  rxflare: 
+    path: ../packages/rxflare
 
 
   cupertino_icons: ^1.0.8

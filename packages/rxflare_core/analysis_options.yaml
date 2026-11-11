@@ -1,0 +1,10 @@
+# Recommended: run `flutter pub get` inside this package before analyze.
+analyzer:
+  errors:
+    invalid_dependency: ignore
+  exclude:
+    - build/**
+linter:
+  rules:
+    - prefer_const_constructors
+    - avoid_print

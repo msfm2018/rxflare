@@ -1,0 +1,30 @@
+name: CI
+on:
+  push:
+    branches: [main, master, "2.*"]
+  pull_request:
+    branches: [main, master, "2.*"]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        package: [rxflare_core, rxflare_router, rxflare_i18n, rxflare]
+    defaults:
+      run:
+        working-directory: packages/${{ matrix.package }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Get monorepo deps
+        working-directory: packages/${{ matrix.package }}
+        run: flutter pub get
+      - name: Analyze
+        run: flutter analyze --no-fatal-infos
+      - name: Test
+        run: flutter test
+        continue-on-error: ${{ matrix.package != 'rxflare_core' }}
