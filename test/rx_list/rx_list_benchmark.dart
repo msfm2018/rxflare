@@ -21,6 +21,7 @@ void benchmarkListUpdate(int size) {
 
   stopwatch.stop();
 
+  // ignore: avoid_print
   print(
     'List Size: $size | '
     'Iterations: $iterations | '

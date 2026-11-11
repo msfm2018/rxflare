@@ -134,6 +134,30 @@ final total = computed(() => price.value * quantity.value);
 
 Rx(() => Text('price: ${total.value}'));
 ```
+
+### Batch updates & untracked reads
+
+After 1.8.2, `Rx` refreshes with synchronous `setState`. When you change several
+values in one event handler, wrap them in `batch` so listeners fire once:
+
+```dart
+batch(() {
+  firstName.value = 'Ada';
+  lastName.value = 'Lovelace';
+  age.value = 36;
+}); // one rebuild instead of three
+```
+
+Use `untracked` when you need to read a value without creating a dependency:
+
+```dart
+final label = computed(() {
+  final n = name.value;
+  final debugId = untracked(() => id.value); // does not subscribe to id
+  return '$n ($debugId)';
+});
+```
+
 ### Large paginated lists
 
 `RxList` keeps every item in memory, which is not suitable for datasets with
@@ -326,6 +350,27 @@ rxflare is designed to be:
 - reactive
 - precise for UI updates
 - easy to adopt in existing Flutter apps
+
+## Migration notes
+
+### 1.8.0 — `RxMaterialApp` removed
+
+`RxMaterialApp` was removed in favor of the style-agnostic `RxWidgetsApp`.
+Provide Material theming and localization at the application level (e.g. wrap
+with `MaterialApp` / `Theme` yourself). See the router example for the
+recommended setup.
+
+### 1.6.x renames (deprecated aliases restored in 1.8.3)
+
+| Old name   | New name    | Status                          |
+|------------|-------------|---------------------------------|
+| `RxObjMgr` | `RxDI`      | `@Deprecated`, remove in 2.0    |
+| `RxParent` | `RxProvider`| `@Deprecated`, remove in 2.0    |
+
+### 1.8.2 — synchronous refresh
+
+`Rx` no longer uses `scheduleMicrotask` for rebuilds. Multi-value updates in
+the same handler should use `batch(() { ... })` to keep a single rebuild.
 
 ## Contributing
 

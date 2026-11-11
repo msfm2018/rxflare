@@ -1,30 +1,54 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:rxflare/main.dart';
+import 'package:rxflare/rxflare.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('Rx rebuilds when obs value changes', (WidgetTester tester) async {
+    final count = 0.obs;
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Rx(() => Text('count=${count.value}', textDirection: TextDirection.ltr)),
+          floatingActionButton: FloatingActionButton(
+            onPressed: () => count.value++,
+            child: const Icon(Icons.add),
+          ),
+        ),
+      ),
+    );
 
-    // Tap the '+' icon and trigger a frame.
+    expect(find.text('count=0'), findsOneWidget);
+
     await tester.tap(find.byIcon(Icons.add));
     await tester.pump();
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(find.text('count=1'), findsOneWidget);
+  });
+
+  testWidgets('batch coalesces multiple updates into one rebuild', (WidgetTester tester) async {
+    final a = 0.obs;
+    final b = 0.obs;
+    var builds = 0;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Rx(() {
+          builds++;
+          return Text('a=${a.value} b=${b.value}', textDirection: TextDirection.ltr);
+        }),
+      ),
+    );
+
+    final buildsAfterFirstFrame = builds;
+
+    batch(() {
+      a.value = 1;
+      b.value = 2;
+    });
+    await tester.pump();
+
+    expect(find.text('a=1 b=2'), findsOneWidget);
+    expect(builds, buildsAfterFirstFrame + 1);
   });
 }

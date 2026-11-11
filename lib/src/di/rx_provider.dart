@@ -38,3 +38,7 @@ class _RxProviderState<T> extends State<RxProvider<T>> {
   @override
   Widget build(BuildContext context) => widget.child;
 }
+
+/// @nodoc
+@Deprecated('Use RxProvider instead. Will be removed in 2.0.')
+typedef RxParent<T> = RxProvider<T>;

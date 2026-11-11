@@ -1,4 +1,31 @@
 # Changelog
+
+## [1.8.3] - 2026-11-11
+
+### Added
+- Added `batch(fn)` to group multiple reactive writes so listeners / `Rx`
+  widgets are notified only once when the outermost batch ends. This restores
+  efficient multi-update coalescing after the 1.8.2 switch to synchronous
+  `setState` refresh.
+- Added `untracked(fn)` to read reactive values without registering
+  dependencies on the current `RxStack` context.
+- Restored deprecated type aliases for migration:
+  - `RxObjMgr` → `RxDI`
+  - `RxParent` → `RxProvider`
+  Both are marked `@Deprecated` and will be removed in 2.0.
+
+### Changed
+- `RxState.refresh()` and field notifications now go through the same batch
+  scheduler, so manual `refresh()` inside `batch` is also deferred.
+- Clarified `Rx` refresh docs: synchronous `setState` when safe, post-frame
+  when called during build/layout/paint; prefer `batch` for multi-writes.
+
+### Docs / CI
+- Unified language of recent CHANGELOG entries and fixed the outdated
+  `scheduleMicrotask` comment on `Rx.refresh`.
+- CI workflow now targets `main` / `master` and runs `flutter analyze` +
+  `flutter test` (with a dry-run publish step).
+
 ## [1.8.2] - 2026-11-10
 
 ### Added

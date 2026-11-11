@@ -17,6 +17,7 @@
 ///   initialRoute: "/",
 /// )
 /// ```
+library;
 
 export 'rx_router_core.dart'; // Core router logic (RxRouter, rxr, etc.)
 export 'rx_route_args.dart'; // Arguments and parameter management

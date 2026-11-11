@@ -110,6 +110,10 @@ class RxDI {
   }
 }
 
+/// @nodoc
+@Deprecated('Use RxDI instead. Will be removed in 2.0.')
+typedef RxObjMgr = RxDI;
+
 // /// Widget-scoped dependency provider.
 // ///
 // /// Automatically registers a dependency when inserted

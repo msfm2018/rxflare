@@ -1,8 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rxflare/rxflare.dart';
 
-import 'package:rxflare/src/core/base_.dart';
-import 'package:rxflare/src/rx_router/rx_stack.dart';
 
 void main() {
   group('RxList Dependency Tracking', () {

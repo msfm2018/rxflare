@@ -1,4 +1,5 @@
 import '../core/base_.dart';
+import '../core/rx_batch.dart';
 import '../core/rx_state.dart';
 import '../utils/rx_debug.dart';
 
@@ -33,7 +34,9 @@ class RxStack {
   /// Registers a state-level dependency.
   ///
   /// The [state] will be added to the current context's state dependencies.
+  /// No-op when inside [untracked].
   static void register(RxState state) {
+    if (RxBatch.isUntracked) return;
     final ctx = current;
     if (ctx != null) {
       // 仅在添加成功时打印日志
@@ -47,7 +50,9 @@ class RxStack {
   ///
   /// The combination of [state] and [field] (key or index) will be recorded
   /// in the current context for precise updates.
+  /// No-op when inside [untracked].
   static void registerField(RxState state, dynamic field) {
+    if (RxBatch.isUntracked) return;
     final ctx = current;
     if (ctx != null) {
       final fields = ctx.fields.putIfAbsent(state, () => <dynamic>{});

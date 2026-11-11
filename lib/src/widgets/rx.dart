@@ -133,7 +133,10 @@ class _RxState extends State<Rx> {
 
   /// Triggers a rebuild when dependencies change.
   ///
-  /// Uses `scheduleMicrotask` to batch updates efficiently.
+  /// Uses synchronous [setState] when safe. If a refresh is requested during
+  /// the build/layout/paint phase, it is deferred to a post-frame callback.
+  /// Prefer wrapping multi-value writes in [batch] so multiple changes
+  /// collapse into a single rebuild.
 
   void refresh([dynamic triggerInfo]) {
     RxDebug.log('RX REFRESH CALLED: $triggerInfo');

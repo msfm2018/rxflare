@@ -39,17 +39,8 @@ android/.idea/
 # =============================
 # 示例项目（example）可选择保留或忽略
 # =============================
-example/android/app/build/
-example/.dart_tool/
-example/.idea/
-example/build/
-example/ios/Pods/
-example/ios/Runner.xcworkspace/
-example/ios/Flutter/Flutter.podspec.lock
-example/ios/Flutter/Generated.xcconfig
-example/.flutter-plugins
-example/.flutter-plugins-dependencies
-exampleIm/macos/Flutter/GeneratedPluginRegistrant.swift
+example/
+exampleIm/
 
 doc/
 # =============================

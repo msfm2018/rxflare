@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import '../rx_router/rx_router.dart';
 import '../utils/rx_debug.dart';
 import 'base_.dart';
+import 'rx_batch.dart';
 
 int _rxStateCounter = 0;
 
@@ -33,7 +34,7 @@ class RxState<T> implements Disposable {
     _rxStateCounter++;
   }
 
-  @protected
+  /// Whether this state has been disposed.
   bool get isDisposed => _disposed;
 
   /// Reads the current value without registering a reactive dependency.
@@ -57,10 +58,12 @@ class RxState<T> implements Disposable {
 
   /// Internal setter that updates the value and notifies all global listeners.
   /// Returns true if the value actually changed.
+  ///
+  /// When inside [batch], notification is deferred until the outermost batch ends.
   bool _setValue(T newValue) {
     if (!deepEquals(_value, newValue)) {
       _value = newValue;
-      _notifyListeners(id);
+      RxBatch.scheduleState(this);
       return true;
     }
     return false;
@@ -69,10 +72,12 @@ class RxState<T> implements Disposable {
   /// Internal setter used for field-level updates (Map/List).
   /// It updates the value and only notifies listeners bound to the specified field.
   /// Returns true if the value actually changed.
+  ///
+  /// When inside [batch], notification is deferred until the outermost batch ends.
   bool _setFieldValue(T newValue, dynamic field) {
     if (!deepEquals(_value, newValue)) {
       _value = newValue;
-      notifyField(field); // ✅ 正确
+      RxBatch.scheduleField(this, field);
       return true;
     }
     return false;
@@ -269,11 +274,17 @@ class RxState<T> implements Disposable {
 
   /// Notifies all listeners registered for a specific field.
   ///
-  /// It extracts the current field value from either a Map or List
-  /// and dispatches it to all registered field listeners.
-
+  /// Prefer going through [RxBatch.scheduleField] so that [batch] works.
   @protected
   void notifyField(dynamic field) {
+    RxBatch.scheduleField(this, field);
+  }
+
+  /// Immediately notifies field listeners (used by the batch flusher).
+  ///
+  /// Intended for [RxBatch] and framework internals; app code should prefer
+  /// [updateField] / [value] / [refresh].
+  void notifyFieldNow(dynamic field) {
     final ls = _fieldListeners[field]?.toList();
 
     if (ls != null && ls.isNotEmpty) {
@@ -293,6 +304,14 @@ class RxState<T> implements Disposable {
         listener(fieldValue);
       }
     }
+  }
+
+  /// Immediately notifies global listeners (used by the batch flusher).
+  ///
+  /// Intended for [RxBatch] and framework internals; app code should prefer
+  /// [value] / [refresh].
+  void notifyListenersNow() {
+    _notifyListeners(id);
   }
 
   /// Adds a global listener.
@@ -567,8 +586,10 @@ class RxState<T> implements Disposable {
   }
 
   /// Manually triggers a refresh.
+  ///
+  /// Honors [batch]: if called inside a batch, the notification is deferred.
   void refresh() {
     if (_disposed) return;
-    _notifyListeners(id);
+    RxBatch.scheduleState(this);
   }
 }
