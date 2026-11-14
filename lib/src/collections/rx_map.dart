@@ -57,16 +57,16 @@ class RxMap<K, V> extends RxState<Map<K, V>> {
   /// - Otherwise, a new Map instance is created (immutability guarantee)
   /// - Only listeners subscribed to this [key] are notified
   void operator []=(K key, V newValue) {
-    final oldValue = value[key];
+    final oldValue = rawValue[key];
 
     if (deepEquals(oldValue, newValue)) return;
 
-    final newMap = Map<K, V>.of(value);
-
+    final newMap = Map<K, V>.of(rawValue);
     newMap[key] = newValue;
 
-    value = newMap;
+    // Field updates should stay field-scoped: do not trigger a full-state
+    // notification when only one key changes.
+    updateFieldValue(newMap, key);
 
-    notifyField(key);
   }
 }
