@@ -4,155 +4,6 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter/services.dart';
 import 'package:rxflare_core/rxflare_core.dart';
 
-
-// void main() async {
-//   WidgetsFlutterBinding.ensureInitialized();
-
-//   await Hive.initFlutter();
-
-//   final box = await Hive.openBox("settings");
-
-//   final saved =
-//       box.get("locale");
-
-//   RxLocale.init(
-//     translations: {
-
-//       "en": {
-
-//         "hello": "Hello",
-
-//         "count":
-//         "{count,plural,=0{No items}=1{One item}other{{count} items}}",
-
-//       },
-
-//       "zh": {
-
-//         "hello": "你好",
-
-//         "count":
-//         "{count,plural,=0{没有}=1{一个}other{{count}个}}",
-
-//       },
-
-//     },
-
-//     initialLocale:
-//       saved != null
-//       ? RxLocale.localeFromString(saved)
-//       : null,
-
-//     followSystem:
-//       saved == null,
-
-//   );
-
-//   RxLocale.onSaveLocale =
-//       (locale){
-
-//     box.put(
-//       "locale",
-//       RxLocale.localeToString(locale),
-//     );
-
-//   };
-
-//   runApp(
-//     const MyApp()
-//   );
-// }
-
-// class MyApp extends StatelessWidget {
-
-//   const MyApp({super.key});
-
-//   @override
-//   Widget build(BuildContext context){
-
-//     return MaterialApp(
-
-//       home:
-//       HomePage(),
-
-//     );
-
-//   }
-// }
-// class HomePage extends StatelessWidget {
-
-//   const HomePage({super.key});
-
-//   @override
-//   Widget build(BuildContext context){
-
-//     return Scaffold(
-
-//       body:
-
-//       Center(
-
-//         child:
-
-//         Column(
-
-//           mainAxisAlignment:
-//           MainAxisAlignment.center,
-
-//           children:[
-
-//             Text(
-//               "hello".tr,
-//             ),
-
-//             Text(
-//               "count"
-//               .trPlural(5),
-//             ),
-
-//             ElevatedButton(
-
-//               onPressed: (){
-
-//                 RxLocale.setLocale(
-//                   const Locale("zh"),
-//                 );
-
-//               },
-
-//               child:
-//               const Text(
-//                 "中文",
-//               ),
-
-//             ),
-
-//             ElevatedButton(
-
-//               onPressed: (){
-
-//                 RxLocale.followSystem();
-
-//               },
-
-//               child:
-//               const Text(
-//                 "跟随系统",
-//               ),
-
-//             ),
-
-//           ],
-
-//         ),
-
-//       ),
-
-//     );
-
-//   }
-// }
-
 class _RxLocaleObserver extends WidgetsBindingObserver {
   @override
   void didChangeLocales(List<Locale>? locales) {
@@ -165,7 +16,7 @@ class _RxLocaleObserver extends WidgetsBindingObserver {
 }
 
 class RxLocale {
-  static late final RxState<Locale> current;
+  // static late final RxState<Locale> current;
   static final _observer = _RxLocaleObserver();
   static bool _followSystem = true;
   static bool get isFollowingSystem => _followSystem;
@@ -220,7 +71,6 @@ class RxLocale {
     bool mergeTranslations = false,
   }) {
     if (_initialized) return;
-    _initialized = true;
 
     if (supported != null && supported.isNotEmpty) {
       _supportedLocales = List.unmodifiable(supported);
@@ -231,27 +81,38 @@ class RxLocale {
         _translations.clear();
         _pluralTemplates.clear();
       }
-      translations.forEach((key, map) {
-        final normalized = _normalizeLangKey(key);
-        _translations[normalized] ??= {};
-        _translations[normalized]!.addAll(map);
+      translations.forEach((language, entries) {
+        final langKey = _normalizeLangKey(language);
+        final normal = <String, String>{};
+        final plural = <String, String>{};
+
+        entries.forEach((key, value) {
+          if (value.contains(',plural,')) {
+            plural[key] = value;
+          } else {
+            normal[key] = value;
+          }
+        });
+
+        _translations.putIfAbsent(langKey, () => {}).addAll(normal);
+        _pluralTemplates.putIfAbsent(langKey, () => {}).addAll(plural);
       });
     }
 
     _followSystem = followSystem;
 
-    final locale = initialLocale != null
+    final resolvedLocale = initialLocale != null
         ? _resolveLocale(initialLocale)
         : _getSystemLocale();
-    current = locale.obs;
 
+    _current = resolvedLocale.obs;
     WidgetsBinding.instance.addObserver(_observer);
+    _initialized = true;
 
     if (followSystem) {
       _syncWithSystem(WidgetsBinding.instance.platformDispatcher.locale);
     }
   }
-
   //   flutter:
   //   assets:
   //     - assets/i18n/en.json
@@ -347,13 +208,16 @@ class RxLocale {
 
   static void dispose() {
     if (!_initialized) return;
+
     WidgetsBinding.instance.removeObserver(_observer);
-    _initialized = false;
+    _current?.dispose();
+    _current = null;
+
     _translations.clear();
     _pluralTemplates.clear();
-    // 建议补充：
     _followSystem = true;
     onSaveLocale = null;
+    _initialized = false;
   }
 
   static void setLocale(Locale locale) {
@@ -406,11 +270,12 @@ class RxLocale {
   static String tr(String key, {Map<String, String>? params}) {
     final rawLangKey =
         locale.countryCode != null && locale.countryCode!.isNotEmpty
-            ? '${locale.languageCode}_${locale.countryCode}'
-            : locale.languageCode;
+        ? '${locale.languageCode}_${locale.countryCode}'
+        : locale.languageCode;
     final langKey = _normalizeLangKey(rawLangKey); // 归一化为小写
 
-    String text = _translations[langKey]?[key] ??
+    String text =
+        _translations[langKey]?[key] ??
         _translations[locale.languageCode.toLowerCase()]?[key] ??
         _translations['en']?[key] ??
         key;
@@ -428,12 +293,13 @@ class RxLocale {
     final locale = current.value;
     final rawLangKey =
         locale.countryCode != null && locale.countryCode!.isNotEmpty
-            ? '${locale.languageCode}_${locale.countryCode}'
-            : locale.languageCode;
+        ? '${locale.languageCode}_${locale.countryCode}'
+        : locale.languageCode;
     final langKey = _normalizeLangKey(rawLangKey);
     final langOnly = _normalizeLangKey(locale.languageCode);
 
-    String? template = _pluralTemplates[langKey]?[key] ??
+    String? template =
+        _pluralTemplates[langKey]?[key] ??
         _pluralTemplates[langOnly]?[key] ??
         _pluralTemplates['en']?[key];
 
@@ -500,6 +366,18 @@ class RxLocale {
       }
     }
     return selected ?? otherCase ?? '';
+  }
+
+  static RxState<Locale>? _current;
+
+  static RxState<Locale> get current {
+    final state = _current;
+    if (state == null) {
+      throw StateError(
+        'Call RxLocale.init() before accessing RxLocale.current.',
+      );
+    }
+    return state;
   }
 
   static Locale get locale => current.value;
