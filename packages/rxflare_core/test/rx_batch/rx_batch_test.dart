@@ -50,6 +50,41 @@ void main() {
       x.value = 2;
       expect(count, 2);
     });
+
+    test('map field updates do not trigger full-state listeners', () {
+      final map = RxMap<String, int>({'a': 1});
+      var globalCount = 0;
+      var fieldCount = 0;
+
+      map.addListener((_) => globalCount++);
+      map.listenByKey('a', (_) => fieldCount++);
+
+      map['a'] = 2;
+
+      expect(map['a'], 2);
+      expect(globalCount, 0);
+      expect(fieldCount, 2); // initial + field update
+    });
+
+    test('list bulk mutation notifies affected fields after the new value is set', () {
+      final items = RxList<int>([1, 2, 3]);
+      var seen = <int>[];
+
+      items.listenByKey(1, (value) => seen.add(value as int));
+      items.updateWhere((value) => value > 1, (value) => value + 10);
+
+      expect(items.value, [1, 12, 13]);
+      expect(seen, [2, 12]);
+
+      final replaced = RxList<int>([1, 2, 3]);
+      var replacedSeen = <int>[];
+      replaced.listenByKey(2, (value) => replacedSeen.add(value as int));
+
+      replaced.replaceWhere((value) => value > 1, 99);
+
+      expect(replaced.value, [1, 99, 99]);
+      expect(replacedSeen, [3, 99]);
+    });
   });
 
   group('untracked', () {
@@ -80,3 +115,4 @@ void main() {
     });
   });
 }
+
