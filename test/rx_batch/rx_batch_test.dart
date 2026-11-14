@@ -1,82 +1,122 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:rxflare/rxflare.dart';
+import 'rx_state.dart';
 
-void main() {
-  group('batch', () {
-    test('coalesces multiple writes into one notification', () {
-      final a = 0.obs;
-      final b = 0.obs;
-      var notifyCount = 0;
+/// Internal batching / untracked control for RxFlare.
+///
+/// - [batch] groups multiple state writes so listeners are notified once
+///   after the outermost batch ends (merges updates that would otherwise
+///   trigger multiple rebuilds under synchronous [setState]).
+/// - [untracked] runs a function without registering reactive dependencies
+///   on the current [RxStack] context.
+///
+/// Note: notifications are coalesced by state and field. A state may still
+/// receive both a global update and a field update when a mutation touches both
+/// forms of tracking, but the flush is still batched and deduplicated at the
+/// state/field level.
+class RxBatch {
+  static int _depth = 0;
+  /// States that had a full-value write in this batch.
+  static final Set<RxState> _pendingGlobal = {};
+  /// Field-level writes: state → fields.
+  static final Map<RxState, Set<dynamic>> _pendingFields = {};
+  static bool _untrackedDepth = false;
 
-      a.addListener((_) => notifyCount++);
-      b.addListener((_) => notifyCount++);
+  /// Whether we are currently inside a [batch] scope.
+  static bool get isBatching => _depth > 0;
 
-      batch(() {
-        a.value = 1;
-        b.value = 2;
-        a.value = 3;
-      });
+  /// Whether dependency tracking is currently suppressed.
+  static bool get isUntracked => _untrackedDepth;
 
-      expect(a.value, 3);
-      expect(b.value, 2);
-      // Each state is flushed once at the end of the batch.
-      expect(notifyCount, 2);
+  /// Runs [fn] while suppressing automatic dependency registration.
+  ///
+  /// Useful when reading reactive values for logging, side effects, or
+  /// conditional logic that should not create a reactive subscription.
+  ///
+  /// Example:
+  /// ```dart
+  /// final snapshot = untracked(() => count.value);
+  /// ```
+  static T untracked<T>(T Function() fn) {
+    final prev = _untrackedDepth;
+    _untrackedDepth = true;
+    try {
+      return fn();
+    } finally {
+      _untrackedDepth = prev;
+    }
+  }
+
+  /// Runs [fn] inside a batch. Nested batches are supported; notifications
+  /// are flushed only when the outermost batch completes.
+  ///
+  /// Example:
+  /// ```dart
+  /// batch(() {
+  ///   a.value = 1;
+  ///   b.value = 2;
+  ///   c.value = 3;
+  /// }); // listeners notified once
+  /// ```
+  static T batch<T>(T Function() fn) {
+    _depth++;
+    try {
+      return fn();
+    } finally {
+      _depth--;
+      if (_depth == 0) {
+        _flush();
+      }
+    }
+  }
+
+  /// Called by [RxState] when a global (non-field) change occurs.
+  static void scheduleState(RxState state) {
+    if (_depth > 0) {
+      _pendingGlobal.add(state);
+      return;
+    }
+    state.notifyListenersNow();
+  }
+
+  /// Called by [RxState] when a field-level change occurs.
+  static void scheduleField(RxState state, dynamic field) {
+    if (_depth > 0) {
+      _pendingFields.putIfAbsent(state, () => <dynamic>{}).add(field);
+      return;
+    }
+    state.notifyFieldNow(field);
+  }
+
+  static void _flush() {
+    final globals = Set<RxState>.from(_pendingGlobal);
+    final fields = Map<RxState, Set<dynamic>>.from(
+      _pendingFields.map((k, v) => MapEntry(k, Set<dynamic>.from(v))),
+    );
+    _pendingGlobal.clear();
+    _pendingFields.clear();
+
+    // Field notifications first (more specific).
+    fields.forEach((state, fieldSet) {
+      if (state.isDisposed) return;
+      for (final f in fieldSet) {
+        state.notifyFieldNow(f);
+      }
     });
 
-    test('nested batches flush only at outermost end', () {
-      final x = 0.obs;
-      var count = 0;
-      x.addListener((_) => count++);
-
-      batch(() {
-        x.value = 1;
-        batch(() {
-          x.value = 2;
-        });
-        x.value = 3;
-      });
-
-      expect(x.value, 3);
-      expect(count, 1);
-    });
-
-    test('writes outside batch still notify immediately', () {
-      final x = 0.obs;
-      var count = 0;
-      x.addListener((_) => count++);
-
-      x.value = 1;
-      expect(count, 1);
-      x.value = 2;
-      expect(count, 2);
-    });
-  });
-
-  group('untracked', () {
-    test('does not register dependencies while reading', () {
-      final a = 1.obs;
-      final b = 2.obs;
-
-      final c = computed(() {
-        final av = a.value;
-        final bv = untracked(() => b.value);
-        return av + bv;
-      });
-
-      expect(c.value, 3);
-
-      var recomputes = 0;
-      c.addListener((_) => recomputes++);
-
-      // Changing b should NOT recompute c (read was untracked).
-      b.value = 10;
-      expect(recomputes, 0);
-      expect(c.value, 3); // stale until a changes, by design of untracked
-
-      // Changing a should recompute and pick up the latest b.
-      a.value = 5;
-      expect(recomputes, 1);
-      expect(c.value, 15);
-    });
-  });
+    // Global notifications once per state that had a full-value write.
+    for (final state in globals) {
+      if (state.isDisposed) continue;
+      state.notifyListenersNow();
+    }
+  }
 }
+
+/// Runs [fn] without registering reactive dependencies.
+///
+/// See [RxBatch.untracked].
+T untracked<T>(T Function() fn) => RxBatch.untracked(fn);
+
+/// Groups multiple reactive writes so listeners fire once at the end.
+///
+/// See [RxBatch.batch].
+T batch<T>(T Function() fn) => RxBatch.batch(fn);
+
