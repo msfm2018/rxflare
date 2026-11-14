@@ -7,6 +7,11 @@ import 'rx_state.dart';
 ///   trigger multiple rebuilds under synchronous [setState]).
 /// - [untracked] runs a function without registering reactive dependencies
 ///   on the current [RxStack] context.
+///
+/// Note: notifications are coalesced by state and field. A state may still
+/// receive both a global update and a field update when a mutation touches both
+/// forms of tracking, but the flush is still batched and deduplicated at the
+/// state/field level.
 class RxBatch {
   static int _depth = 0;
   /// States that had a full-value write in this batch.
