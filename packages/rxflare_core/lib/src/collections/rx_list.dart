@@ -99,7 +99,8 @@ class RxList<T> extends RxState<List<T>> {
   void updateWhere(
       bool Function(T element) test, T Function(T element) update) {
     bool changed = false;
-    final newList = List<T>.of(value);
+    final newList = List<T>.of(rawValue);
+    final changedIndexes = <int>[];
 
     for (int i = 0; i < newList.length; i++) {
       final item = newList[i];
@@ -110,35 +111,42 @@ class RxList<T> extends RxState<List<T>> {
         if (!deepEquals(item, newItem)) {
           newList[i] = newItem;
           changed = true;
-
-          notifyField(i);
+          changedIndexes.add(i);
         }
       }
     }
 
     if (changed) {
+      // Publish the new list first so any reads during notification see the
+      // latest value, then notify only the affected indexes.
       value = newList;
+      for (final i in changedIndexes) {
+        notifyField(i);
+      }
     }
   }
 
   /// Replaces all elements that match [test] with [newValue].
   void replaceWhere(bool Function(T element) test, T newValue) {
     bool changed = false;
-    final newList = List<T>.of(value);
+    final newList = List<T>.of(rawValue);
+    final changedIndexes = <int>[];
 
     for (int i = 0; i < newList.length; i++) {
       if (test(newList[i])) {
         if (!deepEquals(newList[i], newValue)) {
           newList[i] = newValue;
           changed = true;
-
-          notifyField(i);
+          changedIndexes.add(i);
         }
       }
     }
 
     if (changed) {
       value = newList;
+      for (final i in changedIndexes) {
+        notifyField(i);
+      }
     }
   }
 
