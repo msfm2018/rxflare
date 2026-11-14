@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.8.3] - 2026-11-11
+## [1.8.3] - 2026-11-14
 
 ### Added
 - Added `batch(fn)` to group multiple reactive writes so listeners / `Rx`
