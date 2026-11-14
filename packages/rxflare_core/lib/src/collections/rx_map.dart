@@ -1,5 +1,5 @@
 import '../core/rx_state.dart';
-import '../rx_router/rx_stack.dart';
+import '../core/rx_stack.dart';
 
 /// A reactive implementation of [Map] that extends [RxState].
 ///
