@@ -1,10 +1,12 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/widgets.dart';
 import 'package:rxflare_i18n/rxflare_i18n.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   setUp(() {
-    TestWidgetsFlutterBinding.ensureInitialized();
     RxLocale.dispose();
   });
 
@@ -136,5 +138,77 @@ void main() {
       expect(RxLocale.tr('hello'), 'Hi');
       expect(RxLocale.tr('farewell'), 'Bye');
     });
+
+    test('localeFromString parses underscore and hyphen formats', () {
+      expect(
+        RxLocale.localeFromString('zh_CN'),
+        const Locale('zh', 'CN'),
+      );
+      expect(
+        RxLocale.localeFromString('zh-CN'),
+        const Locale('zh', 'CN'),
+      );
+      expect(RxLocale.localeFromString('en'), const Locale('en'));
+    });
+
+    test('trPlural falls back to plain translation when plural template is absent', () {
+      RxLocale.init(
+        supported: const [Locale('en')],
+        translations: {
+          'en': {'items': 'Items: {count}'},
+        },
+        initialLocale: const Locale('en'),
+      );
+
+      expect(RxLocale.trPlural('items', 2), 'Items: 2');
+    });
+
+    test('loadJsonBundle parses valid JSON and ignores invalid values', () async {
+      final tempDir = await Directory.systemTemp.createTemp();
+      final file = File('${tempDir.path}/zh_cn.json');
+      await file.writeAsString('''{
+        "hello": "你好 {name}",
+        "items": "{count,plural,=0{没有}=1{一个}other{{count} 个}}",
+        "invalid": 123
+      }''');
+
+      final oldBundle = rootBundle;
+      final fakeBundle = _TestAssetBundle({file.path: file.readAsStringSync()});
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMessageHandler('flutter/assets', fakeBundle.handle); // ignore: invalid_use_of_protected_member
+
+      try {
+        RxLocale.init(
+          supported: const [Locale('zh', 'CN')],
+          translations: {
+            'zh_cn': {'hello': '默认值'},
+          },
+          initialLocale: const Locale('zh', 'CN'),
+        );
+
+        await RxLocale.loadJsonBundle(file.path, merge: true);
+        expect(RxLocale.tr('hello', params: {'name': '世界'}), '你好 世界');
+        expect(RxLocale.trPlural('items', 2), '2 个');
+      } finally {
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMessageHandler('flutter/assets', null);
+        await tempDir.delete(recursive: true);
+      }
+    });
   });
+}
+
+class _TestAssetBundle {
+  _TestAssetBundle(this._files);
+
+  final Map<String, String> _files;
+
+  Future<String> handle(ByteData? message) async {
+    final key = utf8.decode(message!.buffer.asUint8List());
+    final asset = _files[key];
+    if (asset == null) {
+      throw FlutterError('Missing asset: $key');
+    }
+    return asset;
+  }
 }
