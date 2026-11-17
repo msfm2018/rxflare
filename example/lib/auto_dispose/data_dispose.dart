@@ -26,7 +26,7 @@ class User {
 
 
 class UserController implements Disposable {
-  final count = 0.obs;
+  final count = 0.rx;
   late final RxFuture<User> userFuture;
 
   UserController() {
@@ -43,7 +43,6 @@ class UserController implements Disposable {
     // 顺序：先取消异步，再清状态
     userFuture.dispose();
     count.dispose();
-    print("UserController 已释放");
   }
 }
 

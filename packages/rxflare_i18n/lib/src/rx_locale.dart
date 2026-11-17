@@ -70,7 +70,12 @@ class RxLocale {
     bool followSystem = true,
     bool mergeTranslations = false,
   }) {
-    if (_initialized) return;
+    if (_initialized) {
+      if (translations != null && mergeTranslations) {
+        _mergeTranslations(translations);
+      }
+      return;
+    }
 
     if (supported != null && supported.isNotEmpty) {
       _supportedLocales = List.unmodifiable(supported);
@@ -81,22 +86,8 @@ class RxLocale {
         _translations.clear();
         _pluralTemplates.clear();
       }
-      translations.forEach((language, entries) {
-        final langKey = _normalizeLangKey(language);
-        final normal = <String, String>{};
-        final plural = <String, String>{};
 
-        entries.forEach((key, value) {
-          if (value.contains(',plural,')) {
-            plural[key] = value;
-          } else {
-            normal[key] = value;
-          }
-        });
-
-        _translations.putIfAbsent(langKey, () => {}).addAll(normal);
-        _pluralTemplates.putIfAbsent(langKey, () => {}).addAll(plural);
-      });
+      _mergeTranslations(translations);
     }
 
     _followSystem = followSystem;
@@ -105,7 +96,7 @@ class RxLocale {
         ? _resolveLocale(initialLocale)
         : _getSystemLocale();
 
-    _current = resolvedLocale.obs;
+    _current = resolvedLocale.rx;
     WidgetsBinding.instance.addObserver(_observer);
     _initialized = true;
 
@@ -113,40 +104,28 @@ class RxLocale {
       _syncWithSystem(WidgetsBinding.instance.platformDispatcher.locale);
     }
   }
-  //   flutter:
-  //   assets:
-  //     - assets/i18n/en.json
-  //     - assets/i18n/zh_cn.json
-  //     - assets/i18n/zh_tw.json
-  //     - assets/i18n/ja.json
 
-  // 示例 assets/i18n/zh_cn.json
-  //     {
-  //   "hello": "你好 {name}",
-  //   "welcome": "欢迎使用RxLocale"
-  // }
-  // void main() async {
-  //   WidgetsFlutterBinding.ensureInitialized();
+  static void _mergeTranslations(
+    Map<String, Map<String, String>> translations,
+  ) {
+    translations.forEach((language, entries) {
+      final langKey = _normalizeLangKey(language);
+      final normal = <String, String>{};
+      final plural = <String, String>{};
 
-  //   // 1.初始化
-  //   RxLocale.init(followSystem: true);
+      entries.forEach((key, value) {
+        if (value.contains(',plural,')) {
+          plural[key] = value;
+        } else {
+          normal[key] = value;
+        }
+      });
 
-  //   // 2.加载json bundle（可以await）
-  //   await RxLocale.loadJsonBundles([
-  //     "assets/i18n/en.json",
-  //     "assets/i18n/zh_cn.json",
-  //     "assets/i18n/zh_tw.json",
-  //     "assets/i18n/ja.json",
-  //   ]);
+      _translations.putIfAbsent(langKey, () => {}).addAll(normal);
+      _pluralTemplates.putIfAbsent(langKey, () => {}).addAll(plural);
+    });
+  }
 
-  //   // 持久化钩子示例，业务接shared_preferences
-  //   RxLocale.onSaveLocale = (loc) async {
-  //     final s = RxLocale.localeToString(loc);
-  //     // await prefs.setString("app_locale", s);
-  //   };
-
-  //   runApp(const MyApp());
-  // }
   /// 加载单个json翻译资源
   static Future<void> loadJsonBundle(
     String assetPath, {
@@ -270,12 +249,11 @@ class RxLocale {
   static String tr(String key, {Map<String, String>? params}) {
     final rawLangKey =
         locale.countryCode != null && locale.countryCode!.isNotEmpty
-        ? '${locale.languageCode}_${locale.countryCode}'
-        : locale.languageCode;
+            ? '${locale.languageCode}_${locale.countryCode}'
+            : locale.languageCode;
     final langKey = _normalizeLangKey(rawLangKey); // 归一化为小写
 
-    String text =
-        _translations[langKey]?[key] ??
+    String text = _translations[langKey]?[key] ??
         _translations[locale.languageCode.toLowerCase()]?[key] ??
         _translations['en']?[key] ??
         key;
@@ -293,13 +271,12 @@ class RxLocale {
     final locale = current.value;
     final rawLangKey =
         locale.countryCode != null && locale.countryCode!.isNotEmpty
-        ? '${locale.languageCode}_${locale.countryCode}'
-        : locale.languageCode;
+            ? '${locale.languageCode}_${locale.countryCode}'
+            : locale.languageCode;
     final langKey = _normalizeLangKey(rawLangKey);
     final langOnly = _normalizeLangKey(locale.languageCode);
 
-    String? template =
-        _pluralTemplates[langKey]?[key] ??
+    String? template = _pluralTemplates[langKey]?[key] ??
         _pluralTemplates[langOnly]?[key] ??
         _pluralTemplates['en']?[key];
 
@@ -391,11 +368,14 @@ class RxLocale {
   }
 
   static Locale? localeFromString(String str) {
-    final parts = str.split('_');
+    final normalized = str.replaceAll('-', '_');
+    final parts = normalized.split('_');
+
     if (parts.length == 2) {
       return Locale(parts[0], parts[1]);
     }
-    return Locale(str);
+
+    return Locale(normalized);
   }
 
   static String _normalizeLangKey(String raw) {

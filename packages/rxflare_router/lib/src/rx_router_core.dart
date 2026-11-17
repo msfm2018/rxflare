@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/widgets.dart';
 import 'package:rxflare_core/rxflare_core.dart';
 
@@ -38,7 +40,10 @@ class RxRouter {
   final Map<int, RxState<List<RxPage>>> tabPages = {};
 
   /// Currently active tab index.
-  final activeTabIndex = 0.obs;
+  final activeTabIndex = 0.rx;
+
+  /// Tracks changes to the tabPages collection itself.
+  final RxState<int> _tabRevision = RxState<int>(0);
 
   /// Registered route definitions.
   final _routes = <String, RxRoute>{};
@@ -169,12 +174,17 @@ class RxRouter {
     // Copy the current stack, remove the top page,
     // then push the new page.
     final stack = List<RxPage>.from(_activePages.value);
+
     if (stack.isNotEmpty) {
       final removed = stack.removeLast();
-      // Clean up arguments associated with the removed page
-      // to prevent memory leaks.
+
+      // Complete any pending result for the removed page.
+      RxResult.complete(removed.pageId, null);
+
+      // Clean up arguments associated with the removed page.
       _removeArgs(removed.pageId);
     }
+
     stack.add(memPage);
 
     _activePages.value = stack;
@@ -212,10 +222,14 @@ class RxRouter {
 
     // Clean up arguments for all existing pages
     // before resetting the stack.
+
     for (var page in _activePages.value) {
+      // Complete any pending result for the removed page.
+      RxResult.complete(page.pageId, null);
+
+      // Clean up arguments associated with the removed page.
       _removeArgs(page.pageId);
     }
-
     // Replace the entire stack with a new stack
     // containing only the target page.
     _activePages.value = [memPage];
@@ -299,14 +313,21 @@ class RxRouter {
   // =====================
 
   /// Initializes a tab's route stack.
+  /// Initializes a tab's route stack.
   void initTab(int index, List<RxPage> initial) {
     tabPages[index] = RxState(initial);
+
+    // Notify delegates that a tab stack was added or replaced.
+    _tabRevision.value++;
   }
 
   void initTabIfNeeded(int index, List<RxPage> initial) {
     if (tabPages[index] != null) return;
 
     tabPages[index] = RxState(initial);
+
+    // Notify delegates that a new tab stack was created.
+    _tabRevision.value++;
   }
 
   /// Switches the active tab.
@@ -333,25 +354,57 @@ class RxRouteConfig {
 class RxRouterDelegate extends RouterDelegate<Object>
     with ChangeNotifier, PopNavigatorRouterDelegateMixin<Object> {
   @override
-  final navigatorKey = GlobalKey<NavigatorState>();
+  GlobalKey<NavigatorState> get navigatorKey => RxRouter.I.navigatorKey;
 
   ///Specify a specific stack to listen to. If null, the global root stack and all Tab stacks are monitored by default.
   final RxState<List<RxPage>>? customStack;
 
   final List<void Function()> _unbinders = [];
 
+  /// Tracks tab stacks that have already been subscribed.
+  final Set<RxState<List<RxPage>>> _boundTabStacks = {};
+
   RxRouterDelegate({this.customStack}) {
-    RxRouter.I.ensureInitialized();
+    final router = RxRouter.I;
 
-    final target = customStack ?? RxRouter.I.memPages;
+    router.ensureInitialized();
 
-    //If the binding status changes, Flutter will be automatically notified to rebuild.
-    _unbinders.add(target.bind((_) => notifyListeners()));
+    final target = customStack ?? router.memPages;
 
-    //bind all tabs in global mode
+    // Listen to the root stack or the custom stack.
+    _unbinders.add(
+      target.bind((_) => notifyListeners()),
+    );
+
+    // Global mode also needs to observe tab changes.
     if (customStack == null) {
-      for (var s in RxRouter.I.tabPages.values) {
-        _unbinders.add(s.bind((_) => notifyListeners()));
+      // 1. Listen to active tab changes.
+      _unbinders.add(
+        router.activeTabIndex.bind((_) {
+          notifyListeners();
+        }),
+      );
+
+      // 2. Listen to changes in the tabPages collection.
+      _unbinders.add(
+        router._tabRevision.bind((_) {
+          _bindTabStacks(router);
+          notifyListeners();
+        }),
+      );
+
+      // 3. Subscribe to all existing tab stacks.
+      _bindTabStacks(router);
+    }
+  }
+
+  /// Subscribes to tab stacks that have not been observed yet.
+  void _bindTabStacks(RxRouter router) {
+    for (final stack in router.tabPages.values) {
+      if (_boundTabStacks.add(stack)) {
+        _unbinders.add(
+          stack.bind((_) => notifyListeners()),
+        );
       }
     }
   }
@@ -367,8 +420,8 @@ class RxRouterDelegate extends RouterDelegate<Object>
   @override
   Widget build(BuildContext context) {
     final router = RxRouter.I;
-    final stack = customStack?.value ?? router._activePages.value;
-
+    // final stack = customStack?.value ?? router._activePages.value;
+    final stack = customStack?.value ?? router.memPages.value;
     return Navigator(
       key: navigatorKey,
       pages: stack.map((e) {
@@ -399,28 +452,142 @@ class RxRouterDelegate extends RouterDelegate<Object>
   }
 
   //When notifyListeners () is called, the Router will read this configuration and synchronize it to the browser address bar.
+
   @override
   Object? get currentConfiguration {
-    final stack = customStack?.value ?? RxRouter.I._activePages.value;
+    // final stack = customStack?.value ?? RxRouter.I._activePages.value;
+    final stack = customStack?.value ?? RxRouter.I.memPages.value;
     if (stack.isEmpty) return "/";
 
-    //Find the full path of the current page (including query)
     final lastPage = stack.last;
-    var path = lastPage.name;
+    final router = RxRouter.I;
 
-    //If there is a path parameter, you need to restore it (for example, restore /detail and {id:123} to /detail/123).
-    //Simple processing here, or directly save a complete original path from your RxPage.
-    return path;
+    // 获取注册时定义的路由模板，例如 /detail/:id。
+    final config = router._routes[lastPage.name];
+    final routePattern = config?.path ?? lastPage.name;
+
+    // 根据路径参数还原动态路径段。
+    final segments = Uri.parse(routePattern).pathSegments;
+
+    final restoredSegments = segments.map((segment) {
+      if (segment.startsWith(':')) {
+        final key = segment.substring(1);
+        final value = lastPage.params[key];
+
+        if (value != null) {
+          return Uri.encodeComponent(value);
+        }
+      }
+
+      return Uri.encodeComponent(segment);
+    }).toList();
+
+    final path =
+        restoredSegments.isEmpty ? '/' : '/${restoredSegments.join('/')}';
+
+    // 恢复 Query 参数。
+    if (lastPage.query.isEmpty) {
+      return path;
+    }
+
+    final queryString = Uri(queryParameters: lastPage.query).query;
+
+    return '$path?$queryString';
   }
 
   //Flutter calls this method when the browser clicks Back.
+  // @override
+  // Future<void> setNewRoutePath(Object configuration) async {
+  //   final path = configuration.toString();
+  //   //Logic: If the path requested by the browser is different from the current stack top, jump is executed.
+  //   if (RxRouter.I.current?.name != path) {
+  //     RxRouter.I.to(path);
+  //   }
+  // }
+
+  // @override
+  // Future<void> setNewRoutePath(Object configuration) async {
+  //   final path = configuration.toString();
+  //   if (currentConfiguration != path) {
+  //     RxRouter.I.to(path);
+  //   }
+  // }
+
+  /// 将指定页面还原成浏览器地址。
+  String _locationForPage(RxPage page) {
+    final router = RxRouter.I;
+    final config = router._routes[page.name];
+    final routePattern = config?.path ?? page.name;
+
+    final segments = Uri.parse(routePattern).pathSegments;
+
+    final restoredSegments = segments.map((segment) {
+      if (segment.startsWith(':')) {
+        final key = segment.substring(1);
+        final value = page.params[key];
+
+        if (value != null) {
+          return Uri.encodeComponent(value);
+        }
+      }
+
+      return Uri.encodeComponent(segment);
+    }).toList();
+
+    final path =
+        restoredSegments.isEmpty ? '/' : '/${restoredSegments.join('/')}';
+
+    if (page.query.isEmpty) {
+      return path;
+    }
+
+    final queryString = Uri(queryParameters: page.query).query;
+    return '$path?$queryString';
+  }
+
   @override
   Future<void> setNewRoutePath(Object configuration) async {
+    final router = RxRouter.I;
     final path = configuration.toString();
-    //Logic: If the path requested by the browser is different from the current stack top, jump is executed.
-    if (RxRouter.I.current?.name != path) {
-      RxRouter.I.to(path);
+
+    // 当前地址相同，不重复导航。
+    if (currentConfiguration == path) {
+      return;
     }
+
+    final stack = customStack?.value ?? router.memPages.value;
+
+    // 浏览器后退：目标地址是当前页面的上一页。
+    if (customStack == null && stack.length > 1) {
+      final previousPage = stack[stack.length - 2];
+      final previousLocation = _locationForPage(previousPage);
+
+      if (previousLocation == path) {
+        router.back();
+        return;
+      }
+    }
+
+    // 普通浏览器导航：打开新地址。
+    // 不能 await，因为 router.to() 会等待页面返回结果。
+    // unawaited(router.to(path));
+
+    final navigation = router.to(path);
+
+    unawaited(
+      navigation.then<void>(
+        (_) {
+          // Guard 拒绝、路由不存在或页面返回后，
+          // 如果当前地址与目标地址不同，则重新同步地址栏。
+          if (currentConfiguration != path) {
+            notifyListeners();
+          }
+        },
+        onError: (Object error, StackTrace stackTrace) {
+          notifyListeners();
+        },
+      ),
+    );
   }
 }
 

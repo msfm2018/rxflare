@@ -7,11 +7,13 @@ import 'rx_router_core.dart';
 ///
 /// Does NOT introduce Material or Cupertino design.
 /// You can wrap it with your own design system (Material, Cupertino, custom, etc.).
-class RxWidgetsApp extends StatelessWidget {
+class RxWidgetsApp extends StatefulWidget {
   /// The route map to register with [RxRouter].
+  ///
+  /// Routes are registered once when this widget is initialized.
   final Map<String, RxRoute> routes;
 
-  /// The initial route. Defaults to `"/"`.
+  /// The initial route. Defaults to "/".
   final String initialRoute;
 
   // ── WidgetsApp.router parameters ──
@@ -59,32 +61,59 @@ class RxWidgetsApp extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    // Auto setup RxFlare router
-    rxr.register(routes);
-    rxr.initialRoute = initialRoute;
-    rxr.ensureInitialized();
+  State<RxWidgetsApp> createState() => _RxWidgetsAppState();
+}
 
+class _RxWidgetsAppState extends State<RxWidgetsApp> {
+  late final RxRouterDelegate _routerDelegate;
+
+  @override
+  void initState() {
+    super.initState();
+
+    final router = RxRouter.I;
+
+    // Register routes only once during widget initialization.
+    router.register(widget.routes);
+
+    // Set the initial route before creating the delegate.
+    router.initialRoute = widget.initialRoute;
+
+    // The delegate initializes the router if necessary.
+    _routerDelegate = RxRouterDelegate();
+  }
+
+  @override
+  void dispose() {
+    // Release RxState listeners owned by this delegate.
+    _routerDelegate.dispose();
+
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return WidgetsApp.router(
-      color: color ?? const Color(0xFF000000),
-      routeInformationProvider: routeInformationProvider,
+      color: widget.color ?? const Color(0xFF000000),
+      routeInformationProvider: widget.routeInformationProvider,
       routeInformationParser: RxRouteParser(),
-      routerDelegate: RxRouterDelegate(),
-      backButtonDispatcher: backButtonDispatcher,
-      builder: builder,
-      title: title,
-      onGenerateTitle: onGenerateTitle,
-      locale: locale,
-      localizationsDelegates: localizationsDelegates,
-      localeListResolutionCallback: localeListResolutionCallback,
-      localeResolutionCallback: localeResolutionCallback,
-      supportedLocales: supportedLocales ?? const <Locale>[Locale('en', 'US')],
-      showPerformanceOverlay: showPerformanceOverlay,
-      showSemanticsDebugger: showSemanticsDebugger,
-      debugShowCheckedModeBanner: debugShowCheckedModeBanner,
-      shortcuts: shortcuts,
-      actions: actions,
-      restorationScopeId: restorationScopeId,
+      routerDelegate: _routerDelegate,
+      backButtonDispatcher: widget.backButtonDispatcher,
+      builder: widget.builder,
+      title: widget.title,
+      onGenerateTitle: widget.onGenerateTitle,
+      locale: widget.locale,
+      localizationsDelegates: widget.localizationsDelegates,
+      localeListResolutionCallback: widget.localeListResolutionCallback,
+      localeResolutionCallback: widget.localeResolutionCallback,
+      supportedLocales:
+          widget.supportedLocales ?? const <Locale>[Locale('en', 'US')],
+      showPerformanceOverlay: widget.showPerformanceOverlay,
+      showSemanticsDebugger: widget.showSemanticsDebugger,
+      debugShowCheckedModeBanner: widget.debugShowCheckedModeBanner,
+      shortcuts: widget.shortcuts,
+      actions: widget.actions,
+      restorationScopeId: widget.restorationScopeId,
     );
   }
 }

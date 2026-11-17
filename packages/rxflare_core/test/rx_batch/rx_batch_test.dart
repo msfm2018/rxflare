@@ -4,8 +4,8 @@ import 'package:rxflare_core/rxflare_core.dart';
 void main() {
   group('batch', () {
     test('coalesces multiple writes into one notification', () {
-      final a = 0.obs;
-      final b = 0.obs;
+      final a = 0.rx;
+      final b = 0.rx;
       var notifyCount = 0;
 
       a.addListener((_) => notifyCount++);
@@ -24,7 +24,7 @@ void main() {
     });
 
     test('nested batches flush only at outermost end', () {
-      final x = 0.obs;
+      final x = 0.rx;
       var count = 0;
       x.addListener((_) => count++);
 
@@ -41,7 +41,7 @@ void main() {
     });
 
     test('writes outside batch still notify immediately', () {
-      final x = 0.obs;
+      final x = 0.rx;
       var count = 0;
       x.addListener((_) => count++);
 
@@ -66,7 +66,9 @@ void main() {
       expect(fieldCount, 2); // initial + field update
     });
 
-    test('list bulk mutation notifies affected fields after the new value is set', () {
+    test(
+        'list bulk mutation notifies affected fields after the new value is set',
+        () {
       final items = RxList<int>([1, 2, 3]);
       var seen = <int>[];
 
@@ -89,8 +91,8 @@ void main() {
 
   group('untracked', () {
     test('does not register dependencies while reading', () {
-      final a = 1.obs;
-      final b = 2.obs;
+      final a = 1.rx;
+      final b = 2.rx;
 
       final c = computed(() {
         final av = a.value;
@@ -115,4 +117,3 @@ void main() {
     });
   });
 }
-

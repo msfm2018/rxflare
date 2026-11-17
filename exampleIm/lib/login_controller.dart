@@ -6,7 +6,7 @@ import 'login_auth.dart';
 class LoginController {
   final userCtrl = TextEditingController(text: "admin");
   final pwdCtrl = TextEditingController(text: "123");
-  final isLoading = false.obs;
+  final isLoading = false.rx;
 
   // 被 RxProvider 销毁时，这个方法会被执行
   void dispose() {

@@ -4,8 +4,8 @@ import '../models/user_model.dart';
 
 class HomeController {
   // 1. 移除手动 isLoading，直接用 userFuture.isLoading
-  final userList = <UserModel>[].obs;
-  final selectedIndex = (-1).obs;
+  final userList = <UserModel>[].rx;
+  final selectedIndex = (-1).rx;
 
   late final userFuture = RxFuture((token) => fetchUserList(token));
 

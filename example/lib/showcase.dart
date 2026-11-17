@@ -3,18 +3,18 @@ import 'package:rxflare/rxflare.dart';
 
 // class AppController {
 class AppController implements Disposable {
-  final counter = 0.obs;
+  final counter = 0.rx;
 
-  final loading = false.obs;
+  final loading = false.rx;
 
-  final username = "Tom".obs;
+  final username = "Tom".rx;
 
-  final user = {"name": "Tom", "age": 18}.obsMapD;
+  final user = {"name": "Tom", "age": 18}.rxMapD;
 
   final stats = RxMap<String, dynamic>({"score": 100, "level": 1});
 
-  final todos = ["Learn Flutter", "Learn RxFlare"].obsList;
-  final tags = {"flutter", "dart"}.obsSet;
+  final todos = ["Learn Flutter", "Learn RxFlare"].rxList;
+  final tags = {"flutter", "dart"}.rxSet;
 
   void increment() {
     counter.value++;

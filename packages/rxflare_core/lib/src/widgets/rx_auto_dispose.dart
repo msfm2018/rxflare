@@ -60,7 +60,7 @@ extension AutoDisposeEventToken on EventToken {
 /// 使用示例：
 /// ```dart
 /// class _HomePageState extends State<HomePage> with RxAutoDispose {
-///   late final count = 0.obs.autoDispose(this);
+///   late final count = 0.rx.autoDispose(this);
 ///   late final userFuture = RxFuture(...).autoDispose(this);
 ///
 ///   @override

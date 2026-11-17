@@ -4,13 +4,13 @@ import '../models/user_model.dart';
 
 // 模板二：分页加载 + 下拉刷新 + 上拉更多
 class PageControllerv {
-  final isLoading = false.obs;
-  final isLoadingMore = false.obs;
+  final isLoading = false.rx;
+  final isLoadingMore = false.rx;
 
-  final userList = <UserModel>[].obs;
-  final currentPage = 1.obs;
-  final pageSize = 10.obs;
-  final hasMore = true.obs;
+  final userList = <UserModel>[].rx;
+  final currentPage = 1.rx;
+  final pageSize = 10.rx;
+  final hasMore = true.rx;
 
   late final userFuture = RxFuture((cancelToken) => fetchList(page: 1));
 

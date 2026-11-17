@@ -4,7 +4,7 @@ import 'package:rxflare_core/rxflare_core.dart';
 void main() {
   group('effect', () {
     test('runs immediately and on dependency change', () async {
-      final a = 0.obs;
+      final a = 0.rx;
       final seen = <int>[];
       final stop = effect(() {
         seen.add(a.value);
@@ -20,8 +20,8 @@ void main() {
     });
 
     test('batch coalesces effect runs', () async {
-      final a = 0.obs;
-      final b = 0.obs;
+      final a = 0.rx;
+      final b = 0.rx;
       var runs = 0;
       effect(() {
         a.value;
@@ -41,7 +41,7 @@ void main() {
 
   group('watch', () {
     test('callback receives values', () async {
-      final a = 1.obs;
+      final a = 1.rx;
       final values = <int>[];
       final stop = watch(() => a.value, values.add);
       expect(values, [1]);
@@ -54,8 +54,8 @@ void main() {
 
   group('untracked in effect', () {
     test('untracked read does not subscribe', () async {
-      final a = 1.obs;
-      final b = 10.obs;
+      final a = 1.rx;
+      final b = 10.rx;
       var runs = 0;
       effect(() {
         a.value;

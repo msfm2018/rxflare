@@ -1,0 +1,4 @@
+# melos_managed_dependency_overrides: rxflare_core
+dependency_overrides:
+  rxflare_core:
+    path: ..\\rxflare_core

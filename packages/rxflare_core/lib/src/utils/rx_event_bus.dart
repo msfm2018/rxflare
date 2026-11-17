@@ -30,7 +30,8 @@ class EventToken {
 /// Internal wrapper used to store listener metadata.
 class _EventWrapper {
   /// Wrapped callback with dynamic payload support.
-  final Future<void> Function(int eventID, String uuid, dynamic data) wrapperCallback;
+  final Future<void> Function(int eventID, String uuid, dynamic data)
+      wrapperCallback;
 
   /// Original callback reference.
   ///
@@ -40,7 +41,10 @@ class _EventWrapper {
   /// Optional listener token.
   final EventToken? token;
 
-  _EventWrapper({required this.wrapperCallback, required this.originalCallback, this.token});
+  _EventWrapper(
+      {required this.wrapperCallback,
+      required this.originalCallback,
+      this.token});
 }
 
 /// Internal event dispatch task.
@@ -302,7 +306,8 @@ class RxEventBus {
   /// If [callback] is null,
   /// all listeners registered for the specified
   /// module and event identifier are removed.
-  static void off({required String module, required int eventID, dynamic callback}) {
+  static void off(
+      {required String module, required int eventID, dynamic callback}) {
     final list = _listeners[module]?[eventID];
     if (list == null) return;
 

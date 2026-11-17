@@ -22,7 +22,7 @@ typedef RxWidgetBuilder = Widget Function();
 ///
 /// **Example (Automatic):**
 /// ```dart
-/// final count = 0.obs;
+/// final count = 0.rx;
 ///
 /// Rx(() => Text('Count: ${count.value}'));
 /// ```
@@ -257,7 +257,7 @@ class _RxState extends State<Rx> {
 
 /// [Obx] 是 [Rx] 的响应式包装组件。
 ///
-/// 会自动监听在 [builder] 中访问过的所有 [RxState] / `.obs` 变量，
+/// 会自动监听在 [builder] 中访问过的所有 [RxState] / `.rx` 变量，
 /// 当这些变量发生改变时自动触发局部刷新。
 class Obx extends Rx {
   /// 创建一个具有 **自动依赖追踪** 的响应式组件。

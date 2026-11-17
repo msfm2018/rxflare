@@ -19,7 +19,7 @@ class AutoDisposePage extends StatefulWidget {
 }
 
 class _CounterPageState extends State<AutoDisposePage> with RxAutoDispose {
-  late final count = 0.obs.autoDispose(this);           // ✅ 必须加
+  late final count = 0.rx.autoDispose(this);           // ✅ 必须加
   late final RxFuture<String> dataFuture;
   late final EventToken chatToken;
 
@@ -41,10 +41,12 @@ class _CounterPageState extends State<AutoDisposePage> with RxAutoDispose {
       module: "chat",
       eventID: 1001,
       token: chatToken,
+      // ignore: avoid_print
       callback: (id, uuid, data) async => print("收到: $data"),
     );
 
     // 3. listen
+    // ignore: avoid_print
     count.listen((v) => print("数据更新: $v")).autoDispose(this);
   }
 
@@ -94,8 +96,9 @@ class _CounterPageState extends State<AutoDisposePage> with RxAutoDispose {
               ),
             ),
             Rx(() {
-              if (dataFuture.isLoading)
-                return const CircularProgressIndicator();
+              if (dataFuture.isLoading) {
+                return  CircularProgressIndicator();
+              }
               return Text(dataFuture.data ?? '');
             }),
           ],

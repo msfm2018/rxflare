@@ -1,15 +1,18 @@
+// ignore: deprecated_member_use
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rxflare_core/rxflare_core.dart';
 
 void main() {
-  testWidgets('Rx rebuilds when obs value changes', (WidgetTester tester) async {
-    final count = 0.obs;
+  testWidgets('Rx rebuilds when obs value changes',
+      (WidgetTester tester) async {
+    final count = 0.rx;
 
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
-          body: Rx(() => Text('count=${count.value}', textDirection: TextDirection.ltr)),
+          body: Rx(() =>
+              Text('count=${count.value}', textDirection: TextDirection.ltr)),
           floatingActionButton: FloatingActionButton(
             onPressed: () => count.value++,
             child: const Icon(Icons.add),
@@ -26,16 +29,18 @@ void main() {
     expect(find.text('count=1'), findsOneWidget);
   });
 
-  testWidgets('batch coalesces multiple updates into one rebuild', (WidgetTester tester) async {
-    final a = 0.obs;
-    final b = 0.obs;
+  testWidgets('batch coalesces multiple updates into one rebuild',
+      (WidgetTester tester) async {
+    final a = 0.rx;
+    final b = 0.rx;
     var builds = 0;
 
     await tester.pumpWidget(
       MaterialApp(
         home: Rx(() {
           builds++;
-          return Text('a=${a.value} b=${b.value}', textDirection: TextDirection.ltr);
+          return Text('a=${a.value} b=${b.value}',
+              textDirection: TextDirection.ltr);
         }),
       ),
     );

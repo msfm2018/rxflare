@@ -8,7 +8,7 @@ RxFlare is now multiple packages:
 
 | Package | Contents |
 |---------|----------|
-| `rxflare_core` | `.obs`, `RxState`, `computed`, `batch`, `untracked`, `effect`, `watch`, `Rx` widget, collections, DI, event bus, `RxFuture` |
+| `rxflare_core` | `.rx`, `RxState`, `computed`, `batch`, `untracked`, `effect`, `watch`, `Rx` widget, collections, DI, event bus, `RxFuture` |
 | `rxflare_router` | `RxRouter`, `rxr`, `RxWidgetsApp`, route args / guards |
 | `rxflare_i18n` | `RxLocale` |
 | `rxflare` | Umbrella — re-exports all of the above (one-line dependency) |

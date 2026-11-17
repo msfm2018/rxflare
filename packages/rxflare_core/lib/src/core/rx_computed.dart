@@ -3,16 +3,31 @@ import '../utils/rx_debug.dart';
 import 'base_.dart';
 import 'rx_state.dart';
 
+/// Evaluates the initial computed value while collecting its dependencies.
+///
+/// This is kept outside [RxComputed] so the public generative constructor can
+/// redirect to a private generative constructor without evaluating [compute]
+/// more than once.
+_RxComputedInitial<T> _evaluateInitial<T>(T Function() compute) {
+  final context = RxContext();
+
+  RxStack.push(context);
+  try {
+    return _RxComputedInitial<T>(compute(), context);
+  } finally {
+    RxStack.pop();
+  }
+}
+
+/// Holds the initial value and the dependencies collected while computing it.
+class _RxComputedInitial<T> {
+  final T value;
+  final RxContext context;
+
+  const _RxComputedInitial(this.value, this.context);
+}
+
 /// Creates a computed reactive value.
-///
-/// Example:
-/// ```dart
-/// final count = RxState<int>(0);
-/// final doubled = computed(() => count.value * 2);
-///
-/// doubled.listen((value) => print(value));
-/// count.value = 5; // prints 10
-/// ```
 RxComputed<T> computed<T>(T Function() fn) => RxComputed<T>(fn);
 
 /// A reactive computed value that automatically tracks dependencies.
@@ -31,7 +46,7 @@ RxComputed<T> computed<T>(T Function() fn) => RxComputed<T>(fn);
 /// final sum = RxComputed<int>(() => a.value + b.value);
 ///
 /// sum.listen((val) => print('sum = $val'));
-/// a.value = 3; //  sum = 5
+/// a.value = 3; // sum = 5
 /// ```
 class RxComputed<T> extends RxState<T> {
   /// The computation function used to derive the value.
@@ -48,14 +63,13 @@ class RxComputed<T> extends RxState<T> {
 
   /// Creates a computed reactive value.
   ///
-  /// The initial value is evaluated immediately.
-  RxComputed(this.compute) : super(compute()) {
-    _init();
-  }
+  /// The initial value is evaluated immediately and its dependencies are
+  /// collected during that same evaluation.
+  RxComputed(T Function() compute) : this._(compute, _evaluateInitial(compute));
 
-  /// Initializes dependency tracking.
-  void _init() {
-    _updateValueAndDeps();
+  RxComputed._(this.compute, _RxComputedInitial<T> initial)
+      : super(initial.value) {
+    _updateDeps(initial.context);
     RxDebug.log(" RxComputed(id: $id) 初始化完成");
   }
 
@@ -63,55 +77,61 @@ class RxComputed<T> extends RxState<T> {
   // Core recomputation logic
   // =========================
 
-void _updateValueAndDeps() {
-  if (_computing || isDisposed) return;
+  void _updateValueAndDeps() {
+    if (_computing || isDisposed) return;
 
-  _computing = true;
+    _computing = true;
+    final context = RxContext();
 
-  final ctx = RxContext();
+    try {
+      RxStack.push(context);
 
-  try {
-    RxStack.push(ctx);
+      final newValue = compute();
 
-    final newValue = compute();
-
-    _updateDeps(ctx);
-
-    internalUpdate(newValue);
-  } finally {
-    RxStack.pop();
-    _computing = false;
+      _updateDeps(context);
+      internalUpdate(newValue);
+    } finally {
+      RxStack.pop();
+      _computing = false;
+    }
   }
-}
+
   // =========================
   // Dependency diffing system
   // =========================
-  void _updateDeps(RxContext ctx) {
-    final newStates = ctx.states;
-    final newFields = ctx.fields;
 
-    // Remove stale state dependencies
-    for (final dep in _deps.difference(newStates)) {
-      dep.removeListener(_refresh);
+  void _updateDeps(RxContext context) {
+    final newStates = context.states;
+    final newFields = context.fields;
+
+    // Remove stale state dependencies.
+    for (final dependency in _deps.difference(newStates)) {
+      dependency.removeListener(_refresh);
     }
-    for (final dep in newStates.difference(_deps)) {
-      dep.addListener(_refresh);
+
+    // Add newly observed state dependencies.
+    for (final dependency in newStates.difference(_deps)) {
+      dependency.addListener(_refresh);
     }
+
     _deps
       ..clear()
       ..addAll(newStates);
 
+    // Remove stale field-level dependencies.
     _fieldDeps.forEach((state, oldFields) {
-      final newFs = newFields[state] ?? {};
-      for (final field in oldFields.difference(newFs)) {
+      final newFieldsForState = newFields[state] ?? <dynamic>{};
+
+      for (final field in oldFields.difference(newFieldsForState)) {
         state.removeFieldListener(field, _refresh);
       }
     });
 
-    newFields.forEach((state, newFs) {
-      final oldFs = _fieldDeps[state] ?? {};
+    // Add newly observed field-level dependencies.
+    newFields.forEach((state, newFieldsForState) {
+      final oldFieldsForState = _fieldDeps[state] ?? <dynamic>{};
 
-      for (final field in newFs.difference(oldFs)) {
+      for (final field in newFieldsForState.difference(oldFieldsForState)) {
         state.addFieldListener(field, _refresh);
       }
     });
@@ -132,9 +152,8 @@ void _updateValueAndDeps() {
     _updateValueAndDeps();
   }
 
+  /// Does not allow manually changing the computed value.
   @override
-
-  /// 不允许手动修改计算属性值
   set value(T newValue) {
     RxDebug.log(
       'Warning: RxComputed is read-only. '
@@ -150,8 +169,9 @@ void _updateValueAndDeps() {
   @override
   void dispose() {
     if (isDisposed) return;
-    for (final dep in _deps) {
-      dep.removeListener(_refresh);
+
+    for (final dependency in _deps) {
+      dependency.removeListener(_refresh);
     }
 
     _fieldDeps.forEach((state, fields) {
@@ -170,24 +190,14 @@ void _updateValueAndDeps() {
 // ========================
 // Reactive computed value helpers
 // ========================
+
 /// Shorthand extension for accessing the current value
 /// of an [RxComputed].
-///
-/// Example:
-/// ```dart
-/// final isDark = rxBool(() => themeMode.value == ThemeMode.dark);
-///
-/// Container(
-///   color: isDark.v ? Colors.black : Colors.white,
-/// );
-/// ```
 extension RxComputedExtensions<T> on RxComputed<T> {
   /// Returns the current computed value.
-  ///
-  /// Useful when a plain value is required, such as
-  /// widget properties that do not automatically
-  /// subscribe to reactive updates.
   T get v => value;
+
+  /// Returns the current computed value.
   T get current => value;
 }
 

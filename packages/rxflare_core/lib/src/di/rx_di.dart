@@ -1,4 +1,3 @@
-
 import '../core/base_.dart';
 
 /// Global dependency injection container.
@@ -109,7 +108,6 @@ class RxDI {
     _factoryMap.remove(key);
   }
 }
-
 
 // /// Widget-scoped dependency provider.
 // ///

@@ -6,8 +6,8 @@ import '../models/user_model.dart';
 // 搜索防抖（直接用 RxFuture.search 工厂）
 
 class SearchController {
-  final keyword = "".obs;
-  final searchList = <UserModel>[].obs;
+  final keyword = "".rx;
+  final searchList = <UserModel>[].rx;
 
   // 1. 将 keyword 设为依赖，触发 500ms 防抖
   late final searchFuture = RxFuture.search(

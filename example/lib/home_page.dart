@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:material_ui/material_ui.dart';
 
 import 'package:rxflare/rxflare.dart';
@@ -16,7 +15,7 @@ import 'paged_list_demo.dart';
 import 'router_demo.dart';
 import 'showcase.dart';
 
-final isDarkMode = true.obs; // 默认深色调更容易出惊艳感
+final isDarkMode = true.rx; // 默认深色调更容易出惊艳感
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -255,9 +254,9 @@ class _HomePageState extends State<HomePage>
 class BasicAutoTrackDemo extends StatelessWidget {
   BasicAutoTrackDemo({super.key});
 
-  final count = 0.obs;
-  final name = "张三".obs;
-  final isActive = true.obs;
+  final count = 0.rx;
+  final name = "张三".rx;
+  final isActive = true.rx;
 
   @override
   Widget build(BuildContext context) {
@@ -470,7 +469,7 @@ class BasicAutoTrackDemo extends StatelessWidget {
 class MapListPreciseDemo extends StatelessWidget {
   MapListPreciseDemo({super.key});
 
-  final user = {"name": "Tom", "age": 25, "score": 88, "vip": true}.obs;
+  final user = {"name": "Tom", "age": 25, "score": 88, "vip": true}.rx;
 
   @override
   Widget build(BuildContext context) {
@@ -667,8 +666,8 @@ class MapListPreciseDemo extends StatelessWidget {
 class ComputedDemo extends StatelessWidget {
   ComputedDemo({super.key});
 
-  final price = 99.obs;
-  final quantity = 1.obs;
+  final price = 99.rx;
+  final quantity = 1.rx;
 
   late final total = computed(() => price.value * quantity.value);
   late final isExpensive = computed(() => total.value > 500);
@@ -710,7 +709,7 @@ class ComputedDemo extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceVariant.withValues(
+                      color: theme.colorScheme.surfaceContainerHighest.withValues(
                         alpha: 0.4,
                       ),
                       borderRadius: BorderRadius.circular(16),
@@ -828,7 +827,7 @@ class EventBusDemo extends StatefulWidget {
 }
 
 class _EventBusDemoState extends State<EventBusDemo> {
-  final messages = <String>[].obs;
+  final messages = <String>[].rx;
   final token = EventToken();
 
   @override
@@ -905,7 +904,7 @@ class _EventBusDemoState extends State<EventBusDemo> {
             child: Rx(
               () => ListView.separated(
                 itemCount: messages.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 10),
+                separatorBuilder: (_, _) => const SizedBox(height: 10),
                 itemBuilder: (context, index) => Container(
                   decoration: BoxDecoration(
                     color: theme.colorScheme.surface,
@@ -954,10 +953,10 @@ class _PerformanceTestDemoStateA extends State<PerformanceTestDemoA> {
   final items = List.generate(
     1000,
     (i) => {"id": i, "title": "Item $i", "score": 50 + (i % 50)},
-  ).obs;
+  ).rx;
 
-  final totalRebuildCount = 0.obs;
-  final updateCount = 0.obs;
+  final totalRebuildCount = 0.rx;
+  final updateCount = 0.rx;
 
   void updateRandomItem() {
     final randomIndex = DateTime.now().millisecond % 1000;
@@ -1083,10 +1082,10 @@ class _PerformanceTestDemoState extends State<PerformanceTestDemo> {
   final items = List.generate(
     1000,
     (i) => {"id": i, "title": "Item $i", "score": 50 + (i % 50)},
-  ).obsListMap;
+  ).rxListMap;
 
-  final rebuildCount = 0.obs;
-  final updateCount = 0.obs;
+  final rebuildCount = 0.rx;
+  final updateCount = 0.rx;
 
   void updateRandomItem() {
     final randomIndex = DateTime.now().millisecond % 1000;
@@ -1166,7 +1165,7 @@ class _PerformanceTestDemoState extends State<PerformanceTestDemo> {
           child: ListView.separated(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             itemCount: items.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 8),
+            separatorBuilder: (_, _) => const SizedBox(height: 8),
             itemBuilder: (context, index) {
               return Rx(() {
                 final item = items[index];

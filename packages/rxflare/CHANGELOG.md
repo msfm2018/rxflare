@@ -1,20 +1,63 @@
 # Changelog
 
-## [2.0.0] - 2026-11-11
+## [2.0.0] - 2026-11-17
 
-### Breaking
-- Split into packages: `rxflare_core`, `rxflare_router`, `rxflare_i18n`, umbrella `rxflare`.
-- Removed deprecated aliases `RxObjMgr` and `RxParent`.
-- Moved `RxStack` into `rxflare_core` (dependency tracking, not routing).
+### Breaking Changes
+
+- Split the project into a modular multi-package architecture:
+  - `rxflare_core` — Reactive state management and core functionality.
+  - `rxflare_router` — Routing and navigation.
+  - `rxflare_i18n` — Internationalization and localization.
+  - `rxflare` — Unified umbrella package.
+- Removed deprecated APIs and legacy aliases, including `RxObjMgr` and `RxParent`.
+- Moved `RxStack` into `rxflare_core`, focusing on dependency tracking rather than routing.
+
+### Reactive API
+
+- Introduced `.rx` as the primary reactive extension for creating `RxState<T>` instances.
+- Deprecated legacy `.obs` and collection extensions while retaining backward compatibility.
+- Introduced strongly typed reactive collection extensions:
+  - `.rxList` — Reactive lists (`RxList<T>`).
+  - `.rxMap` — Reactive maps (`RxMap<K, V>`).
+  - `.rxSet` — Reactive sets (`RxSet<T>`).
+  - `.rxMapD` — Reactive JSON maps (`RxMap<String, dynamic>`).
+  - `.rxListMap` — Reactive lists of JSON objects (`RxList<Map<String, dynamic>>`).
+- Added `toggle()` for reactive boolean state.
+- Added collection utility methods for `RxState<List<T>>`, including `add()`, `remove()`, `contains()`, `length`, `isEmpty`, and `isNotEmpty`.
+- Added semantic type aliases: `RxValue<T>`, `RxStore<T>`, and `RxNotifier<T>`.
+
+#### API Migration
+
+| Legacy API (Deprecated) | Recommended API (2.0) |
+|---|---|
+| `count.obs` | `count.rx` |
+| `list.obsList` | `list.rxList` |
+| `map.obsMap` | `map.rxMap` |
+| `set.obsSet` | `set.rxSet` |
+| `map.obsMapD` | `map.rxMapD` |
+| `list.obsListMap` | `list.rxListMap` |
+
+
 
 ### Added
-- `effect(fn)` — reactive side effects with automatic dependency tracking; returns dispose.
-- `watch(sources, callback)` — watch derived values; returns dispose.
-- `batch` / `untracked` (from 1.8.3 line).
-- `MIGRATION.md` and documented refresh timing.
+
+- Introduced `effect(fn)` for reactive side effects with automatic dependency tracking; returns a disposal function.
+- Introduced `watch(sources, callback)` for observing reactive values and responding to changes; returns a disposal function.
+- Added `batch` for grouping multiple reactive updates.
+- Added `untracked` for executing code without collecting reactive dependencies.
+- Added `MIGRATION.md` with migration instructions.
+- Documented reactive update and refresh timing.
+
+### Architecture
+
+- Separated state management, routing, and internationalization into independent packages.
+- Improved internal modularity and maintainability.
+- Updated package dependencies and public API organization.
 
 ### Migration
-See [MIGRATION.md](MIGRATION.md).
+
+See [MIGRATION.md](MIGRATION.md) for breaking changes, API replacements, and migration instructions.
+
 
 
 ## [1.8.3] - 2026-11-11
@@ -122,7 +165,7 @@ class Obx extends Rx {
 ///
 /// Example:
 /// ```dart
-/// final isExpanded = false.obs;
+/// final isExpanded = false.rx;
 /// isExpanded.toggle(); // value becomes true
 /// ```
 extension RxBoolExtension on RxState<bool> {
@@ -340,23 +383,23 @@ return Rx(() => RxWidgetsApp(
 ## [1.4.5] - 2026-05-11
 ### Added
 * Introduced unified reactive extensions:
-* .obs → RxState
-* .obsMap → RxMap
-* .obsList → RxList
-* .obsSet → RxSet
+* .rx → RxState
+* .rxMap → RxMap
+* .rxList → RxList
+* .rxSet → RxSet
 * Added convenient collection shortcuts:
 * obsMapD for Map<String, dynamic> reactive mapping
 ### Improvement
 * Improved developer ergonomics for reactive object creation
 * Simplified common usage patterns for Map/List/Set observables
 ```
-final user = {"name": "Tom", "age": 18}.obsMapD;
+final user = {"name": "Tom", "age": 18}.rxMapD;
 
 Rx(() {
   return Text(user["name"]); 
 });
 
-final todos = ["a", "b"].obsList();
+final todos = ["a", "b"].rxList();
 
 todos[0] = "c";
 ```
@@ -403,7 +446,7 @@ void main() {
 * Added RxAutoDispose mixin – easily manage resource lifecycle by mixing into StatefulWidget.
 ```
 class _UserPageState extends State<UserPage> with RxAutoDispose {
-  final count = 0.obs;
+  final count = 0.rx;
   late final RxFuture<User> userFuture;
 
   @override
@@ -486,12 +529,12 @@ RxBuilder(
 
 ## [1.2.0] - 2026-04-18
 ### Added
-* New generic extension RxAnyExtension<T> – convert any object to RxState<T> using .obs:
+* New generic extension RxAnyExtension<T> – convert any object to RxState<T> using .rx:
   ```dart
-  final user = User().obs;
-  final count = 1.obs;
+  final user = User().rx;
+  final count = 1.rx;
   ```
-* Unified .obs usage, reducing redundant extensions for primitive types.
+* Unified .rx usage, reducing redundant extensions for primitive types.
 
 ## [1.1.9] - 2026-04-08
 * Improved documentation readability.

@@ -3,9 +3,9 @@ import 'package:material_ui/material_ui.dart';
 import 'package:rxflare/rxflare.dart';
 
 class PollController {
-  final notice = <String>[].obs;
+  final notice = <String>[].rx;
   // 新增：最后同步的时间戳
-  final lastSyncTime = "".obs;
+  final lastSyncTime = "".rx;
 
   late final pollFuture = RxFuture.poll((cancelToken) => pollNotice());
 
@@ -116,7 +116,7 @@ class _PollViewState extends State<PollView> {
               child: ListView.separated(
                 padding: const EdgeInsets.all(16),
                 itemCount: items.length,
-                separatorBuilder: (_, __) => const Divider(),
+                separatorBuilder: (_, _) => const Divider(),
                 itemBuilder: (ctx, idx) {
                   return ListTile(
                     leading: const Icon(Icons.campaign, color: Colors.orange),

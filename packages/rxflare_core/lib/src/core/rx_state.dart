@@ -93,6 +93,32 @@ class RxState<T> implements Disposable {
     return _setFieldValue(newValue, field);
   }
 
+  /// Updates the value and notifies only the specified fields.
+  ///
+  /// The underlying value is updated once, then each affected field is
+  /// scheduled for notification. Global listeners are not notified.
+  ///
+  /// When inside [batch], field notifications are deferred and deduplicated.
+  @protected
+  bool updateFieldsValue(T newValue, Iterable<dynamic> fields) {
+    if (_disposed) {
+      RxDebug.log('RxState: update after dispose');
+      return false;
+    }
+
+    if (!deepEquals(_value, newValue)) {
+      _value = newValue;
+
+      for (final field in fields) {
+        RxBatch.scheduleField(this, field);
+      }
+
+      return true;
+    }
+
+    return false;
+  }
+
   /// Sets a new value. If the new value is different from the current one
   /// according to [deepEquals], it triggers global listeners.
   set value(T newValue) {
@@ -134,10 +160,46 @@ class RxState<T> implements Disposable {
     return null;
   }
 
-  /// Updates the entire state or attempts a type-conversion update.
-  ///
-  /// Supports automatic conversion between `double` and `int`
-  /// (with a precision loss warning when applicable).
+  // /// Updates the entire state or attempts a type-conversion update.
+  // ///
+  // /// Supports automatic conversion between `double` and `int`
+  // /// (with a precision loss warning when applicable).
+  // @protected
+  // void update(dynamic newValue) {
+  //   if (_disposed) return;
+  //   final current = _value;
+
+  //   // 1. Exact type match
+  //   if (newValue is T) {
+  //     _setValue(newValue);
+  //     return;
+  //   }
+
+  //   // 2. Numeric compatibility (using num for simplicity)
+  //   if (current is num && newValue is num) {
+  //     dynamic converted;
+
+  //     if (current is double) {
+  //       converted = newValue.toDouble();
+  //     } else if (current is int) {
+  //       if (newValue is double) {
+  //         RxDebug.log(
+  //           " RxState(${name ?? id}): double → int precision may be lost: $newValue",
+  //         );
+  //       }
+  //       converted = newValue.toInt();
+  //     }
+
+  //     _setValue(converted as T);
+  //     return;
+  //   }
+
+  //   // 3. Type mismatch
+  //   RxDebug.log(
+  //     '[Type Error] RxState(${name ?? id}): '
+  //     'Cannot assign ${newValue.runtimeType} to ${current.runtimeType}',
+  //   );
+  // }
   @protected
   void update(dynamic newValue) {
     if (_disposed) return;
@@ -149,22 +211,30 @@ class RxState<T> implements Disposable {
       return;
     }
 
-    // 2. Numeric compatibility (using num for simplicity)
+    // 2. Numeric compatibility
     if (current is num && newValue is num) {
-      dynamic converted;
+      late final T converted;
 
-      if (current is double) {
-        converted = newValue.toDouble();
-      } else if (current is int) {
-        if (newValue is double) {
+      if (T == double) {
+        converted = newValue.toDouble() as T;
+      } else if (T == int) {
+        // Wasm 安全写法：通过数值判断是否有小数部分，不依赖运行时类型
+        if (newValue != newValue.truncateToDouble()) {
           RxDebug.log(
             " RxState(${name ?? id}): double → int precision may be lost: $newValue",
           );
         }
-        converted = newValue.toInt();
+        converted = newValue.toInt() as T;
+      } else {
+        // T 是 num 或其他不支持自动转换的数字类型
+        RxDebug.log(
+          '[Type Error] RxState(${name ?? id}): '
+          'Cannot assign ${newValue.runtimeType} to ${current.runtimeType}',
+        );
+        return;
       }
 
-      _setValue(converted as T);
+      _setValue(converted);
       return;
     }
 
@@ -244,10 +314,7 @@ class RxState<T> implements Disposable {
   //     list.add(listener);
   //   }
   // }
-  void addFieldListener(
-    dynamic field,
-    void Function(dynamic) listener,
-  ) {
+  void addFieldListener(dynamic field, void Function(dynamic) listener) {
     if (_disposed) return;
 
     final list = _fieldListeners.putIfAbsent(field, () => []);
@@ -430,17 +497,11 @@ class RxState<T> implements Disposable {
   /// [onUpdate] is called whenever the value changes.
   /// Returns a function that cancels the binding.
   void Function() bind(void Function(T value) onUpdate) {
-    // Wrapper to match internal void Function(dynamic) signature
+    if (_disposed) return () {};
+
     void wrapper(dynamic _) => onUpdate(_value);
 
     _listeners.add(wrapper);
-
-    // In navigation Delegate scenarios, we usually do not trigger an
-    // immediate notification here because the first build already
-    // invokes rendering.
-    //
-    // If immediate execution is needed, uncomment:
-    // onUpdate(_value);
 
     bool cancelled = false;
     return () {
@@ -455,11 +516,15 @@ class RxState<T> implements Disposable {
   ///
   /// Returns a function that cancels the subscription.
   void Function() listen(void Function(T value) onData) {
+    if (_disposed) return () {};
+
     void wrapper(dynamic _) => onData(_value);
+
     _listeners.add(wrapper);
-    // Immediately emit current value once
+
+    // Immediately emit current value once.
     onData(_value);
-    // 返回取消监听的闭包（优化：增加空检查）
+
     bool disposed = false;
     return () {
       if (!disposed) {
@@ -475,12 +540,16 @@ class RxState<T> implements Disposable {
   /// Listens to value changes and provides both value and state id.
   ///
   /// Useful when you need to know the origin of updates in complex systems.
-  void Function() listenWithId(void Function(T value, dynamic id) onData) {
+  void Function() listenWithId(
+    void Function(T value, dynamic id) onData,
+  ) {
+    if (_disposed) return () {};
+
     void wrapper(dynamic id) => onData(_value, id);
 
     _listenersWithId.add(wrapper);
 
-    // Immediately emit current state once
+    // Immediately emit current state once.
     onData(_value, id);
 
     bool cancelled = false;
@@ -528,6 +597,8 @@ class RxState<T> implements Disposable {
     dynamic key,
     void Function(dynamic value) onData,
   ) {
+    if (_disposed) return () {};
+
     void wrapper(dynamic value) => onData(value);
 
     addFieldListener(key, wrapper);

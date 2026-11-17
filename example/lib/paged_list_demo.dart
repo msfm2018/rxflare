@@ -59,6 +59,7 @@ class PagedListDemo extends StatelessWidget {
   }
 }
 
+// ignore: camel_case_types
 class Row_ extends StatelessWidget {
   final int index;
   const Row_({super.key, required this.index});

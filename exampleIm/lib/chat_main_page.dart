@@ -11,10 +11,10 @@ import 'persistence_service.dart';
 import 'publish_moment_page.dart';
 import 'utils.dart';
 
-final searchText = "".obs;
+final searchText = "".rx;
 
 // 在类成员变量区定义
-final contactSearchText = "".obs;
+final contactSearchText = "".rx;
 final TextEditingController _contactSearchController = TextEditingController();
 
 // 替换原有的 StatelessWidget 定义
@@ -29,7 +29,7 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
   final TextEditingController _inputController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final auth = RxDI.find<AuthService>(); // 获取全局用户
-  final isLoggingOut = false.obs;
+  final isLoggingOut = false.rx;
   final chat = RxDI.find<ChatService>();
 
   @override
@@ -48,7 +48,7 @@ class _WeChatMainPageState extends State<WeChatMainPage> {
   void _showAddMemberSheet(BuildContext context, ChatItem currentChat) {
     final chat = RxDI.find<ChatService>();
     // 使用 rxflare 局部变量记录选中的人
-    final selectedIds = <String>[].obs;
+    final selectedIds = <String>[].rx;
 
     showModalBottomSheet(
       context: context,

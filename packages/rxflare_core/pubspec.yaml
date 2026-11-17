@@ -1,5 +1,5 @@
 name: rxflare_core
-description: Core reactive state management for RxFlare — .obs, computed, batch, untracked, effect, watch, Rx widgets, collections, DI.
+description: Core reactive state management for RxFlare — .rx, computed, batch, untracked, effect, watch, Rx widgets, collections, DI.
 version: 2.0.0
 homepage: https://github.com/msfm2018/rxflare
 repository: https://github.com/msfm2018/rxflare

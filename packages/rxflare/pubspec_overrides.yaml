@@ -1,0 +1,8 @@
+# melos_managed_dependency_overrides: rxflare_core,rxflare_i18n,rxflare_router
+dependency_overrides:
+  rxflare_core:
+    path: ..\\rxflare_core
+  rxflare_i18n:
+    path: ..\\rxflare_i18n
+  rxflare_router:
+    path: ..\\rxflare_router

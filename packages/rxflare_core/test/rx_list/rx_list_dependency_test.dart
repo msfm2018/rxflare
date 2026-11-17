@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rxflare_core/rxflare_core.dart';
 
-
 void main() {
   group('RxList Dependency Tracking', () {
     test('读取 list[0] 只注册 Index 0 依赖', () {

@@ -89,7 +89,8 @@ void main() {
         Rx(() {
           final s = list.statusAt(0);
           final v = list[0];
-          return Text(s == RxPageStatus.error ? 'err' : (v?.toString() ?? '...'));
+          return Text(
+              s == RxPageStatus.error ? 'err' : (v?.toString() ?? '...'));
         }),
       ]));
       await settle(tester);

@@ -44,7 +44,7 @@ class UserModel {
 /// ======================================================
 
 class DioController {
-  final users = <UserModel>[].obs;
+  final users = <UserModel>[].rx;
 
   late final usersFuture = RxFuture<List<UserModel>>(
     (cancelToken) => fetchUsers(cancelToken),
@@ -173,7 +173,8 @@ class _DioViewState extends State<DioView> {
           child: ListView.separated(
             padding: const EdgeInsets.all(16),
             itemCount: list.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
+
+            separatorBuilder: (_, _) => const SizedBox(height: 12),
             itemBuilder: (_, index) {
               final user = list[index];
 

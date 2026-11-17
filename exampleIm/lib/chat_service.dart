@@ -41,7 +41,7 @@ class ChatService {
       color: Colors.green,
       type: "service",
     ),
-  ].obs;
+  ].rx;
 
   final messagesMap = {
     "s1": [
@@ -51,7 +51,7 @@ class ChatService {
         isMe: false,
         time: DateTime.now().millisecondsSinceEpoch - 86400000,
       ),
-    ].obs,
+    ].rx,
     "u1": [
       Message(
         text: "你好呀！",
@@ -65,8 +65,8 @@ class ChatService {
         isMe: false,
         time: DateTime.now().millisecondsSinceEpoch - 3500000,
       ),
-    ].obs,
-    "u2": <Message>[].obs,
+    ].rx,
+    "u2": <Message>[].rx,
     "g1": [
       Message(
         text: "群公告：禁止发广告",
@@ -74,7 +74,7 @@ class ChatService {
         isMe: false,
         time: DateTime.now().millisecondsSinceEpoch - 10000,
       ),
-    ].obs,
+    ].rx,
   };
 
   final chatList = [
@@ -108,10 +108,10 @@ class ChatService {
       lastTime: DateTime.now().millisecondsSinceEpoch - 3000,
       isPinned: false,
     ),
-  ].obs;
+  ].rx;
 
   final groupMembersMap = {
-    "g1": ["u1", "u2", "me"].obs,
+    "g1": ["u1", "u2", "me"].rx,
   };
 
   final contactCategories = [
@@ -157,11 +157,11 @@ class ChatService {
       count: 118,
       color: Colors.grey,
     ),
-  ].obs;
+  ].rx;
 
-  final selectedId = "s1".obs;
+  final selectedId = "s1".rx;
   //切换页面
-  final selectedNavIndex = 1.obs;
+  final selectedNavIndex = 1.rx;
 
   void sortChatList() {
     final List<ChatItem> newList = [...chatList.value];
@@ -189,9 +189,9 @@ class ChatService {
   }
 
   //当前选中的通讯录分类 ID (默认为空)
-  final selectedContactId = "".obs;
+  final selectedContactId = "".rx;
 
-  final isContactsExpanded = false.obs; // 控制联系人项是否展开
+  final isContactsExpanded = false.rx; // 控制联系人项是否展开
 
   List<Map<String, dynamic>> getGroupedContacts(List<Contact> rawList) {
     // 1. 提取星标好友 (现在 e 是 Contact 对象，直接支持 .isStar)

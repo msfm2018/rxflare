@@ -32,7 +32,11 @@ class RxPage {
   /// `{id: "123", type: "test"}`.
   final Map<String, String> query;
 
-  RxPage({required this.name, required this.pageId, this.params = const {}, this.query = const {}});
+  RxPage(
+      {required this.name,
+      required this.pageId,
+      this.params = const {},
+      this.query = const {}});
 }
 
 /// Global page argument storage.

@@ -53,8 +53,8 @@ class ErrorBoundaryDemo extends StatefulWidget {
 }
 
 class _ErrorBoundaryDemoState extends State<ErrorBoundaryDemo> {
-  final number = 10.obs;
-  final divisor = 2.obs; // 改成 0 会触发除零错误
+  final number = 10.rx;
+  final divisor = 2.rx; // 改成 0 会触发除零错误
 
   // 使用 SafeComputed 包装可能出错的计算
   late final SafeComputed<int> safeResult;

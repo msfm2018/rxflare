@@ -21,7 +21,12 @@ dependencies:
   rxflare_core: ^2.0.0
   rxflare_router: ^2.0.0
   rxflare_i18n: ^2.0.0
-
+  # rxflare_core: 
+  #   path : ../rxflare_core
+  # rxflare_router: 
+  #   path : ../rxflare_router
+  # rxflare_i18n: 
+  #   path : ../rxflare_i18n
 dev_dependencies:
   flutter_test:
     sdk: flutter

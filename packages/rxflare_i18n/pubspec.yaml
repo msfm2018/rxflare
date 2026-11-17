@@ -11,6 +11,8 @@ dependencies:
   flutter:
     sdk: flutter
   rxflare_core: ^2.0.0
+  # rxflare_core: 
+    # path : ../rxflare_core
 
 dev_dependencies:
   flutter_test:

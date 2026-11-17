@@ -14,8 +14,10 @@ import 'rx_state.dart';
 /// state/field level.
 class RxBatch {
   static int _depth = 0;
+
   /// States that had a full-value write in this batch.
   static final Set<RxState> _pendingGlobal = {};
+
   /// Field-level writes: state → fields.
   static final Map<RxState, Set<dynamic>> _pendingFields = {};
   static bool _untrackedDepth = false;

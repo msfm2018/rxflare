@@ -96,9 +96,14 @@ class RxList<T> extends RxState<List<T>> {
   /// Updates all elements that satisfy [test] using [update].
   ///
   /// Only triggers update if at least one element changes.
+  /// Updates all elements that satisfy [test] using [update].
+  ///
+  /// Only triggers field-level notifications for indexes whose values
+  /// actually changed. Global listeners are not notified.
   void updateWhere(
-      bool Function(T element) test, T Function(T element) update) {
-    bool changed = false;
+    bool Function(T element) test,
+    T Function(T element) update,
+  ) {
     final newList = List<T>.of(rawValue);
     final changedIndexes = <int>[];
 
@@ -110,25 +115,22 @@ class RxList<T> extends RxState<List<T>> {
 
         if (!deepEquals(item, newItem)) {
           newList[i] = newItem;
-          changed = true;
           changedIndexes.add(i);
         }
       }
     }
 
-    if (changed) {
-      // Publish the new list first so any reads during notification see the
-      // latest value, then notify only the affected indexes.
-      value = newList;
-      for (final i in changedIndexes) {
-        notifyField(i);
-      }
+    if (changedIndexes.isNotEmpty) {
+      updateFieldsValue(newList, changedIndexes);
     }
   }
 
   /// Replaces all elements that match [test] with [newValue].
+  /// Replaces all elements that match [test] with [newValue].
+  ///
+  /// Only triggers field-level notifications for indexes whose values
+  /// actually changed. Global listeners are not notified.
   void replaceWhere(bool Function(T element) test, T newValue) {
-    bool changed = false;
     final newList = List<T>.of(rawValue);
     final changedIndexes = <int>[];
 
@@ -136,17 +138,13 @@ class RxList<T> extends RxState<List<T>> {
       if (test(newList[i])) {
         if (!deepEquals(newList[i], newValue)) {
           newList[i] = newValue;
-          changed = true;
           changedIndexes.add(i);
         }
       }
     }
 
-    if (changed) {
-      value = newList;
-      for (final i in changedIndexes) {
-        notifyField(i);
-      }
+    if (changedIndexes.isNotEmpty) {
+      updateFieldsValue(newList, changedIndexes);
     }
   }
 
@@ -210,8 +208,23 @@ class RxList<T> extends RxState<List<T>> {
   ///
   /// If [notifyGlobal] is true, global listeners may also be notified
   /// depending on implementation in [RxState].
+
   void updateAt(int index, T newValue, {bool notifyGlobal = false}) {
-    this[index] = newValue;
+    final oldValue = rawValue[index];
+
+    if (deepEquals(oldValue, newValue)) {
+      return;
+    }
+
+    final newList = List<T>.of(rawValue);
+    newList[index] = newValue;
+
+    if (notifyGlobal) {
+      value = newList;
+      notifyField(index);
+    } else {
+      updateFieldValue(newList, index);
+    }
   }
 
   /// Adds an [item] to the end of the list.

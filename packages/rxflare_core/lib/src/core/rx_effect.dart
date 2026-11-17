@@ -12,7 +12,7 @@ import '../utils/rx_debug.dart';
 ///
 /// Example:
 /// ```dart
-/// final count = 0.obs;
+/// final count = 0.rx;
 /// final stop = effect(() {
 ///   print('count is ${count.value}');
 /// });
@@ -44,12 +44,19 @@ class _RxEffect implements Disposable {
 
   void _run() {
     if (_disposed || _running) return;
+
     _running = true;
     final ctx = RxContext();
+
     try {
       RxStack.push(ctx);
-      fn();
-      _updateDeps(ctx);
+
+      try {
+        fn();
+      } finally {
+        // 即使 callback 抛出异常，也必须更新依赖。
+        _updateDeps(ctx);
+      }
     } finally {
       RxStack.pop();
       _running = false;
@@ -71,28 +78,38 @@ class _RxEffect implements Disposable {
     final newStates = ctx.states;
     final newFields = ctx.fields;
 
+    // 移除不再使用的 State 依赖。
     for (final dep in _deps.difference(newStates)) {
       dep.removeListener(_refresh);
     }
+
+    // 注册新增的 State 依赖。
     for (final dep in newStates.difference(_deps)) {
       dep.addListener(_refresh);
     }
+
     _deps
       ..clear()
       ..addAll(newStates);
 
+    // 移除不再使用的字段依赖。
     _fieldDeps.forEach((state, oldFields) {
       final newFs = newFields[state] ?? {};
+
       for (final field in oldFields.difference(newFs)) {
         state.removeFieldListener(field, _refresh);
       }
     });
+
+    // 注册新增的字段依赖。
     newFields.forEach((state, newFs) {
       final oldFs = _fieldDeps[state] ?? {};
+
       for (final field in newFs.difference(oldFs)) {
         state.addFieldListener(field, _refresh);
       }
     });
+
     _fieldDeps
       ..clear()
       ..addAll(newFields);

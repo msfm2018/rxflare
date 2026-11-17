@@ -38,4 +38,3 @@ class _RxProviderState<T> extends State<RxProvider<T>> {
   @override
   Widget build(BuildContext context) => widget.child;
 }
-
